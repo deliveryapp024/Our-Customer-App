@@ -1,13 +1,11 @@
 // App-wide constants
 export const APP_NAME = 'CustomerApp';
 
-// API Configuration
 export const API_CONFIG = {
     BASE_URL: __DEV__ ? 'http://localhost:3000/api' : 'https://api.yourapp.com/api',
     TIMEOUT: 30000,
 };
 
-// Storage Keys
 export const STORAGE_KEYS = {
     AUTH_TOKEN: '@auth_token',
     USER_DATA: '@user_data',
@@ -16,47 +14,31 @@ export const STORAGE_KEYS = {
     CART_DATA: '@cart_data',
 };
 
-// Screen Names
 export const SCREENS = {
-    // Auth Stack
-    WELCOME: 'Welcome',
-    MOBILE_INPUT: 'MobileInput',
-    OTP_VERIFICATION: 'OtpVerification',
-    PROFILE_SETUP: 'ProfileSetup',
-    DIETARY_PREFERENCES: 'DietaryPreferences',
-    LOCATION_PICKER: 'LocationPicker',
-
-    // Main Stack
-    HOME: 'Home',
-    SEARCH: 'Search',
-    RESTAURANT_DETAIL: 'RestaurantDetail',
-    CHECKOUT: 'Checkout',
-    ORDER_SUCCESS: 'OrderSuccess',
-
+    // Auth
+    WELCOME: 'Welcome', MOBILE_INPUT: 'MobileInput', OTP_VERIFICATION: 'OtpVerification',
+    PROFILE_SETUP: 'ProfileSetup', DIETARY_PREFERENCES: 'DietaryPreferences', LOCATION_PICKER: 'LocationPicker',
+    // Main
+    HOME: 'Home', SEARCH: 'Search', RESTAURANT_DETAIL: 'RestaurantDetail',
+    CHECKOUT: 'Checkout', ORDER_SUCCESS: 'OrderSuccess', COUPONS_WALLET: 'CouponsWallet',
+    // Home Features
+    BOLT_DELIVERY: 'BoltDelivery', NINETY_NINE_STORE: 'NinetyNineStore', FLASH_DEALS: 'FlashDeals',
+    GROUP_ORDER: 'GroupOrder', AI_COMBO: 'AICombo', DINE_IN: 'DineIn', SMART_FILTERS: 'SmartFilters',
+    TRAIN_DELIVERY: 'TrainDelivery', QUICK_REORDER: 'QuickReorder', FOOD_STORIES: 'FoodStories',
+    // Restaurant
+    FAN_CLUB: 'FanClub', TABLE_RESERVATION: 'TableReservation',
     // Tracking
-    TRACKING: 'Tracking',
-    RATE_REVIEW: 'RateReview',
-
+    TRACKING: 'Tracking', RATE_REVIEW: 'RateReview',
     // Profile
-    PROFILE: 'Profile',
-    HELP_SUPPORT: 'HelpSupport',
-    ORDER_CANCELLED: 'OrderCancelled',
-    PAYMENTS_HUB: 'PaymentsHub',
-    SETTINGS: 'Settings',
-    FAVORITES: 'Favorites',
-    SAVED_ADDRESSES: 'SavedAddresses',
-    ORDER_HISTORY: 'OrderHistory',
-
-    // Tab Names
-    HOME_TAB: 'HomeTab',
-    ORDERS_TAB: 'OrdersTab',
-    SEARCH_TAB: 'SearchTab',
-    PROFILE_TAB: 'ProfileTab',
+    PROFILE: 'Profile', HELP_SUPPORT: 'HelpSupport', ORDER_CANCELLED: 'OrderCancelled',
+    PAYMENTS_HUB: 'PaymentsHub', SETTINGS: 'Settings', FAVORITES: 'Favorites',
+    SAVED_ADDRESSES: 'SavedAddresses', ORDER_HISTORY: 'OrderHistory', REFERRAL: 'Referral',
+    ORDER_RECEIPT: 'OrderReceipt', ECO_DASHBOARD: 'EcoDashboard', EXPENSE_STATEMENTS: 'ExpenseStatements',
+    // Errors
+    PAYMENT_FAILED: 'PaymentFailed', GENERIC_ERROR: 'GenericError',
+    LOCATION_UNSERVICEABLE: 'LocationUnserviceable', RESTAURANT_CLOSED: 'RestaurantClosed',
+    // Tabs
+    HOME_TAB: 'HomeTab', ORDERS_TAB: 'OrdersTab', SEARCH_TAB: 'SearchTab', PROFILE_TAB: 'ProfileTab',
 } as const;
 
-// Navigation Stack Names
-export const STACKS = {
-    AUTH: 'AuthStack',
-    MAIN: 'MainStack',
-    HOME: 'HomeStack',
-} as const;
+export const STACKS = { AUTH: 'AuthStack', MAIN: 'MainStack', HOME: 'HomeStack' } as const;

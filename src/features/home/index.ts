@@ -7,3 +7,7 @@ export { FlashDealsScreen } from './screens/FlashDealsScreen';
 export { GroupOrderScreen } from './screens/GroupOrderScreen';
 export { AIComboScreen } from './screens/AIComboScreen';
 export { DineInScreen } from './screens/DineInScreen';
+export { SmartFiltersScreen } from './screens/SmartFiltersScreen';
+export { TrainDeliveryScreen } from './screens/TrainDeliveryScreen';
+export { QuickReorderScreen } from './screens/QuickReorderScreen';
+export { FoodStoriesScreen } from './screens/FoodStoriesScreen';

@@ -1,0 +1,83 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, StyleSheet } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type Props = { navigation: NativeStackNavigationProp<any> };
+
+const recentOrders = [
+    { id: '1', restaurant: 'The Gourmet Kitchen', items: 'Truffle Burger, Fries', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100', total: 24.50, date: '2 days ago' },
+    { id: '2', restaurant: 'Urban Bites', items: 'Chicken Wings x2', image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=100', total: 18.00, date: '5 days ago' },
+    { id: '3', restaurant: 'Spice Garden', items: 'Butter Chicken, Naan', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100', total: 22.00, date: '1 week ago' },
+];
+
+export const QuickReorderScreen: React.FC<Props> = ({ navigation }) => {
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#000000" />
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}><Text style={styles.backIcon}>←</Text></TouchableOpacity>
+                <Text style={styles.headerTitle}>Quick Reorder</Text>
+                <View style={styles.placeholder} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.heroSection}>
+                    <Text style={styles.heroEmoji}>🔄</Text>
+                    <Text style={styles.heroTitle}>Reorder in one tap!</Text>
+                    <Text style={styles.heroSubtitle}>Your recent favorites ready to order again</Text>
+                </View>
+
+                <Text style={styles.sectionTitle}>Recent Orders</Text>
+                {recentOrders.map((order) => (
+                    <View key={order.id} style={styles.orderCard}>
+                        <Image source={{ uri: order.image }} style={styles.orderImage} />
+                        <View style={styles.orderInfo}>
+                            <Text style={styles.restaurantName}>{order.restaurant}</Text>
+                            <Text style={styles.orderItems}>{order.items}</Text>
+                            <Text style={styles.orderDate}>{order.date}</Text>
+                        </View>
+                        <View style={styles.orderAction}>
+                            <Text style={styles.orderTotal}>${order.total.toFixed(2)}</Text>
+                            <TouchableOpacity style={styles.reorderButton}><Text style={styles.reorderText}>REORDER</Text></TouchableOpacity>
+                        </View>
+                    </View>
+                ))}
+
+                <View style={styles.tipCard}>
+                    <Text style={styles.tipIcon}>💡</Text>
+                    <Text style={styles.tipText}>Tip: Long press to customize your order before reordering</Text>
+                </View>
+                <View style={{ height: 40 }} />
+            </ScrollView>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#000000' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 16 },
+    backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#2A2A2A', justifyContent: 'center', alignItems: 'center' },
+    backIcon: { fontSize: 20, color: '#FFFFFF' },
+    headerTitle: { fontSize: 18, fontWeight: '600', color: '#FFFFFF' },
+    placeholder: { width: 40 },
+    heroSection: { alignItems: 'center', paddingVertical: 32, paddingHorizontal: 16 },
+    heroEmoji: { fontSize: 48, marginBottom: 12 },
+    heroTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 8 },
+    heroSubtitle: { fontSize: 14, color: '#9E9E9E', textAlign: 'center' },
+    sectionTitle: { fontSize: 18, fontWeight: '600', color: '#FFFFFF', paddingHorizontal: 16, marginBottom: 16 },
+    orderCard: { flexDirection: 'row', marginHorizontal: 16, backgroundColor: '#1A1A1A', borderRadius: 16, padding: 16, marginBottom: 12 },
+    orderImage: { width: 70, height: 70, borderRadius: 12, marginRight: 12 },
+    orderInfo: { flex: 1 },
+    restaurantName: { fontSize: 16, fontWeight: '600', color: '#FFFFFF', marginBottom: 4 },
+    orderItems: { fontSize: 14, color: '#9E9E9E', marginBottom: 4 },
+    orderDate: { fontSize: 12, color: '#6B6B6B' },
+    orderAction: { alignItems: 'flex-end' },
+    orderTotal: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 8 },
+    reorderButton: { backgroundColor: '#00E5FF', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20 },
+    reorderText: { fontSize: 12, fontWeight: 'bold', color: '#000000' },
+    tipCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 16, padding: 16, backgroundColor: '#1A1A1A', borderRadius: 12 },
+    tipIcon: { fontSize: 20, marginRight: 12 },
+    tipText: { flex: 1, fontSize: 14, color: '#9E9E9E' },
+});
+
+export default QuickReorderScreen;
