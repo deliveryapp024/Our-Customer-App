@@ -1,0 +1,592 @@
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    Image,
+    StatusBar,
+    StyleSheet,
+    Dimensions,
+} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+
+const { width } = Dimensions.get('window');
+
+type Props = {
+    navigation: NativeStackNavigationProp<any>;
+    route: RouteProp<any>;
+};
+
+const menuCategories = ['Recommended', 'Combos', 'Main Course', 'Starters', 'Desserts'];
+
+const menuItems = [
+    {
+        id: '1',
+        name: 'Signature Chicken Burger',
+        description: 'Juicy grilled chicken with lettuce, tomato, cheese & special sauce',
+        price: 12.99,
+        originalPrice: 15.99,
+        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',
+        isVeg: false,
+        isBestseller: true,
+        category: 'Recommended',
+    },
+    {
+        id: '2',
+        name: 'Classic Margherita Pizza',
+        description: 'Fresh mozzarella, tomato sauce, basil on thin crust',
+        price: 14.99,
+        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300',
+        isVeg: true,
+        isBestseller: true,
+        category: 'Recommended',
+    },
+    {
+        id: '3',
+        name: 'Truffle Fries',
+        description: 'Crispy golden fries with truffle oil and parmesan',
+        price: 6.99,
+        image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300',
+        isVeg: true,
+        isBestseller: false,
+        category: 'Starters',
+    },
+    {
+        id: '4',
+        name: 'Chocolate Lava Cake',
+        description: 'Warm chocolate cake with molten center, served with ice cream',
+        price: 8.99,
+        image: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=300',
+        isVeg: true,
+        isBestseller: true,
+        category: 'Desserts',
+    },
+];
+
+const offers = [
+    { id: '1', text: 'Flat 20% OFF above ₹500', code: 'SAVE20' },
+    { id: '2', text: 'Free Delivery on first order', code: 'FREEDEL' },
+];
+
+export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) => {
+    const restaurant = route.params?.restaurant || {
+        name: 'The Gourmet Kitchen',
+        rating: 4.8,
+        cuisines: ['Continental', 'Italian'],
+        deliveryTime: '20-30 mins',
+        priceLevel: '$$',
+    };
+
+    const [selectedCategory, setSelectedCategory] = useState('Recommended');
+    const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
+
+    const addToCart = (itemId: string) => {
+        setCartItems((prev) => ({
+            ...prev,
+            [itemId]: (prev[itemId] || 0) + 1,
+        }));
+    };
+
+    const removeFromCart = (itemId: string) => {
+        setCartItems((prev) => {
+            const newCount = (prev[itemId] || 0) - 1;
+            if (newCount <= 0) {
+                const { [itemId]: _, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [itemId]: newCount };
+        });
+    };
+
+    const totalItems = Object.values(cartItems).reduce((a, b) => a + b, 0);
+    const totalAmount = menuItems.reduce((sum, item) => {
+        return sum + (cartItems[item.id] || 0) * item.price;
+    }, 0);
+
+    const filteredItems = menuItems.filter(
+        (item) => selectedCategory === 'Recommended' || item.category === selectedCategory,
+    );
+
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#000000" />
+
+            {/* Header Image */}
+            <View style={styles.headerImage}>
+                <Image
+                    source={{ uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800' }}
+                    style={styles.coverImage}
+                    resizeMode="cover"
+                />
+                <View style={styles.headerOverlay}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}>
+                        <Text style={styles.backIcon}>←</Text>
+                    </TouchableOpacity>
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity style={styles.actionButton}>
+                            <Text style={styles.actionIcon}>🔍</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionButton}>
+                            <Text style={styles.actionIcon}>❤️</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Restaurant Info */}
+                <View style={styles.restaurantInfo}>
+                    <View style={styles.restaurantHeader}>
+                        <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                        <View style={styles.ratingBadge}>
+                            <Text style={styles.ratingText}>{restaurant.rating} ★</Text>
+                        </View>
+                    </View>
+                    <Text style={styles.cuisineText}>
+                        {restaurant.cuisines?.join(' • ')} • {restaurant.priceLevel}
+                    </Text>
+                    <View style={styles.metaRow}>
+                        <Text style={styles.metaText}>📍 2.5 km away</Text>
+                        <Text style={styles.metaText}>🕐 {restaurant.deliveryTime}</Text>
+                    </View>
+                </View>
+
+                {/* Offers */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.offersContainer}
+                    contentContainerStyle={styles.offersContent}>
+                    {offers.map((offer) => (
+                        <View key={offer.id} style={styles.offerCard}>
+                            <Text style={styles.offerIcon}>🏷️</Text>
+                            <View>
+                                <Text style={styles.offerText}>{offer.text}</Text>
+                                <Text style={styles.offerCode}>Use {offer.code}</Text>
+                            </View>
+                        </View>
+                    ))}
+                </ScrollView>
+
+                {/* Menu Categories */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoriesContainer}
+                    contentContainerStyle={styles.categoriesContent}>
+                    {menuCategories.map((category) => (
+                        <TouchableOpacity
+                            key={category}
+                            style={[
+                                styles.categoryTab,
+                                selectedCategory === category && styles.categoryTabActive,
+                            ]}
+                            onPress={() => setSelectedCategory(category)}>
+                            <Text
+                                style={[
+                                    styles.categoryText,
+                                    selectedCategory === category && styles.categoryTextActive,
+                                ]}>
+                                {category}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
+                {/* Menu Items */}
+                <View style={styles.menuContainer}>
+                    {filteredItems.map((item) => (
+                        <View key={item.id} style={styles.menuItem}>
+                            <View style={styles.menuItemInfo}>
+                                <View style={styles.vegIndicator}>
+                                    <View
+                                        style={[
+                                            styles.vegDot,
+                                            { backgroundColor: item.isVeg ? '#00C853' : '#FF5252' },
+                                        ]}
+                                    />
+                                </View>
+                                {item.isBestseller && (
+                                    <View style={styles.bestsellerBadge}>
+                                        <Text style={styles.bestsellerText}>★ Bestseller</Text>
+                                    </View>
+                                )}
+                                <Text style={styles.itemName}>{item.name}</Text>
+                                <View style={styles.priceRow}>
+                                    <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                                    {item.originalPrice && (
+                                        <Text style={styles.originalPrice}>
+                                            ${item.originalPrice.toFixed(2)}
+                                        </Text>
+                                    )}
+                                </View>
+                                <Text style={styles.itemDescription} numberOfLines={2}>
+                                    {item.description}
+                                </Text>
+                            </View>
+                            <View style={styles.menuItemImage}>
+                                <Image
+                                    source={{ uri: item.image }}
+                                    style={styles.itemImage}
+                                    resizeMode="cover"
+                                />
+                                {cartItems[item.id] ? (
+                                    <View style={styles.quantityControls}>
+                                        <TouchableOpacity
+                                            style={styles.quantityButton}
+                                            onPress={() => removeFromCart(item.id)}>
+                                            <Text style={styles.quantityButtonText}>−</Text>
+                                        </TouchableOpacity>
+                                        <Text style={styles.quantityText}>{cartItems[item.id]}</Text>
+                                        <TouchableOpacity
+                                            style={styles.quantityButton}
+                                            onPress={() => addToCart(item.id)}>
+                                            <Text style={styles.quantityButtonText}>+</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.addButton}
+                                        onPress={() => addToCart(item.id)}>
+                                        <Text style={styles.addButtonText}>ADD</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                    ))}
+                </View>
+
+                <View style={styles.bottomSpacing} />
+            </ScrollView>
+
+            {/* Cart Bar */}
+            {totalItems > 0 && (
+                <TouchableOpacity style={styles.cartBar} activeOpacity={0.9}>
+                    <View style={styles.cartInfo}>
+                        <Text style={styles.cartItems}>{totalItems} ITEMS</Text>
+                        <Text style={styles.cartTotal}>${totalAmount.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.cartAction}>
+                        <Text style={styles.cartActionText}>View Cart</Text>
+                        <Text style={styles.cartArrow}>→</Text>
+                    </View>
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#000000',
+    },
+    headerImage: {
+        height: 200,
+        position: 'relative',
+    },
+    coverImage: {
+        width: '100%',
+        height: '100%',
+    },
+    headerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 50,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#00000099',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    backIcon: {
+        fontSize: 20,
+        color: '#FFFFFF',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    actionButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#00000099',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    actionIcon: {
+        fontSize: 18,
+    },
+    restaurantInfo: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    restaurantHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    restaurantName: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        flex: 1,
+    },
+    ratingBadge: {
+        backgroundColor: '#00C853',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    ratingText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    cuisineText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        marginBottom: 8,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        gap: 16,
+    },
+    metaText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+    },
+    offersContainer: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    offersContent: {
+        padding: 16,
+        gap: 12,
+    },
+    offerCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1A1A1A',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 12,
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#00E5FF33',
+    },
+    offerIcon: {
+        fontSize: 20,
+        marginRight: 12,
+    },
+    offerText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    offerCode: {
+        fontSize: 12,
+        color: '#00E5FF',
+    },
+    categoriesContainer: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    categoriesContent: {
+        padding: 16,
+        gap: 8,
+    },
+    categoryTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: '#2A2A2A',
+        marginRight: 8,
+    },
+    categoryTabActive: {
+        backgroundColor: '#00E5FF',
+    },
+    categoryText: {
+        fontSize: 14,
+        color: '#FFFFFF',
+    },
+    categoryTextActive: {
+        color: '#000000',
+        fontWeight: '600',
+    },
+    menuContainer: {
+        padding: 16,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        marginBottom: 24,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1A1A1A',
+        paddingBottom: 24,
+    },
+    menuItemInfo: {
+        flex: 1,
+        paddingRight: 16,
+    },
+    vegIndicator: {
+        width: 16,
+        height: 16,
+        borderWidth: 1,
+        borderColor: '#00C853',
+        borderRadius: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    vegDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    bestsellerBadge: {
+        backgroundColor: '#FFB300',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginBottom: 8,
+    },
+    bestsellerText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#000000',
+    },
+    itemName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8,
+    },
+    itemPrice: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    originalPrice: {
+        fontSize: 14,
+        color: '#6B6B6B',
+        textDecorationLine: 'line-through',
+    },
+    itemDescription: {
+        fontSize: 14,
+        color: '#6B6B6B',
+        lineHeight: 20,
+    },
+    menuItemImage: {
+        alignItems: 'center',
+    },
+    itemImage: {
+        width: 120,
+        height: 100,
+        borderRadius: 12,
+    },
+    addButton: {
+        backgroundColor: '#00E5FF',
+        paddingHorizontal: 24,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginTop: -15,
+    },
+    addButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#000000',
+    },
+    quantityControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#00E5FF',
+        borderRadius: 20,
+        marginTop: -15,
+        paddingHorizontal: 8,
+    },
+    quantityButton: {
+        width: 28,
+        height: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quantityButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000000',
+    },
+    quantityText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#000000',
+        paddingHorizontal: 8,
+    },
+    bottomSpacing: {
+        height: 100,
+    },
+    cartBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#00E5FF',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        paddingBottom: 30,
+    },
+    cartInfo: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    cartItems: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#000000',
+    },
+    cartTotal: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#000000',
+    },
+    cartAction: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    cartActionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000000',
+    },
+    cartArrow: {
+        fontSize: 18,
+        color: '#000000',
+    },
+});
+
+export default RestaurantDetailScreen;
