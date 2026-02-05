@@ -92,8 +92,9 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                     <Text style={styles.etaTime}>{eta} mins</Text>
                 </View>
                 <View style={styles.driverInfo}>
+                    // Image from dynamic_order_tracking_pill design
                     <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' }}
+                        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFX_4DnXQMnnltePyfaUUjKeTVXIt2zFmQd6CIaFC9K7IASOpdhVjUxWji2J3yoiOoBdDRwjZ4sQHfb9qsD0cF4rpblF_roN5TRmZd00fspPeR8V62KGXBE8I_9Ni8U3LTsIOer2TbrP87iFnwvszD2wp-IQ3aydROFwwoOKLpGJwe4MrTGCaViJDfwu4a8lAbQetdjAuJYywtx12QgEaFfj1OXPXok7Up4Lq7bUELuvO7jcqnxk4l4XTp4f4k5ujT5xS7vZKrHlFw' }}
                         style={styles.driverImage}
                     />
                     <View style={styles.driverDetails}>

@@ -16,10 +16,11 @@ type Props = {
     route: RouteProp<any>;
 };
 
+// Images from order_cancelled_&_refund_status design
 const orderItems = [
-    { id: '1', name: 'Truffle Beef Burger', quantity: 1, price: 18.50, extra: 'Extra Cheese', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100' },
-    { id: '2', name: 'Sweet Potato Fries', quantity: 2, price: 12.00, extra: 'Large', image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=100' },
-    { id: '3', name: 'Vanilla Bean Shake', quantity: 1, price: 8.00, extra: 'Whipped Cream', image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=100' },
+    { id: '1', name: 'Truffle Beef Burger', quantity: 1, price: 18.50, extra: 'Extra Cheese', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAbB3p9WC8pJ29Ovwzd5NzoTKRER_poni61dpDg8aluZRq8TUYT1PYGfPxmjMavgelkXZyB7H1O3JraNBwj43WwCCpMXC43H5OvYJC9vF78ilQ3OLqI-Eh3BeowMBVnbSfU4CWp2dGd5TvQuRBaWmI76vEdpEVlGbtcvDyYrhYrYywM_s7LnC_stWQbTFjjKub3QGrvmPMra7BjtYA_xgktZNzB86Ucj4PXRJvIHjJbggc4lc7O8Awa4pn7HPxfqgrPkTnjh0nX-swF' },
+    { id: '2', name: 'Sweet Potato Fries', quantity: 2, price: 12.00, extra: 'Large', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAARt6_bYmyFPpR5G4WCZ8KknwqIDH8Pb6-hRow4BXF7W6ZfMhPn34pmmUpQmYFDE0SIJJ7h90GEeXrV2u4SSb8SJqBCZiWyWCfN7Yif23kxy8pd2TCu_t_WSW5FVugWlDFaWP8MuLzn42y_E5k9T7u8di0GTsmnUolhSIlrvENUz3vUxwBQ0K1iLCopKb9uk4G5Su3IfsKJsLzG73_NxZX4IlnwInL8gFYr6n6_gGhscy8myngILyJyJBBDkMXSQFT6YtuP2VyL20P' },
+    { id: '3', name: 'Vanilla Bean Shake', quantity: 1, price: 8.00, extra: 'Whipped Cream', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgsqsJBwp1811VYDbrKEAqIJ-86IHmTJIkDeY-nJ3nQOu-5xkxniSw1i41WQbIEoj0ptYdsRR9kax80xi3aG1iR0imeStXXwUf2OBmRAfqqIuWfFLZy2_5MNsRpzH9p5K6jE5bjA0hw1_DknO7acOerXVZUHElIeMaj6RvhCq7qCBwEQDz8T6ArgyE9c3iiGwuvj73I5aeajgG97mHI-1RHOWvDHkVw3A4jLs_C8Lr0SaYv43uYXmtHbkYmGCTn-YzKbfOtjfd761G' },
 ];
 
 export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => {

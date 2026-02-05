@@ -36,6 +36,7 @@ const DINING_CATEGORIES = [
     { id: '6', name: 'Cafe', icon: '☕' },
 ];
 
+// Images from dining_out_discovery_feed design
 const MOCK_RESTAURANTS: Restaurant[] = [
     {
         id: '1',
@@ -44,7 +45,7 @@ const MOCK_RESTAURANTS: Restaurant[] = [
         rating: 4.5,
         distance: '2.3 km',
         priceForTwo: '₹1,500',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAqqTiN1dhT5dCugD0v8WlEZudmhA5xvvOtYa59g9enwAuEf2eQKnRCOgW6Xyf9I6-6gc1dHznfkxFZwytC1UGr4jSHDnViZtE0LrKj2J5clBc3shkWWQ3bKsdsEcDg8tyEetrFsieLE-54XqK8pDaL32E_ng2akbVhbD9YqyvK8WdlAITRIHO_vUOF3rf12p6PR02DnbDaJrUU-qO9Bvc77ciDadzrkQF_D8u38hFJ0pgMCdRlG2k5o-r6UqUVIKwm7FYLuraUJ59U',
         offers: ['20% OFF', 'Free Dessert'],
         hasTableBooking: true,
         waitTime: '15 min',
@@ -56,7 +57,7 @@ const MOCK_RESTAURANTS: Restaurant[] = [
         rating: 4.3,
         distance: '3.1 km',
         priceForTwo: '₹2,000',
-        image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4dEvPWoHC0f2U1T8KMeirU5V1DHMw3nIgxZ4H2lxpjwxJrSg9A3qDE8mz8toFq7MPoeh5yyxcFlRVtd3swIjs3QzLtj1znkjbSo6f42Fypb0k7658C9L4Va30rO2r5ckQ_Ma1dqYKhtmEiJUCybe_1CS4z6ZpJ0oytN6EfpMp9r2BQWON20ZW2PldsJiDSkSeKtBqobyGkpHbEt1zgAqX03k93Ee2kn6MSy8t5XpzmH6yj7CrY1OsQmRObWwZT7E6JunV6-oXkjRO',
         offers: ['1+1 on Drinks'],
         hasTableBooking: true,
     },
@@ -67,7 +68,7 @@ const MOCK_RESTAURANTS: Restaurant[] = [
         rating: 4.2,
         distance: '1.8 km',
         priceForTwo: '₹800',
-        image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwU7Aw-djD82T_HiBcJeZQYYwhSob1ftFoy_-LoDZ4KQVzY_DrbPt8-F-JaM-LIJkbcHB0PipVezmL9DKqa8OW0kepAbDZxitF7uZJn2Ybhi5uLhFRDes5HB27AI-RJtlr7nPm6xa7GmHB45HLGQT1ABRO9nGatNkGbzqIV1FWartun9zjSH3wmEIqInU2lnBvLJha5zm95MCyBdj-IGKQJjr1vaJN_7Acitb1Huf-zplyDVuNDMmzcgzVc8QjGbnNHwxyP-NPhuIp',
         offers: ['Flat 30% OFF'],
         hasTableBooking: true,
         waitTime: '5 min',
@@ -79,7 +80,7 @@ const MOCK_RESTAURANTS: Restaurant[] = [
         rating: 4.4,
         distance: '0.9 km',
         priceForTwo: '₹600',
-        image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpVdOCfYUXsUTWXNOmhRKv9is_U4CtlHqbFv8HXP8oGmsg83MUaxWSUg2_VLnUUxpCVwnn-d5kHlg7Ju_fLL69bNHtv7XKUQexirABgfUsqQJhYa0VnQo4rsywD-asRuofyX7gdvhT2UfJX47JNxOGKtb9E1M88Iyl9lFQZlJxdnp4C309T4q2xjTiVVyHBUDnUXBataLN4akLxeVaq1zUMmU4aMyxrTdmy5DEzLI_vWYBvGUx-ctKrTSoTmmTiZrX8FaRhoIsKmO_',
         offers: ['Buy 1 Get 1 Coffee'],
         hasTableBooking: false,
     },

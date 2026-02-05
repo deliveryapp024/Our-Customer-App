@@ -30,11 +30,12 @@ interface Restaurant {
     priceRange: string;
 }
 
+// Images from dining_out_discovery_feed design
 const dineInRestaurants: Restaurant[] = [
     {
         id: '1',
         name: 'The Gourmet Kitchen',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAqqTiN1dhT5dCugD0v8WlEZudmhA5xvvOtYa59g9enwAuEf2eQKnRCOgW6Xyf9I6-6gc1dHznfkxFZwytC1UGr4jSHDnViZtE0LrKj2J5clBc3shkWWQ3bKsdsEcDg8tyEetrFsieLE-54XqK8pDaL32E_ng2akbVhbD9YqyvK8WdlAITRIHO_vUOF3rf12p6PR02DnbDaJrUU-qO9Bvc77ciDadzrkQF_D8u38hFJ0pgMCdRlG2k5o-r6UqUVIKwm7FYLuraUJ59U',
         rating: 4.8,
         cuisine: 'Continental, Italian',
         location: 'Camp Area',
@@ -46,7 +47,7 @@ const dineInRestaurants: Restaurant[] = [
     {
         id: '2',
         name: 'Spice Garden',
-        image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwU7Aw-djD82T_HiBcJeZQYYwhSob1ftFoy_-LoDZ4KQVzY_DrbPt8-F-JaM-LIJkbcHB0PipVezmL9DKqa8OW0kepAbDZxitF7uZJn2Ybhi5uLhFRDes5HB27AI-RJtlr7nPm6xa7GmHB45HLGQT1ABRO9nGatNkGbzqIV1FWartun9zjSH3wmEIqInU2lnBvLJha5zm95MCyBdj-IGKQJjr1vaJN_7Acitb1Huf-zplyDVuNDMmzcgzVc8QjGbnNHwxyP-NPhuIp',
         rating: 4.6,
         cuisine: 'North Indian, Mughlai',
         location: 'MG Road',
@@ -58,7 +59,7 @@ const dineInRestaurants: Restaurant[] = [
     {
         id: '3',
         name: 'Sushi Master',
-        image: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpVdOCfYUXsUTWXNOmhRKv9is_U4CtlHqbFv8HXP8oGmsg83MUaxWSUg2_VLnUUxpCVwnn-d5kHlg7Ju_fLL69bNHtv7XKUQexirABgfUsqQJhYa0VnQo4rsywD-asRuofyX7gdvhT2UfJX47JNxOGKtb9E1M88Iyl9lFQZlJxdnp4C309T4q2xjTiVVyHBUDnUXBataLN4akLxeVaq1zUMmU4aMyxrTdmy5DEzLI_vWYBvGUx-ctKrTSoTmmTiZrX8FaRhoIsKmO_',
         rating: 4.9,
         cuisine: 'Japanese, Sushi',
         location: 'Downtown',

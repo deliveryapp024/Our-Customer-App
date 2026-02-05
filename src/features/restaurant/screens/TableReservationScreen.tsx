@@ -25,7 +25,8 @@ export const TableReservationScreen: React.FC<Props> = ({ navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.restaurantCard}>
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200' }} style={styles.restaurantImage} />
+                    // Image from table_reservation_details design
+                    <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAi22JSUpIZp9S12iuATknD-tmEEZIPnsutkYxZfCkG0JZX4i5eEtNl4VWpCaDEMS7BnPRGnodl8Wn2CXdqyNGps51vv9fyynNBwQ0nc8KlCDw4s2HpfMINwIh8YFr_isEiQdhewzgMR6GpeG3SF0ZEcdImW2aMPs4p2zsJkwM-UhNhY5UJlT-UzJ4X8nh946SR_nI4RUfaLRfGpH4zaPVgwJnelKNbLsVg1BH3CdW-ckWxOoPwgYbL70Uclx-Fr5Y3eBb-ErV5bFwQ' }} style={styles.restaurantImage} />
                     <View style={styles.restaurantInfo}>
                         <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
                         <Text style={styles.restaurantMeta}>Continental, Italian • Camp Area</Text>

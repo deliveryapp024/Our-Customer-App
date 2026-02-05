@@ -66,7 +66,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                 {/* Order Card */}
                 <View style={styles.orderCard}>
                     <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100' }}
+                        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMd4hcbYRiik7yUchVf4T6ukX0uuAgveYEpJ1GXiCRv2bEd8vUWg-PnALtRkZfb-mOJIR59TSigydxDcGVC4ZKz3q0OgyzXWImb7dzlt3KO2Wzw1qdeEyPLL3Ig9Yn3cLaaxUHSaDaK1q-mg24bW_KKeI2AOxm9J9BMWJYfCYwdYDgDnHIYMiBueRRBYBI5IqUMqf1_h3UMCE87kuDJLVy2MNc4wFO_7DGbCSqldxpG7Bj0aFV4caHNZsLVvRD-R1n4BxkMHyxbhjk' }}
                         style={styles.orderImage}
                     />
                     <View style={styles.orderInfo}>

@@ -24,13 +24,14 @@ const categories = [
     { id: '4', name: 'Daily Essentials', isActive: false },
 ];
 
+// Images from 99_store_budget_value design
 const products = [
-    { id: '1', name: 'Lay\'s Classic Chips', image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=200', price: 0.99, quantity: '50g' },
-    { id: '2', name: 'Coca Cola', image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=200', price: 0.99, quantity: '330ml' },
-    { id: '3', name: 'Oreo Cookies', image: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=200', price: 0.99, quantity: '120g' },
-    { id: '4', name: 'Maggi Noodles', image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=200', price: 0.99, quantity: '70g' },
-    { id: '5', name: 'Parle-G Biscuits', image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200', price: 0.99, quantity: '100g' },
-    { id: '6', name: 'Pepsi', image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=200', price: 0.99, quantity: '330ml' },
+    { id: '1', name: 'Lay\'s Classic Chips', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDGDxqWBY532UcDPMiDsMEeglf0j4HNGooEZK180SYU1ZNFHiGkfHAHmRNJL5Ekg4tIxmHeq_mNo10rl3F_Zx7ZKMsEc931QZXJ2M4uJ7D7CFnq_CaFD3j6Me9ViRaV1HYqyGcX0dXNVjX6OkwLp-4EhnES3_4E6vJOVz5oAjrOPzgejl2YW0R8FNx9jqbw9VpmhSkgBihX0beVSz2Xs63SkOumXSQDQasD5OD4hWc7bxH4380Y6jSAyEuw3e2oHO_b2O1NLPZhEpj8', price: 0.99, quantity: '50g' },
+    { id: '2', name: 'Coca Cola', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVmqF-tem-WMGhgUi36RSOCDRYKaKqBBIGYSnMLNAdyLefcDYBFrUkFmGxLqsdELCXIaoTz2BdAQ0gJOTGMObWUuzCYCE4wSiPjqm-egrZe6wsxh4CZ372_flxlgu2loPXPeSCptnjFfLqOfmWhIKFrUU3PYBnIzDTBJrHWaK3CAucT4MU8_W08L1JUVEhcY1xRln-fL8TqbGt6g5cL7a-nFTIGMcLcwDupWE1XlENaz5CSCnymQzpqhqDx1v1Wqu7R5C1654utIWt', price: 0.99, quantity: '330ml' },
+    { id: '3', name: 'Oreo Cookies', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAftZzhEfn20YbCFJsvwkAdP1o_WaErMtpVvRqqaFYVWmTuvzVd5EvsfRlAOfmbLrgejB-IUwQPq0rV800ICniUZQC8PWiiBZVcm8Sp69Th5Wsi22O826aUrWaNbytaSI62bMn04hjCgCuxjX9M3mqYJUCnWo2H12FXZpqrnv6Vntu8xso3FOBmhSNQMfRBOQwIqOYrfzrJGOUBv-_7EI940OAoLOpyvJKvI5NhYS9NA9sr7YNqNffbBlniGJM4PRvRi2FCyCCIOok8', price: 0.99, quantity: '120g' },
+    { id: '4', name: 'Maggi Noodles', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvKr3W-rGYrsgB2kxKygnZwnIWBDiSmpeUXhEAkJO4yDexBjTPsVN8sZSveSFNopyChaOAGeqUhWZ2kVmbAp6bGBulUPS9Jt5VsG3wOrH3vyMdkm76SIc2JZRcKzmVJJ1rUiiu_qO5lY3rtUOGH4FhvTi3mjqE0C6RuOzNF1SZuqhDaE0NGWWMe9mm3BbQPlEGK3Fr_XPQEby7p4ZEYtLEJA6tDy3Vio7VEJDUKzl63Cjl-h86fr0ORFuJcskNx3VUFnpqe-qerJh2', price: 0.99, quantity: '70g' },
+    { id: '5', name: 'Parle-G Biscuits', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAB_tEln8mFX_nXsPEwv81T2calS9M4mubgLGux59LmaCU7_F5qq-87kfPiakeORvJJ5pcY-v85rIcPlxUCCEk9esDOqYRXOTiGLhLbAG8qOWikkm283dFkIJl3_mMNNgShAGfxir9J4wIJkUanGQ2yT_6WfP3ufw7pVaxDJLKLPa4eDe_p4Lm1PujMVaUAsmWHGA1CFkee-1G2Sskw4sVOBtOBm8TWdSC6xurYJagOw8ZMpIGuv5yoO8jA46F0zDdDFjKnuxM-hTTU', price: 0.99, quantity: '100g' },
+    { id: '6', name: 'Pepsi', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb2OC6_veVyOKzc3LP2lLTcCwibVH0lMQLAHlb5_eyWIjLsd241bRH0ulTCoXEPUA6Td5CbSrPWvsv5ILohGR-LcRuz68wwlrival7wFTMrgLFKsEmcTnlViwf5NlvPPYEjmEaHRTPW4lwwzhpHKCW7tQVUpG06bMSpxL9vB5-K8uYnLri7ogx5bLkwr-xypBx7FL5YR_T0ECZ3LZq9sJzX5JAMXb4ju0l04e_x-7YbA-G32JbZXNdOlKDBp7oQdcV7MimrmWN0VIe', price: 0.99, quantity: '330ml' },
 ];
 
 export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {

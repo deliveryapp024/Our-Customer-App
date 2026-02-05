@@ -74,9 +74,10 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
                         </View>
                     </View>
                     <View style={styles.foodImageContainer}>
+                        // Image from order_placement_success design
                         <Image
                             source={{
-                                uri: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200',
+                                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBGWV77IXaL9-FCyvyJNyc-v1nLbCELzS1Uprt0bs6XjY089jM05PHJOowfcwP_lkzgMdvnxJ61SRap2Usbqbw7U7wMBlJ7yEmx-4kzZk5K_2gprNWOOYJHqFbSwlw52z6O_cQNhJw6RU1NgYdUpCWTM5E9a1STRyEQaopEPX2eWHaWdzyZeVABeWBxUaxs7tOTaR54o4hU6UV-gH6bQKl6gV0jiDIEtqSvbYpiLB26OsTkqrwIEeJei0DzfKMCIV3SnXguQismPoXk',
                             }}
                             style={styles.foodImage}
                             resizeMode="cover"

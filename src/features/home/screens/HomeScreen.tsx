@@ -41,7 +41,7 @@ const restaurants = [
     {
         id: '1',
         name: 'The Gourmet Kitchen',
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCh2fIAp9oyd2iKcXdCrUMWQo-idGSY6th2lWcn9JIWULsmhc9WMTTqCmUdFV-PqxqxB9w5UEdfyYF0-jhhPpJz1GJhYuuyTp3snHteh1RUOXUvzOsfLXdiBsMXmrUHqwfmNDqOc6L2jBSJiNSrv844oTPWPbTQDs6snW2cs85oeWC0vTEegACwjG3td5PpsC8Pa07tJPbnHgLKopcnHh7Bcrrm4eLldCAfitrNBxdqO3xzNizP-0HxQEu4LbZBZprZfRFIO3blYvEi',
         rating: 4.8,
         cuisines: ['Continental', 'Italian'],
         deliveryTime: '20-30 mins',
@@ -52,7 +52,7 @@ const restaurants = [
     {
         id: '2',
         name: 'Urban Bites',
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBg1Hac2hi31tHaIUsrco1AUdt9EwRhBjTeJ3P0Wh5_6TYMKDCzlx8UHu4liDZJoxSLtlN9yUJMirrP59RBel6fq_yvagtQ2XsWO7CQuEnAgYLYtyYWl46XdXVo-pDxv1HDLsghJ-asBzkhLggH7_cKYmWOkbEeeuj1jHPnpBxb0EwkPM_gDt3d6abw5g5zkPkHHLjcwt4zcH12yKVWS9vGeZqAQes3BSZwlMiZJiq9rYZYvnMQFd_eUcWTbc2KvdcRF7B1Xu9gUcUq',
         rating: 4.5,
         cuisines: ['Fast Food', 'American'],
         deliveryTime: '15-25 mins',
@@ -61,10 +61,10 @@ const restaurants = [
     },
     {
         id: '3',
-        name: 'Spice Garden',
-        image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400',
+        name: 'Cyan Spice',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI-c8QszP_pPOf7jrVL7irkdep3O0vXq7fcjUszzjAPHTYBS9_kjmyeo1C8rklt2ijyKoSf8NjFzyODh_PkBjP-EIA4m-EKe2vKa-dD-AxDu9CvyT99y_8pbR_FWCKEeMhU6PHhXMx3E7O2vsHKBYN34Dxps657IB_gJptLzaHnSar11u5njYhUEfV0NPB07XzvYB_P0JCEer0iC38mDX-ilCaGtX6Hjtge7WeB39DbZ2wsUSETZKRYjGETA9eiaPUmRLEIrb4FBUW',
         rating: 4.6,
-        cuisines: ['Indian', 'North Indian'],
+        cuisines: ['Thai', 'Asian'],
         deliveryTime: '25-35 mins',
         priceLevel: '$$',
         hasOffer: true,
@@ -72,15 +72,16 @@ const restaurants = [
     },
     {
         id: '4',
-        name: 'Sushi Master',
-        image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400',
+        name: 'Paradise Biryani',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDL_hv9NIrd8zZtdLBqQHd-5MAAQSZMqYtMgg9wmoQSUBWyydGORerIaxcxEZPObCaVmlJt7-T1Fpn_oeLFSW-qjcvK69sKfe-QJPFj7Vhnd_5OTsKvcRAHXmFdPVdJLkOcR_XyZ5oos10D-T81uS-b98KedNVLtQvAvnWv4cLponieo9yYw5ZrBAGjdoqn9wTaY4NZGOomdAkK8rVyVUtTT2RfZpdzE6UOhEe_2QhmCJRL_deG1zh8rt4CvLWMg_XI5yLBwogF944',
         rating: 4.9,
-        cuisines: ['Japanese', 'Sushi'],
+        cuisines: ['Indian', 'Mughal'],
         deliveryTime: '30-40 mins',
         priceLevel: '$$$',
         hasOffer: false,
     },
 ];
+
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const [location] = useState('Camp, Belagavi');

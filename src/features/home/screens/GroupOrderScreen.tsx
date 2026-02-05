@@ -83,8 +83,9 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Restaurant Info */}
                 <View style={styles.restaurantCard}>
+                    // Image from group_order_collaboration_hub design
                     <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100' }}
+                        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDrmY6BTt-h9SoXRwL0sRcAHapG4E07BkBy2bGFt0YKL7y1F2TcDdpHfn4SZJic9EgcgKomK64FaikUxcNH_zy5faQdlrx2rCaaMy6Nw6K28xihuSRMVzvejBWOWLgR6feasAxakrlcPz_0W7Xctuqpj_ncoqmwdrJiKTAd0T69AkcfPUCe9uEQqCPpSKPBXCu82nw-cJn_l_NHL8Z-Ogf-jQLOve8gWzLHfsnr1b2tjW1s4uv_JvYjG-yuTOxTlP9LMKEgcPvt_6XC' }}
                         style={styles.restaurantImage}
                     />
                     <View style={styles.restaurantInfo}>

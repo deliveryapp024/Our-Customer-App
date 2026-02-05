@@ -29,6 +29,7 @@ interface AICombo {
     tag: string;
 }
 
+// Images from smart_ai_combo_suggestions_1 design
 const aiCombos: AICombo[] = [
     {
         id: '1',
@@ -38,7 +39,7 @@ const aiCombos: AICombo[] = [
         originalPrice: 28.99,
         comboPrice: 19.99,
         savings: 9.00,
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD_2k8VWoV8IOtqcEmrnLQaCMyMeZcx5FtM4I8byQwGrmYggiFUHfhvrmpeSO6suqdaTQvWLPXZ_oMLZWxsSnzwMgbedJx4j0cohvGhhKj2LplsywIRgzYiOzD2ZpkL1VfcGPIWSaZ5Ouu9l4oaS6FjSAUGecBX4lb6yY87wAz4mO2MrTwUVfFY9OfkRkIN3Z-B9sR21uj8d2RxhPj4tQSrInNV1n5e874YZc4R-nCZggQc0W3mkM8OUrmsbkdIobGqdNgY6i9YVQuX',
         tag: 'Most Popular',
     },
     {
@@ -49,7 +50,7 @@ const aiCombos: AICombo[] = [
         originalPrice: 32.00,
         comboPrice: 24.99,
         savings: 7.01,
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDU4LYjttnH_lTRQWzUEobtvtmXEnItTMyyyk7CYDqIHS5zyssqd3E6C_8rryfnirE-o87g3uzp8IWVQ9wPTTPhSDIkXIl8ILQLgnlixUAyiPwdF3DHXBuGPvvoeGjtbt66f3KWEFkH2AWFXkbnjfMIQmSCfovQ5KVa39-VSZj5QtPyfhpiZktLFmNJZWz8eO3UNGrc_WoDHu0u1cOqu_gm5HPSbLUBSHHvkW8NUOHzxCkQfDIoTAxR7IrZ6n5hxJYe6nUgd1hueINZ',
         tag: 'Health Pick',
     },
     {
@@ -60,7 +61,7 @@ const aiCombos: AICombo[] = [
         originalPrice: 26.99,
         comboPrice: 18.99,
         savings: 8.00,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBy7RwX66CgZaIjdDdXZ51sfPYMg5H944LEwdZXUDSd_852JZJ50HVVM63GYJq80iYMuVm70JAN4RETyBI5Re4DAWem3saqtEpPmRgcYPMEdUjDtRRv6x3IRtP_a0cQqjnbtLwAV6qtgnRTIw7tsoHgbX4dulZYfh9hNLhoYx8g9cjVaINnykU7tRbYzv7aqa7-L1EFDQajaoESpWfqMKsC6t6S9o1V2IKho0EOZVAtq39ZjIISnxZiLGGd4Byl6yPiG_ih8xfp6zJ_',
         tag: 'Value Deal',
     },
 ];

@@ -16,6 +16,7 @@ interface CartActions {
     updateQuantity: (itemId: string, quantity: number) => void;
     clearCart: () => void;
     loadCart: () => Promise<void>;
+    saveCart: () => Promise<void>;
     getTotal: () => number;
     getItemCount: () => number;
 }

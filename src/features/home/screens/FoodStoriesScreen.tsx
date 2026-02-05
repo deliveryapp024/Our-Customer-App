@@ -6,11 +6,12 @@ const { width } = Dimensions.get('window');
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
+// Images from restaurant_food_stories_feed design
 const stories = [
-    { id: '1', restaurant: 'The Gourmet Kitchen', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', caption: 'Our new Truffle Burger is here! 🍔', likes: 234, isNew: true },
-    { id: '2', restaurant: 'Urban Bites', image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400', caption: 'Crispy wings made with love ❤️', likes: 156, isNew: true },
-    { id: '3', restaurant: 'Spice Garden', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', caption: 'Authentic flavors from India 🇮🇳', likes: 189, isNew: false },
-    { id: '4', restaurant: 'Sushi Master', image: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=400', caption: 'Fresh catch of the day 🐟', likes: 312, isNew: false },
+    { id: '1', restaurant: 'The Gourmet Kitchen', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuACu_J4GhIjX3_oAJPvo_JFzUK9TaH4LCWX4lCd8vJDcVUUVUt778h7mymnHrp8qHhnQhi5nLAahFID6OcV00XqdifqpBeRfrF9npJAdCtYOeznXlurP8-USxfFDSq--snEPiEHfL9CTgPOGxfaAL6G76mh3nzIzeGcuwQMSrss7HNRbvR8co-IyMmsDd8i_Oq-4IY8bCf0JTg2Pyk2Yox1YFAxaViahrZP5gTvOaInEVZcEqo2mYkKOmlLtsEpRrSNvBxk_cIElEvP', caption: 'Our new Truffle Burger is here! 🍔', likes: 234, isNew: true },
+    { id: '2', restaurant: 'Urban Bites', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDjrzy8lgyhNSW4I7xcLoInXGKEEuYCtuFJVguCjhe4YZ1eLLeRf2K1ADODPhlS_sF9ckBpDio09aNzJC24v5QdEhHEK7GcT0tHOofEQpDLp8NoD87n9bTR4oWb3TauJwvISXeu4y0ED8crxvBLw40zFccLl883nIWxZvs32G8jalWbE6KucADlPeMAzFrhwDK1Ka0vdm27mssjTJwjnHiK7B0jDaOAVASBP-YIm6OdhS_fwwoA_Q059baD3dI_WYk7HrHo72iYrOM', caption: 'Crispy wings made with love ❤️', likes: 156, isNew: true },
+    { id: '3', restaurant: 'Spice Garden', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4DUFZkfL_GvK1a5bsb87pJR5AhI1e1Uu_Y8xllkAKSAhX0yesOMYZAY_PPji3Ro1-nw6t3iemZon61CG-TGWC_onjsudf9H6jvDbRUP--Ztx5qqvPDKSEVPTIQsnkIOhM293zwi2WV6rEXeO82oxqWTk1SXucNlcUCio4nhgqgpxmErECjUt2hYnGBDcYRvnGM6vkN7lmTbH_fiT76NKMKsohXviixfulE6I6YGLHPMwwn6lV2J57SSIcI_5QgSBqfW-aeuPNAUDR', caption: 'Authentic flavors from India 🇮🇳', likes: 189, isNew: false },
+    { id: '4', restaurant: 'Sushi Master', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAofeOc-q88BTDJXsetru-T9CK9FOFB0h3wYuECuGgiWnlwtDFJ4wDLiSus3QMLAnBuppVzJWzl_3kheMETXw72FkTzeiFkix7ToNE9n89FvqUR0dcOY5b2jD26V4k-X-xPR5WsvIjloK5bNrVN-KzEKRqrG1z8gUI5YtuhQJqA5S_FSQcD5l5R-5COhFDvfT9yjBFvTT8QFqgkEnRhGYHvR6DaUjFz-uRv9uVB_-4UO65sO1MD-wUxQ3hT4avmj5ArKcvqXQef6v_4', caption: 'Fresh catch of the day 🐟', likes: 312, isNew: false },
 ];
 
 export const FoodStoriesScreen: React.FC<Props> = ({ navigation }) => {

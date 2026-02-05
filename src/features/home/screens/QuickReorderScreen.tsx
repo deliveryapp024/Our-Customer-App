@@ -4,10 +4,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
+// Images from quick_reorder_tab design
 const recentOrders = [
-    { id: '1', restaurant: 'The Gourmet Kitchen', items: 'Truffle Burger, Fries', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100', total: 24.50, date: '2 days ago' },
-    { id: '2', restaurant: 'Urban Bites', items: 'Chicken Wings x2', image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=100', total: 18.00, date: '5 days ago' },
-    { id: '3', restaurant: 'Spice Garden', items: 'Butter Chicken, Naan', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100', total: 22.00, date: '1 week ago' },
+    { id: '1', restaurant: 'The Gourmet Kitchen', items: 'Truffle Burger, Fries', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCJSBTTnNUXcD3_SoZwkxgwXxnPtQtcW0UTj4fBxvUiAv1RagWpe6nAG9qcP4lMAa_IBQw5hnEP0nSs4XimXjgt30c_jFPc5oDdOH0fUDP0h5R1hk4_usQhnSjW43FGVFmL4Sm5ujbpP_NcYoJ-R0U6QTw4YdoN1gc_UvIJKNXT9hNF_WpIBWw-v-8qJqJAOcA4vK-vPnweo2wzug4qmIj0Q-VhXqXhU1J5JOE_fxrgn1QDChZrCyKb33pkVmjauzf56Jh5N-6va7Ep', total: 24.50, date: '2 days ago' },
+    { id: '2', restaurant: 'Urban Bites', items: 'Chicken Wings x2', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAgU30K_DDlUza7issKtXAqH2jcxdgPvIUcPcA_pLhJnT0J2_wstQnxPy7G4DkJwm1vf8lVcyeJWognRxj07vh4ci-DKWAiHYN17UIlOATBqiPVxESS0kgwveeA0H1sv48wbe-QgjRaKFBCZEdG7dYC-Uq6uyq0494hSVdr2wks0gJa4jS85Mdu65SyisF0hyEOdy6Io2j9tu_F8ocm-5SGmGUaVozXTeEWRPtLAcMXYswIAj_Uzd_xweUHfk65YXQiSX0N1OUkNeJ6', total: 18.00, date: '5 days ago' },
+    { id: '3', restaurant: 'Spice Garden', items: 'Butter Chicken, Naan', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwgnwfFcajDszaP5Q-wB8CN8FLRpOWJV_W98-6zl4Cgw5ksmMH3pN0hmXtncTKBUVE5GKSFgw4ezoBrliGMYh4V6pdHetpfzxXUtxSfNTL1JTFq2OMEP8NLVb-t2OnxTFQrgNyvM3gx0dGdnOK5I7xm8e9t7zanXNM08DnpcSwZdx92I04EjO6CD0MvreVujDF30GEZ6iRNXFGB-pPHZecbTMDJVOEDgscOtmxFEUkGj7859XF1fiwKxrsDYPbqmbZXK7tDwSlXSUn', total: 22.00, date: '1 week ago' },
 ];
 
 export const QuickReorderScreen: React.FC<Props> = ({ navigation }) => {

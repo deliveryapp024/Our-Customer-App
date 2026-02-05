@@ -8,6 +8,8 @@ import {
     StyleSheet,
     Dimensions,
 } from 'react-native';
+
+const WELCOME_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBFaFkutz2Ezm8up5-gZ-Prk2s9pBtlDiWmMU9J4x4asVOjjZ0vUMk1VpzBd26tt7X4_xRAxNMIpcMe6C6Y_q6tZEaSf64zJkczLOTIpJPl-oCM2WNfpXu_KYpGZ5mGQZby0vEueeU1_HqKhS52x-xbrOu0fUs-bfynGLkCfk-G26mQzuya6QqvOlhBo792bW69oZlJH-oQWTdCpTnxHvlXqAJVj5aS5axOjDNDrMKRwkxog0th3r6rD-TlWrwjjx1lvTSW_vyN7mYu';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS } from '../../../constants';
 
@@ -25,10 +27,9 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Hero Image */}
             <View style={styles.imageContainer}>
                 <Image
-                    source={require('../../../../assets/images/welcome-food.png')}
+                    source={{uri: WELCOME_IMAGE}}
                     style={styles.heroImage}
                     resizeMode="cover"
-                    defaultSource={require('../../../../assets/images/placeholder.png')}
                 />
             </View>
 

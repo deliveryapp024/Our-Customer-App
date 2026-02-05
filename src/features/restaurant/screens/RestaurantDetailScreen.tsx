@@ -24,46 +24,47 @@ const menuCategories = ['Recommended', 'Combos', 'Main Course', 'Starters', 'Des
 const menuItems = [
     {
         id: '1',
-        name: 'Signature Chicken Burger',
-        description: 'Juicy grilled chicken with lettuce, tomato, cheese & special sauce',
-        price: 12.99,
-        originalPrice: 15.99,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',
-        isVeg: false,
-        isBestseller: true,
-        category: 'Recommended',
-    },
-    {
-        id: '2',
-        name: 'Classic Margherita Pizza',
-        description: 'Fresh mozzarella, tomato sauce, basil on thin crust',
-        price: 14.99,
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300',
+        name: 'Truffle Mushroom Risotto',
+        description: 'Creamy arborio rice cooked with wild mushrooms, black truffle oil, and aged parmesan cheese.',
+        price: 24.00,
+        originalPrice: 30.00,
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCph6QQr9sw-e2qtkW0Ujmnbhcgylk7axX8zUgxt6BfUUN_7OpXbYnTqOtF7j3QgEVtX-h0O9I5PbyquS3LHPuX3Fq2mqe4t8KBnGmGJIqfCy7dsJ1syoGjeHxSlf10NXv7qkVAM6eI244t8Juz62V6iH3r2Pbea8hKBLrafV9__qJFW4tSrRLzHgKzAurpAyF1RPhnZs0NGw7IPaZcB_-SoT86FOHRbXVZv0qJm8P3faAW_TCu8EDYBgSsHR9cD2-AYmMw0puxeKgf',
         isVeg: true,
         isBestseller: true,
         category: 'Recommended',
     },
     {
+        id: '2',
+        name: 'Spicy Tuna Tartare',
+        description: 'Fresh yellowfin tuna cubes marinated in soy, sesame oil, and chili, served with crispy wonton chips.',
+        price: 18.50,
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaeJpHQ9VxZtom_8j6qUq3p1_o0JyU5Ob1bI4jLGAlY7LCq42Yc65yri4zdtm1MD2qXlDj0PfSL6_Ohau5ni3raOf-VrhSdTLmIDhCgS6YKLd53FQjNzzYoBvDrODljOCNNUnWD9zSiuOFCiQKuoofedw9xCASgRlBskoDA2EK-Rfg9zmvCsrtXZJj5Ra1inyxbfwAbYv58iJ5O44tGqFAa08k_Ix358z74Nt5PYze9JURo8GIN0ir9opNOVBNaBOqx2hom6lm745p',
+        isVeg: false,
+        isBestseller: false,
+        category: 'Recommended',
+    },
+    {
         id: '3',
-        name: 'Truffle Fries',
-        description: 'Crispy golden fries with truffle oil and parmesan',
-        price: 6.99,
-        image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300',
+        name: 'Avocado & Quinoa Salad',
+        description: 'Organic quinoa, ripe avocado, cherry tomatoes, cucumber, and lemon vinaigrette.',
+        price: 16.00,
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4pgP27mhURLdWTQ2DJvv0hs3aZQoxLtSe5t2UXk9GlzcFrfvdN4mZXjoBcznHOyRT0F3Pbg0AXE_6Hg9J6wVqYFZ0uNCBbxf17DSzjWlmozISIwijRGMfXfXBQcPAJbkfkNz6xRbh2ZEuHPKq8T293d72aztpE7PhwOyQQqyUBqStprg6RfHoKxCN8i9Ov-tI3o_0BgDZilmraz3awkxvZZgcZZZzdOZvS04hmPPprAGYj6_5bEFPBoLdrqmxL5EtSlQ-fMa14zgY',
         isVeg: true,
         isBestseller: false,
         category: 'Starters',
     },
     {
         id: '4',
-        name: 'Chocolate Lava Cake',
-        description: 'Warm chocolate cake with molten center, served with ice cream',
-        price: 8.99,
-        image: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=300',
-        isVeg: true,
+        name: 'Sushi Platter Deluxe',
+        description: '24 pieces of assorted nigiri, sashimi, and maki rolls. Serves 2.',
+        price: 45.00,
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIjQ1MczSUGCtPAcRActJ1jO1suMFfvrkLV2R6TrR6ikEwFO19nDOA7t7-uCbau8QsMkOwv5TAQPMGEMhDy-OhZQOjHJoVHhbGmSjTuayqHMfQ71szlq-qqu8E3NjzLwlAs0COLHLNMiCdnw8QwhDRhaLt1zLLeVl2SSxt5-CsVeUuPpq4GvXkXx_YueTwvavQmw-T7Ce5j1gKV6hhVLwDbkeBpkavWjN6mLb_bzZn6NwvwwnsX9x-wvqs95-bMZ2Uq6VLwwJz1S71',
+        isVeg: false,
         isBestseller: true,
-        category: 'Desserts',
+        category: 'Combos',
     },
 ];
+
 
 const offers = [
     { id: '1', text: 'Flat 20% OFF above ₹500', code: 'SAVE20' },
@@ -116,7 +117,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
             {/* Header Image */}
             <View style={styles.headerImage}>
                 <Image
-                    source={{ uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800' }}
+                    source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6' }}
                     style={styles.coverImage}
                     resizeMode="cover"
                 />

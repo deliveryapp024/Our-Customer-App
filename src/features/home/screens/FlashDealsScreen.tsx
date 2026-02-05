@@ -33,7 +33,7 @@ const flashDeals: FlashDeal[] = [
     {
         id: '1',
         restaurantName: 'The Gourmet Kitchen',
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCh2fIAp9oyd2iKcXdCrUMWQo-idGSY6th2lWcn9JIWULsmhc9WMTTqCmUdFV-PqxqxB9w5UEdfyYF0-jhhPpJz1GJhYuuyTp3snHteh1RUOXUvzOsfLXdiBsMXmrUHqwfmNDqOc6L2jBSJiNSrv844oTPWPbTQDs6snW2cs85oeWC0vTEegACwjG3td5PpsC8Pa07tJPbnHgLKopcnHh7Bcrrm4eLldCAfitrNBxdqO3xzNizP-0HxQEu4LbZBZprZfRFIO3blYvEi',
         originalPrice: 25.99,
         dealPrice: 12.99,
         discount: '50% OFF',
@@ -43,8 +43,8 @@ const flashDeals: FlashDeal[] = [
     },
     {
         id: '2',
-        restaurantName: 'Urban Bites',
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',
+        restaurantName: 'Swift Burger Co.',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDC5vARZsW5066UvblgoPxPCIbg0144cPv7c9etHqj_c_Vz115R9N8sM0CSGW_UKDmzhMrFoLrOv2JfL9rjggmwLfchZ-N9TEI3RgkIMgsGY4js8ok-bPsERSAmc1VBC1ZV4gIywnz1L4TrVqXxcDwOKptJ_A5Qhg02W85oUNPn9-ywmRanfzc6Oj-fZVEgVf5LmEf9qzLHjLk-WmwIUvAZwmstPFUEhp-mhFclgyuwkAPsMARIe1l3cUvJn-_e7l5KXmlT13VPwwjG',
         originalPrice: 18.99,
         dealPrice: 9.99,
         discount: '47% OFF',
@@ -54,8 +54,8 @@ const flashDeals: FlashDeal[] = [
     },
     {
         id: '3',
-        restaurantName: 'Spice Garden',
-        image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=300',
+        restaurantName: 'Cyan Spice',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI-c8QszP_pPOf7jrVL7irkdep3O0vXq7fcjUszzjAPHTYBS9_kjmyeo1C8rklt2ijyKoSf8NjFzyODh_PkBjP-EIA4m-EKe2vKa-dD-AxDu9CvyT99y_8pbR_FWCKEeMhU6PHhXMx3E7O2vsHKBYN34Dxps657IB_gJptLzaHnSar11u5njYhUEfV0NPB07XzvYB_P0JCEer0iC38mDX-ilCaGtX6Hjtge7WeB39DbZ2wsUSETZKRYjGETA9eiaPUmRLEIrb4FBUW',
         originalPrice: 32.00,
         dealPrice: 19.99,
         discount: '38% OFF',

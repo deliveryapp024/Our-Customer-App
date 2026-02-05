@@ -33,7 +33,8 @@ export const FanClubScreen: React.FC<Props> = ({ navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.heroCard}>
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200' }} style={styles.restaurantImage} />
+                    // Image from restaurant_fan_club_loyalty design
+                    <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4DSeZGWbVfWaQoBSz8Po_e1FFHAbCJ0JhqkgFkPwawDxyTSAis4sMfbDvnLeuf-MBjWpE_suGdsAtx2KubTjwitJ8LMQcWXpWMcXKzIID8xf_y-E5XDl-W3fdwg47nz7AwXB7LZzt24YcM5vcrHpW1ymKAJv2NYU2QpfCvM8GoC71kqoRyaiSqj6yycxt8ABQIO689Sgg2fbTxzqZ2Jx5_aD8ORgSHAb_DvR_U-I57I-x0pJinAJAUJWMwP6uWO4pHQQPIgW4lqVh' }} style={styles.restaurantImage} />
                     <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
                     <View style={styles.tierBadge}><Text style={styles.tierIcon}>🥉</Text><Text style={styles.tierText}>Bronze Member</Text></View>
                     <View style={styles.progressSection}>

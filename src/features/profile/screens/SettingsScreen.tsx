@@ -24,7 +24,12 @@ interface SettingItem {
     enabled?: boolean;
 }
 
-const settingsGroups = [
+type SettingItemType = 
+    | { id: string; icon: string; label: string; type: 'toggle'; enabled: boolean }
+    | { id: string; icon: string; label: string; type: 'link' }
+    | { id: string; icon: string; label: string; type: 'value'; value: string };
+
+const settingsGroups: { title: string; items: SettingItemType[] }[] = [
     {
         title: 'Notifications',
         items: [

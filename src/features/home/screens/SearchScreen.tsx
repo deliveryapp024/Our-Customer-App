@@ -17,11 +17,12 @@ type Props = {
 
 const recentSearches = ['Sushi', 'Vegan Burger', 'Tacos', 'Pasta'];
 
+// Images from search_&_trends design
 const trendingSearches = [
-    { id: '1', name: 'Biryani', trend: 'UP 24%', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100' },
-    { id: '2', name: 'Pizza', trend: 'UP 18%', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=100' },
-    { id: '3', name: 'Burgers', trend: 'UP 12%', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100' },
-    { id: '4', name: 'Healthy', trend: 'UP 31%', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100' },
+    { id: '1', name: 'Biryani', trend: 'UP 24%', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWwfrdEbNZoBdvm9QdpYfRrA_riCOpmkHgQlE84Wk9Xnx8RE3vmnm3BcSH0v7PGB8ishKC-hl4eGNqIxlVa7BBEqNJkxPg6fJd_MAqT_IlGkh5MHw02uTGO6eBdGZ2yjplRarw-LvoyYJ_QiQVVBoo8JpFV3AP7KhRCL8q5e-IEgpxogFtqrt_R5GMQKkenXNq8dJArHnASp39TYNHxPa7nFcRkZIdsQdCrTs8qLX1iRZMgg6DBGnzIE8EEnCY4bpuE5wVv2tTIKFD' },
+    { id: '2', name: 'Pizza', trend: 'UP 18%', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCgCzfzsXmdxE49M2spCuYQGsmg5smGrLpYbC8UEIwAmeCZfR7zgAsEkLWrjfnk0JdhgE7lwTI-6HO1LAUELFcCbDMNuBjsN0n4Gnii8aCZbRylecEDpFJ0FGl9L3_IUzC6e8jUFL9tR-p27Uiiv_uWhtxs4uTtLuzLyymUSYd6sXWmlGZKciiXn0hFDDEayKmNzqwZmBHavxOFIeg7dTO2YIKk97rZXbC6VzUoNdbobf8dWVvQzBgoNoDCP7Fb6vsOvRGW3xBE1Bb' },
+    { id: '3', name: 'Burgers', trend: 'UP 12%', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5Ej-PpCNf_gobGCKoZXoiNjNpjMOHA9ibfqYU1TSZrIT-v2JqLVmcFVgh8apXS5b0P5dGtkqgkDM1VWF6Hi36qoh3F4h89TyLeujF8P8uQzQuihF1T2GLhU09uCX-OuNSGeJj3MeBAXJJxXyfrCa-87O83mj7xbMfwuccPq8SXvp3Vgl0UUVuxKrrE-mJnYGr_DID5RBzKafEH54-OQtpfWmp6ARCsO4PpL64WN--hL2V25YA2UdbfHD3ab823xFQK4bTSYc2QvcD' },
+    { id: '4', name: 'Healthy', trend: 'UP 31%', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAnnN7SMnl_G1WavrnyXgwEM0WF1IsZOLbYsR6LE2FgW1OIHQa5r0P8Sb8MEac07iVkABdNVNyGIFgGTKPYyGfJHwRWU1aGF0M4Y25avKcreOukkZDN2oIztMWICjfpMTQFMX7sB8QcQPCo1ru2_9ysH7Nf8LG0Rut6Lk9-B0ZoIGuf8A-8myhSkjVHoaMMNRWGin5-xZ5Y-WBj405Z7_BjB9d_3wmvuqqzrks6t_kJa5oMJzeSN0UXJi6s8uLT-t5TNYAVlbpSTeS' },
 ];
 
 export const SearchScreen: React.FC<Props> = ({ navigation }) => {

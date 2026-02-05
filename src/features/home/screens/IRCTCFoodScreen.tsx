@@ -35,13 +35,14 @@ const MOCK_STATIONS: Station[] = [
     { code: 'ALD', name: 'Prayagraj Junction', arrivalTime: '21:15', restaurants: 6 },
 ];
 
+// Images from home_discovery_hub design
 const MOCK_FOOD_ITEMS: TrainFood[] = [
     {
         id: '1',
         name: 'Butter Chicken Thali',
         restaurant: 'Punjab Grill Express',
         price: 249,
-        image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAo61o96ph2K1uSVuMtrwM6d59ZYddbUxT4pIjs1oS_GKXefNXf7WIC_nLJi7zQ_tWgcONGVykVoVTieuW6oKqCRibspP6iQRZUvnnWkklIxXbHj5wxZwhX1WxQDYkdPCUjU4VJ3QMYOdDYvUd8dv3c-su7FN3YXEXJjWBf-tK0YdfdY-1OFbw_TK5x5zIm_-2g8j9CQvp9lJ8LLQ84RvozbQYgJvnjIcxUOvDLbAeAaKTc2w0JFNP-9W8AJC1Nj0MzwJv2Bk48YxEw',
         isVeg: false,
         rating: 4.5,
         prepTime: '25 min',
@@ -51,7 +52,7 @@ const MOCK_FOOD_ITEMS: TrainFood[] = [
         name: 'Paneer Biryani',
         restaurant: 'Biryani Blues',
         price: 199,
-        image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDuUDoavxhQe53DGhNkpbhp2j2rMwqKQO1N97BgS9E7rIjarpgCfm0FiDNAHOM3U9eKJuM1Pugksh2VFiAdhCk8Y1qC0YYfl99qigZ2GFgpP83cuc6rGtq5oZK2i4H1TbfdvXfZXwTeP8JvfVvwT8hqpbOevaaDyZsabcUB-AsuwnVm27JPDOwvFudCYyFpezAoA-efMpB-N8XkPw7l6Hzns8sVO1dTOhe1WvNCHtmREitleWqTmRJSaoz7sN9YjpRlFmdH6rAdu25c',
         isVeg: true,
         rating: 4.3,
         prepTime: '20 min',
@@ -61,7 +62,7 @@ const MOCK_FOOD_ITEMS: TrainFood[] = [
         name: 'South Indian Combo',
         restaurant: 'Sagar Ratna',
         price: 179,
-        image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCh2fIAp9oyd2iKcXdCrUMWQo-idGSY6th2lWcn9JIWULsmhc9WMTTqCmUdFV-PqxqxB9w5UEdfyYF0-jhhPpJz1GJhYuuyTp3snHteh1RUOXUvzOsfLXdiBsMXmrUHqwfmNDqOc6L2jBSJiNSrv844oTPWPbTQDs6snW2cs85oeWC0vTEegACwjG3td5PpsC8Pa07tJPbnHgLKopcnHh7Bcrrm4eLldCAfitrNBxdqO3xzNizP-0HxQEu4LbZBZprZfRFIO3blYvEi',
         isVeg: true,
         rating: 4.4,
         prepTime: '15 min',
@@ -71,7 +72,7 @@ const MOCK_FOOD_ITEMS: TrainFood[] = [
         name: 'Chicken Fried Rice',
         restaurant: 'Wok Express',
         price: 189,
-        image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBg1Hac2hi31tHaIUsrco1AUdt9EwRhBjTeJ3P0Wh5_6TYMKDCzlx8UHu4liDZJoxSLtlN9yUJMirrP59RBel6fq_yvagtQ2XsWO7CQuEnAgYLYtyYWl46XdXVo-pDxv1HDLsghJ-asBzkhLggH7_cKYmWOkbEeeuj1jHPnpBxb0EwkPM_gDt3d6abw5g5zkPkHHLjcwt4zcH12yKVWS9vGeZqAQes3BSZwlMiZJiq9rYZYvnMQFd_eUcWTbc2KvdcRF7B1Xu9gUcUq',
         isVeg: false,
         rating: 4.2,
         prepTime: '18 min',
