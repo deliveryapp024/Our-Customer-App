@@ -37,8 +37,8 @@ export const SCREENS = {
     // Errors
     PAYMENT_FAILED: 'PaymentFailed', GENERIC_ERROR: 'GenericError',
     LOCATION_UNSERVICEABLE: 'LocationUnserviceable', RESTAURANT_CLOSED: 'RestaurantClosed',
-    // Tabs
-    HOME_TAB: 'HomeTab', ORDERS_TAB: 'OrdersTab', SEARCH_TAB: 'SearchTab', PROFILE_TAB: 'ProfileTab',
+    // Tabs - 5 Bottom Navigation: Home, Food, Reorder, Deals, Profile
+    HOME_TAB: 'HomeTab', FOOD_TAB: 'FoodTab', REORDER_TAB: 'ReorderTab', DEALS_TAB: 'DealsTab', PROFILE_TAB: 'ProfileTab',
 } as const;
 
 export const STACKS = { AUTH: 'AuthStack', MAIN: 'MainStack', HOME: 'HomeStack' } as const;

@@ -41,15 +41,21 @@ export const DietaryPreferencesScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     const handleContinue = () => {
-        // Update user preferences if any selected (optional)
-        if (selected.length > 0 && user) {
-            setUser({
-                ...user,
-                dietaryPreferences: selected,
-            });
+        try {
+            // Update user preferences if any selected (optional)
+            if (selected.length > 0 && user) {
+                setUser({
+                    ...user,
+                    dietaryPreferences: selected,
+                });
+            }
+            // Always proceed - no mandatory fields
+            navigation.navigate(SCREENS.LOCATION_PICKER);
+        } catch (error) {
+            console.error('Dietary preferences error:', error);
+            // Proceed anyway for smooth flow
+            navigation.navigate(SCREENS.LOCATION_PICKER);
         }
-        // Always proceed - no mandatory fields
-        navigation.navigate(SCREENS.LOCATION_PICKER);
     };
 
     return (

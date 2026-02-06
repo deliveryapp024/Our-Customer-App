@@ -2,17 +2,18 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { SCREENS } from '../constants';
-import { HomeScreen, SearchScreen } from '../features/home';
+import { HomeScreen, FlashDealsScreen, QuickReorderScreen } from '../features/home';
 import { ProfileScreen } from '../features/profile';
+import { RestaurantDetailScreen } from '../features/restaurant';
 
 const Tab = createBottomTabNavigator();
 
-// Placeholder Orders screen
-const OrdersScreen = () => (
+// Food Tab Screen - Restaurant Discovery
+const FoodScreen = () => (
     <View style={styles.placeholder}>
-        <Text style={styles.placeholderEmoji}>📋</Text>
-        <Text style={styles.placeholderText}>Orders</Text>
-        <Text style={styles.placeholderSubtext}>Your order history will appear here</Text>
+        <Text style={styles.placeholderEmoji}>🍔</Text>
+        <Text style={styles.placeholderText}>Food</Text>
+        <Text style={styles.placeholderSubtext}>Discover restaurants and cuisines</Text>
     </View>
 );
 
@@ -47,20 +48,29 @@ export const MainTabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name={SCREENS.SEARCH_TAB}
-                component={SearchScreen}
+                name={SCREENS.FOOD_TAB}
+                component={FoodScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="🔍" label="Search" />
+                        <TabIcon focused={focused} icon="🍔" label="Food" />
                     ),
                 }}
             />
             <Tab.Screen
-                name={SCREENS.ORDERS_TAB}
-                component={OrdersScreen}
+                name={SCREENS.REORDER_TAB}
+                component={QuickReorderScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="📋" label="Orders" />
+                        <TabIcon focused={focused} icon="🔄" label="Reorder" />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name={SCREENS.DEALS_TAB}
+                component={FlashDealsScreen}
+                options={{
+                    tabBarIcon: ({ focused }) => (
+                        <TabIcon focused={focused} icon="🎁" label="Deals" />
                     ),
                 }}
             />

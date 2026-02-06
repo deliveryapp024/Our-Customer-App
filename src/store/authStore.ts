@@ -29,8 +29,6 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
     login: async (phone: string, _otp: string) => {
         try {
-            set({ isLoading: true });
-
             // TODO: Replace with actual API call
             // Simulating API response
             const mockUser: User = {
@@ -48,13 +46,11 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
                 user: mockUser,
                 token: mockToken,
                 isAuthenticated: true,
-                isLoading: false,
             });
 
             return true;
         } catch (error) {
             console.error('Login error:', error);
-            set({ isLoading: false });
             return false;
         }
     },

@@ -9,7 +9,7 @@ import {
     ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SCREENS } from '../../../constants';
+import { SCREENS, STACKS } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../../constants';
@@ -41,15 +41,26 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     const handleContinue = async () => {
-        // Mark onboarding as complete
-        await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
-        setOnboardingComplete(true);
+        try {
+            // Mark onboarding as complete
+            await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
+            setOnboardingComplete(true);
 
-        // Navigate to main app - reset navigation stack
-        navigation.reset({
-            index: 0,
-            routes: [{ name: SCREENS.HOME }],
-        });
+            // Navigate to main app - reset navigation stack
+            navigation.reset({
+                index: 0,
+                routes: [{ name: STACKS.MAIN }],
+            });
+        } catch (error) {
+            console.error('Location picker error:', error);
+            // Try alternative navigation
+            try {
+                setOnboardingComplete(true);
+                navigation.navigate(STACKS.MAIN);
+            } catch (e) {
+                console.error('Navigation failed:', e);
+            }
+        }
     };
 
     return (

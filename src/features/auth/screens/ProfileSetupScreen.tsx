@@ -23,16 +23,22 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     const user = useAuthStore((state) => state.user);
 
     const handleContinue = () => {
-        // Update user data if provided (optional)
-        if (name || email) {
-            setUser({
-                ...user!,
-                name: name || undefined,
-                email: email || undefined,
-            });
+        try {
+            // Update user data if provided (optional)
+            if (name || email) {
+                setUser({
+                    ...user!,
+                    name: name || undefined,
+                    email: email || undefined,
+                });
+            }
+            // Always proceed - no mandatory fields
+            navigation.navigate(SCREENS.DIETARY_PREFERENCES);
+        } catch (error) {
+            console.error('Profile setup error:', error);
+            // Proceed anyway for smooth flow
+            navigation.navigate(SCREENS.DIETARY_PREFERENCES);
         }
-        // Always proceed - no mandatory fields
-        navigation.navigate(SCREENS.DIETARY_PREFERENCES);
     };
 
     return (

@@ -126,7 +126,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.locationContainer}>
+                <TouchableOpacity 
+                    style={styles.locationContainer}
+                    onPress={() => navigation.navigate(SCREENS.LOCATION_PICKER)}>
                     <Text style={styles.locationIcon}>📍</Text>
                     <View>
                         <Text style={styles.locationLabel}>{location}</Text>
@@ -134,7 +136,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                     <Text style={styles.dropdownIcon}>▼</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.profileButton}>
+                <TouchableOpacity 
+                    style={styles.profileButton}
+                    onPress={() => navigation.navigate(SCREENS.PROFILE)}>
                     <Text style={styles.profileIcon}>👤</Text>
                 </TouchableOpacity>
             </View>
@@ -181,7 +185,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                             style={[
                                 styles.quickActionButton,
                                 { backgroundColor: action.id === '1' ? '#00E5FF' : '#2A2A2A' },
-                            ]}>
+                            ]}
+                            onPress={() => {
+                                if (action.id === '1') navigation.navigate(SCREENS.BOLT_DELIVERY);
+                                if (action.id === '2') navigation.navigate(SCREENS.NINETY_NINE_STORE);
+                                if (action.id === '3') navigation.navigate(SCREENS.FLASH_DEALS);
+                                if (action.id === '4') navigation.navigate(SCREENS.DINE_IN);
+                            }}>
                             <Text style={styles.quickActionIcon}>{action.icon}</Text>
                             <Text
                                 style={[
