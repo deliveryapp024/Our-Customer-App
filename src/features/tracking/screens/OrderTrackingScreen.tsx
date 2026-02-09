@@ -8,10 +8,12 @@ import {
     StatusBar,
     StyleSheet,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
+import { ordersApi, Order } from '../../../api';
 
 const { width } = Dimensions.get('window');
 
@@ -29,18 +31,161 @@ interface TrackingStep {
     isActive: boolean;
 }
 
-const initialSteps: TrackingStep[] = [
-    { id: '1', title: 'Order Placed', subtitle: 'Your order has been received', time: '12:30 PM', isCompleted: true, isActive: false },
-    { id: '2', title: 'Order Confirmed', subtitle: 'Restaurant accepted your order', time: '12:32 PM', isCompleted: true, isActive: false },
-    { id: '3', title: 'Being Prepared', subtitle: 'Chef is cooking your food', time: '12:45 PM', isCompleted: true, isActive: false },
-    { id: '4', title: 'Out for Delivery', subtitle: 'Driver is on the way', time: '1:00 PM', isCompleted: false, isActive: true },
+const getInitialSteps = (): TrackingStep[] => [
+    { id: '1', title: 'Order Placed', subtitle: 'Your order has been received', time: '', isCompleted: false, isActive: true },
+    { id: '2', title: 'Order Confirmed', subtitle: 'Restaurant accepted your order', time: '', isCompleted: false, isActive: false },
+    { id: '3', title: 'Being Prepared', subtitle: 'Chef is cooking your food', time: '', isCompleted: false, isActive: false },
+    { id: '4', title: 'Out for Delivery', subtitle: 'Driver is on the way', time: '', isCompleted: false, isActive: false },
     { id: '5', title: 'Delivered', subtitle: 'Enjoy your meal!', time: '', isCompleted: false, isActive: false },
 ];
 
 export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
-    const orderId = route.params?.orderId || '#8821';
-    const [steps] = useState<TrackingStep[]>(initialSteps);
+    const orderId = route.params?.orderId;
+    const [steps, setSteps] = useState<TrackingStep[]>(getInitialSteps());
     const [eta, setEta] = useState(8);
+    const [order, setOrder] = useState<Order | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isPolling, setIsPolling] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+    // Polling configuration
+    const POLLING_CONFIG = {
+        initialInterval: 5000,    // 5 seconds
+        maxInterval: 30000,       // 30 seconds max
+        backoffMultiplier: 1.5,   // Increase by 50% each time
+        terminalStates: ['delivered', 'cancelled', 'seller_rejected'],
+    };
+
+    // Fetch order details
+    const fetchOrderDetails = async (isBackgroundPoll = false) => {
+        if (!orderId) return;
+        
+        // Extract order ID from orderNumber format (#XXXX)
+        const id = orderId.startsWith('#') ? orderId.slice(1) : orderId;
+        
+        if (!isBackgroundPoll) {
+            setLoading(true);
+        }
+        setError(null);
+        
+        const result = await ordersApi.getOrderById(id);
+        
+        if (result.success) {
+            setOrder(result.data);
+            updateTrackingSteps(result.data.status);
+            setLastUpdated(new Date());
+        } else {
+            setError(result.error || 'Failed to load order');
+            if (!isBackgroundPoll) {
+                setOrder(null);
+            }
+        }
+        
+        if (!isBackgroundPoll) {
+            setLoading(false);
+        }
+        
+        return result.success ? result.data : null;
+    };
+
+    // Initial fetch
+    useEffect(() => {
+        fetchOrderDetails();
+    }, [orderId]);
+
+    // Polling with backoff
+    useEffect(() => {
+        if (!orderId || !order) return;
+
+        let pollInterval = POLLING_CONFIG.initialInterval;
+        let pollTimer: NodeJS.Timeout | null = null;
+        let isActive = true;
+
+        const poll = async () => {
+            if (!isActive) return;
+
+            // Stop polling if order reached terminal state
+            if (order && POLLING_CONFIG.terminalStates.includes(order.status)) {
+                console.log('[OrderTracking] Polling stopped - terminal state:', order.status);
+                setIsPolling(false);
+                return;
+            }
+
+            setIsPolling(true);
+            const updatedOrder = await fetchOrderDetails(true);
+
+            if (updatedOrder && isActive) {
+                // Check if status changed
+                if (updatedOrder.status !== order.status) {
+                    console.log('[OrderTracking] Status changed:', order.status, '->', updatedOrder.status);
+                    // Reset interval on status change for quicker updates
+                    pollInterval = POLLING_CONFIG.initialInterval;
+                } else {
+                    // Increase interval with backoff (capped at max)
+                    pollInterval = Math.min(
+                        pollInterval * POLLING_CONFIG.backoffMultiplier,
+                        POLLING_CONFIG.maxInterval
+                    );
+                }
+
+                // Schedule next poll
+                pollTimer = setTimeout(poll, pollInterval);
+            }
+        };
+
+        // Start polling after initial delay
+        pollTimer = setTimeout(poll, POLLING_CONFIG.initialInterval);
+
+        return () => {
+            isActive = false;
+            if (pollTimer) {
+                clearTimeout(pollTimer);
+            }
+        };
+    }, [orderId, order?.status]);
+
+    // Handle app background/foreground (simplified - full implementation needs AppState)
+    useEffect(() => {
+        // In a real app, you'd use AppState to pause/resume polling
+        // when app goes to background/foreground
+        console.log('[OrderTracking] Polling active:', isPolling);
+    }, [isPolling]);
+
+    // Update tracking steps based on order status
+    const updateTrackingSteps = (status: string) => {
+        const updatedSteps = initialSteps.map((step, index) => {
+            const stepStatus = getStepStatus(step.title);
+            const statusOrder = ['pending_seller_approval', 'available', 'confirmed', 'arriving', 'delivered'];
+            const currentIndex = statusOrder.indexOf(status);
+            const stepIndex = statusOrder.indexOf(stepStatus);
+
+            return {
+                ...step,
+                isCompleted: stepIndex <= currentIndex && stepIndex !== -1,
+                isActive: stepStatus === status,
+            };
+        });
+        setSteps(updatedSteps);
+    };
+
+    // Map step title to API status
+    const getStepStatus = (title: string): string => {
+        switch (title) {
+            case 'Order Placed':
+                return 'pending_seller_approval';
+            case 'Order Confirmed':
+                return 'confirmed';
+            case 'Being Prepared':
+                return 'confirmed';
+            case 'Out for Delivery':
+                return 'arriving';
+            case 'Delivered':
+                return 'delivered';
+            default:
+                return '';
+        }
+    };
 
     useEffect(() => {
         // Simulate countdown
@@ -53,6 +198,36 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
     const handleRateOrder = () => {
         navigation.navigate(SCREENS.RATE_REVIEW, { orderId });
     };
+
+    // Show loading state
+    if (loading) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <StatusBar barStyle="light-content" backgroundColor="#000000" />
+                <ActivityIndicator size="large" color="#00E5FF" />
+                <Text style={styles.loadingText}>Loading order details...</Text>
+            </View>
+        );
+    }
+
+    // Show error/empty state if no order
+    if (!order && !loading) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <StatusBar barStyle="light-content" backgroundColor="#000000" />
+                <Text style={styles.emptyIcon}>📦</Text>
+                <Text style={styles.emptyTitle}>Order Not Found</Text>
+                <Text style={styles.emptyText}>
+                    {error || 'We couldn\'t find this order.\nIt may have been removed or expired.'}
+                </Text>
+                <TouchableOpacity 
+                    style={styles.backToOrdersButton}
+                    onPress={() => navigation.navigate(SCREENS.ORDER_HISTORY)}>
+                    <Text style={styles.backToOrdersText}>View Order History</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -69,6 +244,28 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                 <TouchableOpacity style={styles.sosButton}>
                     <Text style={styles.sosText}>SOS</Text>
                 </TouchableOpacity>
+            </View>
+
+            {/* Error Message */}
+            {error && __DEV__ && (
+                <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>Debug: {error}</Text>
+                </View>
+            )}
+
+            {/* Polling Status Indicator */}
+            <View style={styles.pollingContainer}>
+                {isPolling && (
+                    <View style={styles.pollingIndicator}>
+                        <View style={styles.pollingDot} />
+                        <Text style={styles.pollingText}>Live updates</Text>
+                    </View>
+                )}
+                {lastUpdated && (
+                    <Text style={styles.lastUpdatedText}>
+                        Updated {lastUpdated.toLocaleTimeString()}
+                    </Text>
+                )}
             </View>
 
             {/* Map Placeholder */}
@@ -166,6 +363,83 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
+    },
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#9E9E9E',
+    },
+    errorBanner: {
+        backgroundColor: '#FF525220',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginHorizontal: 16,
+        marginBottom: 8,
+        borderRadius: 8,
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#FF5252',
+    },
+    pollingContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#1A1A1A',
+    },
+    pollingIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    pollingDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#00C853',
+        marginRight: 6,
+    },
+    pollingText: {
+        fontSize: 12,
+        color: '#00C853',
+    },
+    lastUpdatedText: {
+        fontSize: 11,
+        color: '#6B6B6B',
+    },
+    emptyIcon: {
+        fontSize: 64,
+        marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        textAlign: 'center',
+        marginBottom: 24,
+        paddingHorizontal: 32,
+        lineHeight: 20,
+    },
+    backToOrdersButton: {
+        backgroundColor: '#00E5FF',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
+    backToOrdersText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#000000',
     },
     header: {
         flexDirection: 'row',

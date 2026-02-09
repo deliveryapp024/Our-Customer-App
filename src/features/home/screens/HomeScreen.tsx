@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,9 +10,11 @@ import {
     StyleSheet,
     Dimensions,
     FlatList,
+    ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS } from '../../../constants';
+import { homeApi, HomeResponse } from '../../../api';
 
 const { width } = Dimensions.get('window');
 
@@ -85,6 +87,37 @@ const restaurants = [
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const [location] = useState('Camp, Belagavi');
+    const [homeData, setHomeData] = useState<HomeResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch home data from API
+    useEffect(() => {
+        const loadHomeData = async () => {
+            setLoading(true);
+            setError(null);
+            const result = await homeApi.fetchHome();
+            if (result.success) {
+                setHomeData(result.data);
+            } else {
+                setError(result.error || 'Failed to load home data');
+                // Keep mock data as fallback (already defined below)
+            }
+            setLoading(false);
+        };
+
+        loadHomeData();
+    }, []);
+
+    // Get categories from API or fallback to mock
+    const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map(tile => ({
+        id: tile.id,
+        name: tile.name,
+        icon: tile.icon,
+    })) || categories;
+
+    // Get banner items from API or empty
+    const bannerItems = homeData?.sections?.find(s => s.type === 'banner_carousel')?.data?.items || [];
 
     const renderRestaurantCard = ({ item }: { item: typeof restaurants[0] }) => (
         <TouchableOpacity
@@ -226,16 +259,29 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Explore by Category</Text>
                 </View>
 
-                <View style={styles.categoriesContainer}>
-                    {categories.map((category) => (
-                        <TouchableOpacity key={category.id} style={styles.categoryItem}>
-                            <View style={styles.categoryIcon}>
-                                <Text style={styles.categoryEmoji}>{category.icon}</Text>
-                            </View>
-                            <Text style={styles.categoryName}>{category.name}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#00E5FF" />
+                    </View>
+                ) : (
+                    <View style={styles.categoriesContainer}>
+                        {displayCategories.map((category) => (
+                            <TouchableOpacity key={category.id} style={styles.categoryItem}>
+                                <View style={styles.categoryIcon}>
+                                    <Text style={styles.categoryEmoji}>{category.icon}</Text>
+                                </View>
+                                <Text style={styles.categoryName}>{category.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+
+                {/* Error message if API fails */}
+                {error && __DEV__ && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>Debug: {error}</Text>
+                    </View>
+                )}
 
                 {/* Bottom Spacing */}
                 <View style={styles.bottomSpacing} />
@@ -501,6 +547,18 @@ const styles = StyleSheet.create({
     },
     bottomSpacing: {
         height: 100,
+    },
+    loadingContainer: {
+        paddingVertical: 20,
+        alignItems: 'center',
+    },
+    errorContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#FF5252',
     },
 });
 

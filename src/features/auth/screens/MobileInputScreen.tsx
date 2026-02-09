@@ -8,9 +8,12 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS } from '../../../constants';
+import { useAuthStore } from '../../../store/authStore';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -19,10 +22,43 @@ type Props = {
 export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
     const [countryCode] = useState('+91');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const requestOTP = useAuthStore((state) => state.requestOTP);
 
-    const handleContinue = () => {
-        // No validation required - just go to next screen
-        navigation.navigate(SCREENS.OTP_VERIFICATION, { phone: countryCode + phoneNumber });
+    const validatePhoneNumber = (phone: string): boolean => {
+        // Indian mobile number validation: 10 digits starting with 6-9
+        const phoneRegex = /^[6-9]\d{9}$/;
+        return phoneRegex.test(phone);
+    };
+
+    const handleContinue = async () => {
+        const phone = countryCode + phoneNumber;
+
+        // Validate phone number
+        if (!validatePhoneNumber(phoneNumber)) {
+            Alert.alert('Invalid Number', 'Please enter a valid 10-digit mobile number');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const result = await requestOTP(phone);
+
+            if (result.success) {
+                // Navigate to OTP verification screen
+                navigation.navigate(SCREENS.OTP_VERIFICATION, {
+                    phone,
+                    devOtp: result.devOtp, // Pass dev OTP for testing if available
+                });
+            } else {
+                Alert.alert('Error', result.error || 'Failed to send OTP. Please try again.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -34,7 +70,8 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
             {/* Back Button */}
             <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}>
+                onPress={() => navigation.goBack()}
+                disabled={isLoading}>
                 <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
 
@@ -47,7 +84,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Phone Input */}
                 <View style={styles.inputContainer}>
-                    <TouchableOpacity style={styles.countryCode}>
+                    <TouchableOpacity style={styles.countryCode} disabled={isLoading}>
                         <Text style={styles.countryCodeText}>{countryCode}</Text>
                         <Text style={styles.dropdownIcon}>▼</Text>
                     </TouchableOpacity>
@@ -60,6 +97,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                         value={phoneNumber}
                         onChangeText={setPhoneNumber}
                         maxLength={10}
+                        editable={!isLoading}
                     />
                 </View>
             </View>
@@ -73,11 +111,18 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                 </Text>
 
                 <TouchableOpacity
-                    style={styles.continueButton}
+                    style={[styles.continueButton, isLoading && styles.continueButtonDisabled]}
                     onPress={handleContinue}
-                    activeOpacity={0.8}>
-                    <Text style={styles.continueButtonText}>Continue</Text>
-                    <Text style={styles.arrowIcon}>→</Text>
+                    activeOpacity={0.8}
+                    disabled={isLoading}>
+                    {isLoading ? (
+                        <ActivityIndicator color="#000000" />
+                    ) : (
+                        <>
+                            <Text style={styles.continueButtonText}>Continue</Text>
+                            <Text style={styles.arrowIcon}>→</Text>
+                        </>
+                    )}
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
@@ -176,6 +221,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    continueButtonDisabled: {
+        opacity: 0.6,
     },
     continueButtonText: {
         fontSize: 16,

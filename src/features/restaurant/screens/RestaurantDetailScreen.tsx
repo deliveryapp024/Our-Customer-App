@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,9 +8,11 @@ import {
     StatusBar,
     StyleSheet,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { restaurantsApi, Restaurant, MenuItem } from '../../../api';
 
 const { width } = Dimensions.get('window');
 
@@ -21,7 +23,8 @@ type Props = {
 
 const menuCategories = ['Recommended', 'Combos', 'Main Course', 'Starters', 'Desserts'];
 
-const menuItems = [
+// Mock menu items for fallback
+const mockMenuItems: MenuItem[] = [
     {
         id: '1',
         name: 'Truffle Mushroom Risotto',
@@ -65,19 +68,59 @@ const menuItems = [
     },
 ];
 
-
 const offers = [
     { id: '1', text: 'Flat 20% OFF above ₹500', code: 'SAVE20' },
     { id: '2', text: 'Free Delivery on first order', code: 'FREEDEL' },
 ];
 
 export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) => {
-    const restaurant = route.params?.restaurant || {
-        name: 'The Gourmet Kitchen',
-        rating: 4.8,
-        cuisines: ['Continental', 'Italian'],
-        deliveryTime: '20-30 mins',
-        priceLevel: '$$',
+    // Get restaurant from navigation params or use default
+    const navRestaurant = route.params?.restaurant;
+    const restaurantId = route.params?.restaurantId || navRestaurant?._id || navRestaurant?.id;
+
+    const [restaurant, setRestaurant] = useState<Partial<Restaurant>>(navRestaurant || {});
+    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+    const [menuCategories, setMenuCategories] = useState<string[]>([]);
+    const [apiFailed, setApiFailed] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch restaurant details and menu if restaurantId is provided
+    useEffect(() => {
+        if (restaurantId) {
+            fetchRestaurantData(restaurantId);
+        }
+    }, [restaurantId]);
+
+    const fetchRestaurantData = async (id: string) => {
+        setLoading(true);
+        setError(null);
+
+        // Fetch restaurant details
+        const restaurantResult = await restaurantsApi.fetchRestaurantDetails(id);
+        if (restaurantResult.success) {
+            setRestaurant(prev => ({ ...prev, ...restaurantResult.data }));
+        } else if (__DEV__) {
+            setError(`Failed to load restaurant: ${restaurantResult.error}`);
+        }
+
+        // Fetch menu
+        const menuResult = await restaurantsApi.fetchRestaurantMenu(id);
+        if (menuResult.success) {
+            setMenuItems(menuResult.data.items || []);
+            setMenuCategories(menuResult.data.categories || ['Recommended']);
+            setApiFailed(false);
+        } else {
+            console.log('Menu fetch failed:', menuResult.error);
+            setApiFailed(true);
+            // Only use mock data in dev mode when API fails
+            if (__DEV__) {
+                setMenuItems(mockMenuItems);
+                setMenuCategories(['Recommended', 'Combos', 'Main Course', 'Starters', 'Desserts']);
+            }
+        }
+
+        setLoading(false);
     };
 
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
@@ -109,6 +152,16 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const filteredItems = menuItems.filter(
         (item) => selectedCategory === 'Recommended' || item.category === selectedCategory,
     );
+
+    // Show loading state while fetching
+    if (loading && !navRestaurant) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <ActivityIndicator size="large" color="#00E5FF" />
+                <Text style={styles.loadingText}>Loading restaurant...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -198,6 +251,34 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     ))}
                 </ScrollView>
 
+                {/* Menu Loading State */}
+                {loading && (
+                    <View style={styles.menuLoadingContainer}>
+                        <ActivityIndicator size="large" color="#00E5FF" />
+                        <Text style={styles.menuLoadingText}>Loading menu...</Text>
+                    </View>
+                )}
+
+                {/* Menu Empty State */}
+                {!loading && menuItems.length === 0 && !apiFailed && (
+                    <View style={styles.menuEmptyContainer}>
+                        <Text style={styles.menuEmptyIcon}>🍽️</Text>
+                        <Text style={styles.menuEmptyTitle}>No Menu Available</Text>
+                        <Text style={styles.menuEmptyText}>
+                            This restaurant hasn't added any items yet.
+                        </Text>
+                    </View>
+                )}
+
+                {/* Dev Mode Mock Data Notice */}
+                {!loading && apiFailed && __DEV__ && (
+                    <View style={styles.devNoticeContainer}>
+                        <Text style={styles.devNoticeText}>
+                            ⚠️ API failed - showing mock data for development
+                        </Text>
+                    </View>
+                )}
+
                 {/* Menu Items */}
                 <View style={styles.menuContainer}>
                     {filteredItems.map((item) => (
@@ -285,6 +366,57 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
+    },
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#9E9E9E',
+    },
+    menuLoadingContainer: {
+        paddingVertical: 40,
+        alignItems: 'center',
+    },
+    menuLoadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#9E9E9E',
+    },
+    menuEmptyContainer: {
+        paddingVertical: 60,
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    menuEmptyIcon: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    menuEmptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 8,
+    },
+    menuEmptyText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        textAlign: 'center',
+    },
+    devNoticeContainer: {
+        backgroundColor: '#FFB30020',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 8,
+    },
+    devNoticeText: {
+        fontSize: 12,
+        color: '#FFB300',
+        textAlign: 'center',
     },
     headerImage: {
         height: 200,

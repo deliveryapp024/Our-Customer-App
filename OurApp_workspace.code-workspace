@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Delivery-App-Server"
+		},
+		{
+			"path": "../Delivery-App-Delivery"
+		},
+		{
+			"path": "../Seller-App"
+		}
+	]
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,44 +7,89 @@ import {
     Image,
     StatusBar,
     StyleSheet,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
 import { useCartStore } from '../../../store/cartStore';
+import { ordersApi, Order } from '../../../api';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
+    route: RouteProp<any>;
 };
 
 const paymentMethods = [
-    { id: 'wallet', name: 'App Wallet', icon: '💼', balance: '$24.50' },
-    { id: 'gpay', name: 'Google Pay', icon: '🔵', description: 'UPI' },
-    { id: 'card', name: '•••• 4242', icon: '💳', description: 'Visa' },
+    { id: 'cod', name: 'Cash on Delivery', icon: '💵', description: 'Pay when you receive' },
+    { id: 'wallet', name: 'App Wallet', icon: '💼', balance: '$24.50', disabled: true },
+    { id: 'gpay', name: 'Google Pay', icon: '🔵', description: 'UPI (Coming Soon)', disabled: true },
+    { id: 'card', name: '•••• 4242', icon: '💳', description: 'Visa (Coming Soon)', disabled: true },
 ];
 
-export const CheckoutScreen: React.FC<Props> = ({ navigation }) => {
+export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
     const { items, restaurantName, getTotal, getItemCount, clearCart } = useCartStore();
-    const [selectedPayment, setSelectedPayment] = useState('wallet');
+    const [selectedPayment, setSelectedPayment] = useState('cod'); // COD for Phase 0
     const [isProcessing, setIsProcessing] = useState(false);
+    const [orderError, setOrderError] = useState<string | null>(null);
+
+    // Get branch info from navigation params or cart
+    const branchId = route.params?.branchId;
+    const deliveryLocation = route.params?.deliveryLocation;
 
     const subtotal = getTotal();
     const deliveryFee = 2.99;
     const discount = 5.00;
     const total = subtotal + deliveryFee - discount;
 
-    const handlePlaceOrder = async () => {
-        setIsProcessing(true);
+    // Generate idempotency key for this checkout session
+    const [idempotencyKey] = useState(() => `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
-        // Simulate order processing
-        setTimeout(() => {
-            setIsProcessing(false);
+    const handlePlaceOrder = async () => {
+        if (!branchId) {
+            Alert.alert('Error', 'Restaurant information is missing');
+            return;
+        }
+
+        if (items.length === 0) {
+            Alert.alert('Error', 'Your cart is empty');
+            return;
+        }
+
+        setIsProcessing(true);
+        setOrderError(null);
+
+        // Prepare order items
+        const orderItems = items.map(item => ({
+            id: item.menuItem.id,
+            item: item.menuItem.name,
+            count: item.quantity,
+        }));
+
+        // Create order with idempotency key (prevents duplicates on retry)
+        const result = await ordersApi.createOrder({
+            items: orderItems,
+            branch: branchId,
+            totalPrice: total,
+            deliveryLocation,
+            idempotencyKey, // Same key on retry = same order result
+        });
+
+        setIsProcessing(false);
+
+        if (result.success) {
+            const order = result.data;
             clearCart();
             navigation.navigate(SCREENS.ORDER_SUCCESS, {
-                orderId: 'ORD' + Date.now(),
+                orderId: order._id,
                 total: total.toFixed(2),
                 restaurantName,
             });
-        }, 2000);
+        } else {
+            setOrderError(result.error || 'Failed to place order');
+            Alert.alert('Order Failed', result.error || 'Failed to place order. Please try again.');
+        }
     };
 
     return (
@@ -138,8 +183,10 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation }) => {
                             style={[
                                 styles.paymentOption,
                                 selectedPayment === method.id && styles.paymentOptionSelected,
+                                method.disabled && styles.paymentOptionDisabled,
                             ]}
-                            onPress={() => setSelectedPayment(method.id)}>
+                            onPress={() => !method.disabled && setSelectedPayment(method.id)}
+                            disabled={method.disabled}>
                             <Text style={styles.paymentIcon}>{method.icon}</Text>
                             <View style={styles.paymentInfo}>
                                 <Text style={styles.paymentName}>{method.name}</Text>
@@ -357,6 +404,9 @@ const styles = StyleSheet.create({
     },
     paymentOptionSelected: {
         borderColor: '#00E5FF',
+    },
+    paymentOptionDisabled: {
+        opacity: 0.5,
     },
     paymentIcon: {
         fontSize: 24,

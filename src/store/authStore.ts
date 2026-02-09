@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants';
+import { authApi, setAuthToken } from '../api';
 import type { User, AuthState } from '../types';
 
 interface AuthActions {
@@ -8,12 +9,13 @@ interface AuthActions {
     setToken: (token: string | null) => void;
     setLoading: (isLoading: boolean) => void;
     setOnboardingComplete: (complete: boolean) => void;
-    login: (phone: string, otp: string) => Promise<boolean>;
+    requestOTP: (phone: string) => Promise<{ success: boolean; error?: string; devOtp?: string }>;
+    verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
     loadStoredAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
+export const useAuthStore = create<AuthState & AuthActions>((set) => ({
     // Initial state
     isAuthenticated: false,
     user: null,
@@ -27,31 +29,81 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     setLoading: (isLoading) => set({ isLoading }),
     setOnboardingComplete: (complete) => set({ onboardingComplete: complete }),
 
-    login: async (phone: string, _otp: string) => {
+    requestOTP: async (phone: string) => {
         try {
-            // TODO: Replace with actual API call
-            // Simulating API response
-            const mockUser: User = {
-                id: '1',
-                phone,
-                createdAt: new Date().toISOString(),
+            const response = await authApi.requestOTP(phone);
+            if (response.success) {
+                return {
+                    success: true,
+                    devOtp: response.data.otp, // Only present in dev mode
+                };
+            }
+            return {
+                success: false,
+                error: response.error,
             };
-            const mockToken = 'mock_token_' + Date.now();
-
-            // Store in AsyncStorage
-            await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, mockToken);
-            await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockUser));
-
-            set({
-                user: mockUser,
-                token: mockToken,
-                isAuthenticated: true,
-            });
-
-            return true;
         } catch (error) {
-            console.error('Login error:', error);
-            return false;
+            const message = error instanceof Error ? error.message : 'Failed to request OTP';
+            return {
+                success: false,
+                error: message,
+            };
+        }
+    },
+
+    verifyOTP: async (phone: string, otp: string) => {
+        try {
+            const response = await authApi.verifyOTP(phone, otp);
+            if (response.success) {
+                const { token, user } = response.data;
+
+                // Handle token object {accessToken, refreshToken} or string (backward compat)
+                let accessToken: string;
+                let refreshToken: string | null = null;
+
+                if (typeof token === 'string') {
+                    // Backward compatibility: old server format
+                    accessToken = token;
+                } else {
+                    // New format: token object with accessToken and refreshToken
+                    accessToken = token.accessToken;
+                    refreshToken = token.refreshToken;
+                }
+
+                // Store tokens in AsyncStorage
+                await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, accessToken);
+                if (refreshToken) {
+                    await AsyncStorage.setItem('@refresh_token', refreshToken);
+                }
+                await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+
+                // Set token in API client for future requests (Authorization: Bearer <token>)
+                setAuthToken(accessToken);
+
+                set({
+                    user: {
+                        id: user._id,
+                        phone: String(user.phone),
+                        name: user.name,
+                        email: user.email,
+                        createdAt: user.createdAt,
+                    },
+                    token: accessToken,
+                    isAuthenticated: true,
+                });
+
+                return { success: true };
+            }
+            return {
+                success: false,
+                error: response.error,
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to verify OTP';
+            return {
+                success: false,
+                error: message,
+            };
         }
     },
 
@@ -62,6 +114,10 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
                 STORAGE_KEYS.USER_DATA,
                 STORAGE_KEYS.ONBOARDING_COMPLETE,
             ]);
+
+            // Clear auth token from API client
+            setAuthToken(null);
+
             set({
                 user: null,
                 token: null,
@@ -82,9 +138,14 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
             ]);
 
             if (token[1] && userData[1]) {
+                const user = JSON.parse(userData[1]);
+
+                // Set token in API client for future requests
+                setAuthToken(token[1]);
+
                 set({
                     token: token[1],
-                    user: JSON.parse(userData[1]),
+                    user,
                     isAuthenticated: true,
                     onboardingComplete: onboardingComplete[1] === 'true',
                     isLoading: false,

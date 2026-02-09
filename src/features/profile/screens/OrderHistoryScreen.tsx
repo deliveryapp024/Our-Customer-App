@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,15 +7,18 @@ import {
     Image,
     StatusBar,
     StyleSheet,
+    ActivityIndicator,
+    RefreshControl,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS } from '../../../constants';
+import { ordersApi, Order as ApiOrder } from '../../../api';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
 };
 
-interface Order {
+interface DisplayOrder {
     id: string;
     orderNumber: string;
     restaurantName: string;
@@ -26,41 +29,66 @@ interface Order {
     status: 'delivered' | 'cancelled' | 'in_progress';
 }
 
-const pastOrders: Order[] = [
-    {
-        id: '1',
-        orderNumber: '#8821',
-        restaurantName: 'The Gourmet Kitchen',
-        restaurantImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCh2fIAp9oyd2iKcXdCrUMWQo-idGSY6th2lWcn9JIWULsmhc9WMTTqCmUdFV-PqxqxB9w5UEdfyYF0-jhhPpJz1GJhYuuyTp3snHteh1RUOXUvzOsfLXdiBsMXmrUHqwfmNDqOc6L2jBSJiNSrv844oTPWPbTQDs6snW2cs85oeWC0vTEegACwjG3td5PpsC8Pa07tJPbnHgLKopcnHh7Bcrrm4eLldCAfitrNBxdqO3xzNizP-0HxQEu4LbZBZprZfRFIO3blYvEi',
-        items: 'Truffle Burger, Fries, Shake',
-        total: '$42.50',
-        date: 'Today, 8:30 PM',
-        status: 'delivered',
-    },
-    {
-        id: '2',
-        orderNumber: '#8819',
-        restaurantName: 'Urban Bites',
-        restaurantImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBg1Hac2hi31tHaIUsrco1AUdt9EwRhBjTeJ3P0Wh5_6TYMKDCzlx8UHu4liDZJoxSLtlN9yUJMirrP59RBel6fq_yvagtQ2XsWO7CQuEnAgYLYtyYWl46XdXVo-pDxv1HDLsghJ-asBzkhLggH7_cKYmWOkbEeeuj1jHPnpBxb0EwkPM_gDt3d6abw5g5zkPkHHLjcwt4zcH12yKVWS9vGeZqAQes3BSZwlMiZJiq9rYZYvnMQFd_eUcWTbc2KvdcRF7B1Xu9gUcUq',
-        items: 'Chicken Wings x2, Coke',
-        total: '$28.00',
-        date: 'Yesterday, 1:15 PM',
-        status: 'delivered',
-    },
-    {
-        id: '3',
-        orderNumber: '#8815',
-        restaurantName: 'Cyan Spice',
-        restaurantImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI-c8QszP_pPOf7jrVL7irkdep3O0vXq7fcjUszzjAPHTYBS9_kjmyeo1C8rklt2ijyKoSf8NjFzyODh_PkBjP-EIA4m-EKe2vKa-dD-AxDu9CvyT99y_8pbR_FWCKEeMhU6PHhXMx3E7O2vsHKBYN34Dxps657IB_gJptLzaHnSar11u5njYhUEfV0NPB07XzvYB_P0JCEer0iC38mDX-ilCaGtX6Hjtge7WeB39DbZ2wsUSETZKRYjGETA9eiaPUmRLEIrb4FBUW',
-        items: 'Thai Curry, Rice x2',
-        total: '$35.00',
-        date: '2 days ago',
-        status: 'cancelled',
-    },
-];
-
 export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
-    const handleOrderPress = (order: Order) => {
+    const [orders, setOrders] = useState<DisplayOrder[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch orders from API
+    const fetchOrders = async (isRefresh = false) => {
+        if (!isRefresh) setLoading(true);
+        setError(null);
+
+        const result = await ordersApi.getOrders();
+        
+        if (result.success) {
+            // Transform API orders to display format
+            const apiOrders = result.data.map((order: ApiOrder) => ({
+                id: order._id,
+                orderNumber: `#${order._id.slice(-4)}`,
+                restaurantName: 'Restaurant', // TODO: Get from seller data
+                restaurantImage: '', // TODO: Get from seller data
+                items: `${order.items.length} items`,
+                total: `$${order.totalPrice.toFixed(2)}`,
+                date: new Date(order.createdAt).toLocaleDateString(),
+                status: mapOrderStatus(order.status),
+            }));
+            setOrders(apiOrders);
+        } else {
+            setError(result.error || 'Failed to load orders');
+            setOrders([]); // Empty state on error
+        }
+
+        setLoading(false);
+        setRefreshing(false);
+    };
+
+    // Map API status to display status
+    const mapOrderStatus = (status: string): DisplayOrder['status'] => {
+        switch (status) {
+            case 'delivered':
+                return 'delivered';
+            case 'cancelled':
+                return 'cancelled';
+            case 'confirmed':
+            case 'arriving':
+                return 'in_progress';
+            default:
+                return 'in_progress';
+        }
+    };
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchOrders(true);
+    };
+
+    const handleOrderPress = (order: DisplayOrder) => {
         if (order.status === 'cancelled') {
             navigation.navigate(SCREENS.ORDER_CANCELLED, { orderId: order.orderNumber });
         } else {
@@ -113,7 +141,15 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.placeholder} />
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#00E5FF"
+                    />
+                }>
                 {/* Filter Tabs */}
                 <View style={styles.filterTabs}>
                     <TouchableOpacity style={[styles.filterTab, styles.filterTabActive]}>
@@ -127,8 +163,39 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
+                {/* Loading State */}
+                {loading && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#00E5FF" />
+                    </View>
+                )}
+
+                {/* Error State */}
+                {error && __DEV__ && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>Debug: {error}</Text>
+                    </View>
+                )}
+
+                {/* Empty State */}
+                {!loading && orders.length === 0 && (
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyIcon}>📦</Text>
+                        <Text style={styles.emptyTitle}>No Orders Yet</Text>
+                        <Text style={styles.emptyText}>
+                            You haven't placed any orders yet.{'\n'}
+                            Start exploring restaurants!
+                        </Text>
+                        <TouchableOpacity 
+                            style={styles.browseButton}
+                            onPress={() => navigation.navigate(SCREENS.HOME)}>
+                            <Text style={styles.browseButtonText}>Browse Restaurants</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
                 {/* Orders */}
-                {pastOrders.map((order) => (
+                {orders.map((order) => (
                     <TouchableOpacity
                         key={order.id}
                         style={styles.orderCard}
@@ -315,6 +382,52 @@ const styles = StyleSheet.create({
     },
     bottomSpacing: {
         height: 40,
+    },
+    loadingContainer: {
+        paddingVertical: 40,
+        alignItems: 'center',
+    },
+    errorContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#FF5252',
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+        paddingHorizontal: 32,
+    },
+    emptyIcon: {
+        fontSize: 64,
+        marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 20,
+    },
+    browseButton: {
+        backgroundColor: '#00E5FF',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
+    browseButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#000000',
     },
 });
 

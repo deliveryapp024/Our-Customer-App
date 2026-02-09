@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,8 +8,11 @@ import {
     StatusBar,
     StyleSheet,
     Image,
+    ActivityIndicator,
+    FlatList,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { searchApi, SearchSuggestion } from '../../../api';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -28,9 +31,35 @@ const trendingSearches = [
 export const SearchScreen: React.FC<Props> = ({ navigation }) => {
     const [query, setQuery] = useState('');
     const [recent, setRecent] = useState(recentSearches);
+    const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const clearRecent = () => setRecent([]);
     const removeSearch = (item: string) => setRecent(recent.filter((r) => r !== item));
+
+    // Debounced search
+    useEffect(() => {
+        if (!query.trim() || query.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        const timeoutId = setTimeout(async () => {
+            setLoading(true);
+            setError(null);
+            const result = await searchApi.fetchSearchSuggestions(query.trim());
+            if (result.success) {
+                setSuggestions(result.data.results || []);
+            } else {
+                setError(result.error || 'Search failed');
+                setSuggestions([]);
+            }
+            setLoading(false);
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [query]);
 
     return (
         <View style={styles.container}>
@@ -66,8 +95,41 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Search Suggestions (Live) */}
+                {query.length >= 2 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Suggestions</Text>
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#00E5FF" style={styles.suggestionsLoader} />
+                        ) : suggestions.length > 0 ? (
+                            <View style={styles.suggestionsContainer}>
+                                {suggestions.map((item) => (
+                                    <TouchableOpacity 
+                                        key={`${item.type}-${item._id}`} 
+                                        style={styles.suggestionItem}
+                                        onPress={() => {
+                                            setQuery(item.name);
+                                            // TODO: Navigate to search results
+                                        }}>
+                                        <Text style={styles.suggestionIcon}>
+                                            {item.type === 'product' ? '🍽️' : item.type === 'category' ? '📂' : '🏪'}
+                                        </Text>
+                                        <Text style={styles.suggestionText}>{item.name}</Text>
+                                        <Text style={styles.suggestionType}>{item.type}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        ) : (
+                            <Text style={styles.noResultsText}>No suggestions found</Text>
+                        )}
+                        {error && __DEV__ && (
+                            <Text style={styles.errorText}>Debug: {error}</Text>
+                        )}
+                    </View>
+                )}
+
                 {/* Recent Searches */}
-                {recent.length > 0 && (
+                {recent.length > 0 && query.length < 2 && (
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Recent Searches</Text>
@@ -295,6 +357,46 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#000000',
+    },
+    suggestionsLoader: {
+        marginTop: 12,
+    },
+    suggestionsContainer: {
+        marginTop: 12,
+    },
+    suggestionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: '#1A1A1A',
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    suggestionIcon: {
+        fontSize: 16,
+        marginRight: 12,
+    },
+    suggestionText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#FFFFFF',
+    },
+    suggestionType: {
+        fontSize: 12,
+        color: '#9E9E9E',
+        textTransform: 'capitalize',
+    },
+    noResultsText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        marginTop: 12,
+        fontStyle: 'italic',
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#FF5252',
+        marginTop: 8,
     },
 });
 

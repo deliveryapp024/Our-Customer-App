@@ -6,6 +6,8 @@ import {
     TouchableOpacity,
     StatusBar,
     StyleSheet,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -19,10 +21,14 @@ type Props = {
 
 export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     const phone = route.params?.phone || '+91 XXXXXXXXXX';
+    const devOtp = route.params?.devOtp;
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [timer, setTimer] = useState(45);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isResending, setIsResending] = useState(false);
     const inputRefs = useRef<TextInput[]>([]);
-    const login = useAuthStore((state) => state.login);
+    const verifyOTP = useAuthStore((state) => state.verifyOTP);
+    const requestOTP = useAuthStore((state) => state.requestOTP);
 
     useEffect(() => {
         if (timer > 0) {
@@ -32,6 +38,11 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
     }, [timer]);
 
     const handleOtpChange = (value: string, index: number) => {
+        // Only allow digits
+        if (value && !/^\d*$/.test(value)) {
+            return;
+        }
+
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
@@ -39,6 +50,14 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
         // Auto-focus next input
         if (value && index < 5) {
             inputRefs.current[index + 1]?.focus();
+        }
+
+        // Auto-submit when all digits are filled
+        if (index === 5 && value) {
+            const otpString = [...newOtp.slice(0, 5), value].join('');
+            if (otpString.length === 6) {
+                handleVerify(otpString);
+            }
         }
     };
 
@@ -48,27 +67,54 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
         }
     };
 
-    const handleVerify = async () => {
+    const handleVerify = async (otpString?: string) => {
+        const finalOtp = otpString || otp.join('');
+
+        // Validate OTP length
+        if (finalOtp.length !== 6) {
+            Alert.alert('Invalid OTP', 'Please enter the 6-digit verification code');
+            return;
+        }
+
+        setIsLoading(true);
+
         try {
-            // No validation - just proceed to next screen
-            const otpString = otp.join('');
-            const success = await login(phone, otpString);
-            if (success) {
+            const result = await verifyOTP(phone, finalOtp);
+
+            if (result.success) {
                 navigation.navigate(SCREENS.PROFILE_SETUP);
             } else {
-                // Even if login fails, proceed for demo
-                navigation.navigate(SCREENS.PROFILE_SETUP);
+                Alert.alert('Verification Failed', result.error || 'Invalid OTP. Please try again.');
+                // Clear OTP inputs on failure
+                setOtp(['', '', '', '', '', '']);
+                inputRefs.current[0]?.focus();
             }
         } catch (error) {
-            console.error('Verify error:', error);
-            // Proceed anyway for smooth flow
-            navigation.navigate(SCREENS.PROFILE_SETUP);
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleResend = () => {
-        setTimer(45);
-        setOtp(['', '', '', '', '', '']);
+    const handleResend = async () => {
+        setIsResending(true);
+
+        try {
+            const result = await requestOTP(phone);
+
+            if (result.success) {
+                setTimer(45);
+                setOtp(['', '', '', '', '', '']);
+                inputRefs.current[0]?.focus();
+                Alert.alert('OTP Sent', 'A new verification code has been sent to your phone.');
+            } else {
+                Alert.alert('Error', result.error || 'Failed to resend OTP. Please try again.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setIsResending(false);
+        }
     };
 
     return (
@@ -78,7 +124,8 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
             {/* Back Button */}
             <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}>
+                onPress={() => navigation.goBack()}
+                disabled={isLoading}>
                 <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
 
@@ -90,13 +137,28 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                     <Text style={styles.phoneText}>{phone}</Text>
                 </Text>
 
+                {/* Development OTP Hint */}
+                {__DEV__ && devOtp && (
+                    <View style={styles.devHint}>
+                        <Text style={styles.devHintText}>Dev OTP: {devOtp}</Text>
+                    </View>
+                )}
+
                 {/* OTP Input */}
                 <View style={styles.otpContainer}>
                     {otp.map((digit, index) => (
                         <TextInput
                             key={index}
-                            ref={(ref) => (inputRefs.current[index] = ref!)}
-                            style={[styles.otpInput, digit ? styles.otpInputFilled : null]}
+                            ref={(ref) => {
+                                if (ref) {
+                                    inputRefs.current[index] = ref;
+                                }
+                            }}
+                            style={[
+                                styles.otpInput,
+                                digit ? styles.otpInputFilled : null,
+                                isLoading && styles.otpInputDisabled,
+                            ]}
                             value={digit}
                             onChangeText={(value) => handleOtpChange(value, index)}
                             onKeyPress={({ nativeEvent }) =>
@@ -105,6 +167,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                             keyboardType="number-pad"
                             maxLength={1}
                             selectTextOnFocus
+                            editable={!isLoading}
                         />
                     ))}
                 </View>
@@ -117,22 +180,29 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                             Resend code in 0:{timer.toString().padStart(2, '0')}
                         </Text>
                     ) : (
-                        <TouchableOpacity onPress={handleResend}>
-                            <Text style={styles.resendLink}>Resend Code</Text>
+                        <TouchableOpacity onPress={handleResend} disabled={isResending}>
+                            {isResending ? (
+                                <ActivityIndicator size="small" color="#00E5FF" />
+                            ) : (
+                                <Text style={styles.resendLink}>Resend Code</Text>
+                            )}
                         </TouchableOpacity>
                     )}
                 </View>
 
-                {/* Verify Button - Always enabled */}
+                {/* Verify Button */}
                 <TouchableOpacity
-                    style={styles.verifyButton}
-                    onPress={handleVerify}
-                    activeOpacity={0.8}>
-                    <Text style={styles.verifyButtonText}>Verify Now</Text>
+                    style={[styles.verifyButton, isLoading && styles.verifyButtonDisabled]}
+                    onPress={() => handleVerify()}
+                    activeOpacity={0.8}
+                    disabled={isLoading}>
+                    {isLoading ? (
+                        <ActivityIndicator color="#000000" />
+                    ) : (
+                        <Text style={styles.verifyButtonText}>Verify Now</Text>
+                    )}
                 </TouchableOpacity>
             </View>
-
-            {/* Custom Keypad (visual only, system keyboard used) */}
         </View>
     );
 };
@@ -176,6 +246,19 @@ const styles = StyleSheet.create({
     phoneText: {
         color: '#00E5FF',
     },
+    devHint: {
+        backgroundColor: '#2A2A2A',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 24,
+        borderLeftWidth: 4,
+        borderLeftColor: '#FFB300',
+    },
+    devHintText: {
+        color: '#FFB300',
+        fontSize: 14,
+        fontWeight: '600',
+    },
     otpContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -195,6 +278,9 @@ const styles = StyleSheet.create({
     },
     otpInputFilled: {
         borderColor: '#00E5FF',
+    },
+    otpInputDisabled: {
+        opacity: 0.5,
     },
     resendContainer: {
         alignItems: 'center',
@@ -219,6 +305,9 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         paddingVertical: 16,
         alignItems: 'center',
+    },
+    verifyButtonDisabled: {
+        opacity: 0.6,
     },
     verifyButtonText: {
         fontSize: 16,
