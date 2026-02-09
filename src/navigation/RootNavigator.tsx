@@ -17,7 +17,7 @@ import {
     OrderReceiptScreen, EcoDashboardScreen, ExpenseStatementsScreen,
 } from '../features/profile';
 import { PaymentFailedScreen, GenericErrorScreen, LocationUnserviceableScreen, RestaurantClosedScreen } from '../features/common';
-import { SCREENS, STACKS } from '../constants';
+import { SCREENS, STACKS, FEATURE_FLAGS } from '../constants';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,9 +44,13 @@ export const RootNavigator = () => {
                     <Stack.Screen name={SCREENS.FLASH_DEALS} component={FlashDealsScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.GROUP_ORDER} component={GroupOrderScreen} options={{ animation: 'slide_from_bottom' }} />
                     <Stack.Screen name={SCREENS.AI_COMBO} component={AIComboScreen} options={{ animation: 'slide_from_right' }} />
-                    <Stack.Screen name={SCREENS.DINE_IN} component={DineInScreen} options={{ animation: 'slide_from_right' }} />
+                    {FEATURE_FLAGS.ENABLE_DINING_OUT && (
+                        <Stack.Screen name={SCREENS.DINE_IN} component={DineInScreen} options={{ animation: 'slide_from_right' }} />
+                    )}
                     <Stack.Screen name={SCREENS.SMART_FILTERS} component={SmartFiltersScreen} options={{ animation: 'slide_from_bottom' }} />
-                    <Stack.Screen name={SCREENS.TRAIN_DELIVERY} component={TrainDeliveryScreen} options={{ animation: 'slide_from_right' }} />
+                    {FEATURE_FLAGS.ENABLE_IRCTC_FOOD && (
+                        <Stack.Screen name={SCREENS.TRAIN_DELIVERY} component={TrainDeliveryScreen} options={{ animation: 'slide_from_right' }} />
+                    )}
                     <Stack.Screen name={SCREENS.QUICK_REORDER} component={QuickReorderScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.FOOD_STORIES} component={FoodStoriesScreen} options={{ animation: 'fade' }} />
                     {/* Tracking */}

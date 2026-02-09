@@ -48,3 +48,18 @@ export const SCREENS = {
 } as const;
 
 export const STACKS = { AUTH: 'AuthStack', MAIN: 'MainStack', HOME: 'HomeStack' } as const;
+
+// Feature flags for Phase 0 MVP
+// Set to false to hide mock-only features during pilot
+export const FEATURE_FLAGS = {
+    // Mock-only screens - disable for Phase 0 pilot
+    ENABLE_DINING_OUT: false,      // Dine-in/restaurant discovery feature
+    ENABLE_IRCTC_FOOD: false,      // Train delivery feature
+    ENABLE_LIVE_MAP: false,        // Real-time driver tracking map
+    
+    // Working features - enable for Phase 0
+    ENABLE_BOLT_DELIVERY: true,
+    ENABLE_NINETY_NINE_STORE: true,
+    ENABLE_FLASH_DEALS: true,
+    ENABLE_GROUP_ORDER: true,
+};

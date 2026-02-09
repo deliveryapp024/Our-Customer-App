@@ -13,7 +13,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SCREENS } from '../../../constants';
+import { SCREENS, FEATURE_FLAGS } from '../../../constants';
 import { homeApi, HomeResponse } from '../../../api';
 
 const { width } = Dimensions.get('window');
@@ -33,11 +33,11 @@ const categories = [
 ];
 
 const quickActions = [
-    { id: '1', name: 'Bolt', icon: '⚡', color: '#00E5FF' },
-    { id: '2', name: '99 Store', icon: '🏪', color: '#FFB300' },
-    { id: '3', name: 'Offers', icon: '🏷️', color: '#FF5252' },
-    { id: '4', name: 'Dining', icon: '🍽️', color: '#00C853' },
-];
+    { id: '1', name: 'Bolt', icon: '⚡', color: '#00E5FF', enabled: FEATURE_FLAGS.ENABLE_BOLT_DELIVERY },
+    { id: '2', name: '99 Store', icon: '🏪', color: '#FFB300', enabled: FEATURE_FLAGS.ENABLE_NINETY_NINE_STORE },
+    { id: '3', name: 'Offers', icon: '🏷️', color: '#FF5252', enabled: FEATURE_FLAGS.ENABLE_FLASH_DEALS },
+    { id: '4', name: 'Dining', icon: '🍽️', color: '#00C853', enabled: FEATURE_FLAGS.ENABLE_DINING_OUT },
+].filter(action => action.enabled);
 
 const restaurants = [
     {
