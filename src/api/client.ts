@@ -32,6 +32,8 @@ async function request<T>(
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -47,6 +49,7 @@ async function request<T>(
         const response = await fetch(url, {
             ...options,
             headers,
+            signal: controller.signal,
         });
 
         // Dev-only debug logging for x-request-id header
@@ -92,6 +95,8 @@ async function request<T>(
             success: false,
             error: message,
         };
+    } finally {
+        clearTimeout(timeout);
     }
 }
 

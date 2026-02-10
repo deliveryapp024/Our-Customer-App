@@ -5,10 +5,12 @@ export const API_CONFIG = {
     // IMPORTANT:
     // - Most backend routes are under /api (e.g. POST /api/auth/otp/test)
     // - Health endpoint is /health (no /api prefix)
-    API_ORIGIN: __DEV__ ? 'http://10.0.2.2:5000' : 'http://144.91.71.57:5000',
+    // NOTE (Pilot): Using staging even in __DEV__ so physical devices work without being on the same LAN as a dev machine.
+    // If you need emulator-local dev later, switch this back to 10.0.2.2 for Android emulator builds.
+    API_ORIGIN: 'http://144.91.71.57:5000',
     API_PREFIX: '/api',
     // Back-compat: treat BASE_URL as origin+prefix for API calls.
-    BASE_URL: (__DEV__ ? 'http://10.0.2.2:5000' : 'http://144.91.71.57:5000') + '/api',
+    BASE_URL: 'http://144.91.71.57:5000' + '/api',
     TIMEOUT: 30000,
 };
 

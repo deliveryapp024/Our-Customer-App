@@ -33,9 +33,16 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
         try {
             const response = await authApi.requestOTP(phone);
             if (response.success) {
+                // Backend responses vary:
+                // 1) { success: true, data: { otp?: string } }
+                // 2) { success: true, otp?: string }  (no data envelope)
+                const devOtp =
+                    (response as any).data?.otp ??
+                    (response as any).otp ??
+                    undefined;
                 return {
                     success: true,
-                    devOtp: response.data.otp, // Only present in dev mode
+                    devOtp, // Only present in dev mode (if backend returns it)
                 };
             }
             return {
@@ -55,7 +62,15 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
         try {
             const response = await authApi.verifyOTP(phone, otp);
             if (response.success) {
-                const { token, user } = response.data;
+                // Backend responses vary:
+                // 1) { success: true, data: { token, user } }
+                // 2) { success: true, token, user } (no data envelope)
+                const payload = (response as any).data ?? response;
+                const { token, user } = payload;
+
+                if (!token || !user) {
+                    return { success: false, error: 'Invalid server response (missing token/user)' };
+                }
 
                 // Handle token object {accessToken, refreshToken} or string (backward compat)
                 let accessToken: string;

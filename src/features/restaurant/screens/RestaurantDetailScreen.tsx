@@ -26,7 +26,7 @@ const menuCategories = ['Recommended', 'Combos', 'Main Course', 'Starters', 'Des
 // Mock menu items for fallback
 const mockMenuItems: MenuItem[] = [
     {
-        id: '1',
+        _id: '1',
         name: 'Truffle Mushroom Risotto',
         description: 'Creamy arborio rice cooked with wild mushrooms, black truffle oil, and aged parmesan cheese.',
         price: 24.00,
@@ -37,7 +37,7 @@ const mockMenuItems: MenuItem[] = [
         category: 'Recommended',
     },
     {
-        id: '2',
+        _id: '2',
         name: 'Spicy Tuna Tartare',
         description: 'Fresh yellowfin tuna cubes marinated in soy, sesame oil, and chili, served with crispy wonton chips.',
         price: 18.50,
@@ -47,7 +47,7 @@ const mockMenuItems: MenuItem[] = [
         category: 'Recommended',
     },
     {
-        id: '3',
+        _id: '3',
         name: 'Avocado & Quinoa Salad',
         description: 'Organic quinoa, ripe avocado, cherry tomatoes, cucumber, and lemon vinaigrette.',
         price: 16.00,
@@ -57,7 +57,7 @@ const mockMenuItems: MenuItem[] = [
         category: 'Starters',
     },
     {
-        id: '4',
+        _id: '4',
         name: 'Sushi Platter Deluxe',
         description: '24 pieces of assorted nigiri, sashimi, and maki rolls. Serves 2.',
         price: 45.00,
@@ -126,27 +126,31 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
     const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
 
-    const addToCart = (itemId: string) => {
+    // API menu items use `_id`; mock fallback uses `id`. Normalize to a single key.
+    const getItemKey = (item: any) => String(item?._id || item?.id);
+
+    const addToCart = (itemKey: string) => {
         setCartItems((prev) => ({
             ...prev,
-            [itemId]: (prev[itemId] || 0) + 1,
+            [itemKey]: (prev[itemKey] || 0) + 1,
         }));
     };
 
-    const removeFromCart = (itemId: string) => {
+    const removeFromCart = (itemKey: string) => {
         setCartItems((prev) => {
-            const newCount = (prev[itemId] || 0) - 1;
+            const newCount = (prev[itemKey] || 0) - 1;
             if (newCount <= 0) {
-                const { [itemId]: _, ...rest } = prev;
+                const { [itemKey]: _, ...rest } = prev;
                 return rest;
             }
-            return { ...prev, [itemId]: newCount };
+            return { ...prev, [itemKey]: newCount };
         });
     };
 
     const totalItems = Object.values(cartItems).reduce((a, b) => a + b, 0);
-    const totalAmount = menuItems.reduce((sum, item) => {
-        return sum + (cartItems[item.id] || 0) * item.price;
+    const totalAmount = menuItems.reduce((sum, item: any) => {
+        const key = getItemKey(item);
+        return sum + (cartItems[key] || 0) * item.price;
     }, 0);
 
     const filteredItems = menuItems.filter(
@@ -282,7 +286,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 {/* Menu Items */}
                 <View style={styles.menuContainer}>
                     {filteredItems.map((item) => (
-                        <View key={item.id} style={styles.menuItem}>
+                        <View key={getItemKey(item)} style={styles.menuItem}>
                             <View style={styles.menuItemInfo}>
                                 <View style={styles.vegIndicator}>
                                     <View
@@ -316,24 +320,24 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                     style={styles.itemImage}
                                     resizeMode="cover"
                                 />
-                                {cartItems[item.id] ? (
+                                {cartItems[getItemKey(item)] ? (
                                     <View style={styles.quantityControls}>
                                         <TouchableOpacity
                                             style={styles.quantityButton}
-                                            onPress={() => removeFromCart(item.id)}>
+                                            onPress={() => removeFromCart(getItemKey(item))}>
                                             <Text style={styles.quantityButtonText}>−</Text>
                                         </TouchableOpacity>
-                                        <Text style={styles.quantityText}>{cartItems[item.id]}</Text>
+                                        <Text style={styles.quantityText}>{cartItems[getItemKey(item)]}</Text>
                                         <TouchableOpacity
                                             style={styles.quantityButton}
-                                            onPress={() => addToCart(item.id)}>
+                                            onPress={() => addToCart(getItemKey(item))}>
                                             <Text style={styles.quantityButtonText}>+</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
                                     <TouchableOpacity
                                         style={styles.addButton}
-                                        onPress={() => addToCart(item.id)}>
+                                        onPress={() => addToCart(getItemKey(item))}>
                                         <Text style={styles.addButtonText}>ADD</Text>
                                     </TouchableOpacity>
                                 )}

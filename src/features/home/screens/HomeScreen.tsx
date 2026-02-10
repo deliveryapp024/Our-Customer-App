@@ -39,6 +39,7 @@ const quickActions = [
     { id: '4', name: 'Dining', icon: '🍽️', color: '#00C853', enabled: FEATURE_FLAGS.ENABLE_DINING_OUT },
 ].filter(action => action.enabled);
 
+// Mock restaurants (dev-only fallback). For pilot/release we prefer real API data.
 const restaurants = [
     {
         id: '1',
@@ -119,7 +120,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     // Get banner items from API or empty
     const bannerItems = homeData?.sections?.find(s => s.type === 'banner_carousel')?.data?.items || [];
 
-    const renderRestaurantCard = ({ item }: { item: typeof restaurants[0] }) => (
+    // Restaurants from API (preferred).
+    const apiRestaurants =
+        homeData?.sections?.find(s => s.type === 'restaurant_list')?.data?.restaurants || [];
+
+    // Only fall back to mock restaurants if the home API call itself failed.
+    // If API succeeds but returns empty, show empty state (prevents fake IDs causing 404s).
+    const displayRestaurants =
+        (apiRestaurants.length > 0)
+            ? apiRestaurants
+            : (error ? (__DEV__ ? restaurants : []) : []);
+
+    const renderRestaurantCard = ({ item }: { item: any }) => (
         <TouchableOpacity
             style={styles.restaurantCard}
             onPress={() => navigation.navigate(SCREENS.RESTAURANT_DETAIL, { restaurant: item })}
@@ -246,12 +258,20 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 <FlatList
-                    data={restaurants}
+                    data={displayRestaurants}
                     renderItem={renderRestaurantCard}
-                    keyExtractor={(item) => item.id}
+                    // Prefer _id for real API data, fallback to id for mocks.
+                    keyExtractor={(item: any) => String(item?._id || item?.id)}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.restaurantList}
+                    ListEmptyComponent={
+                        <View style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
+                            <Text style={{ color: '#9E9E9E', fontSize: 13 }}>
+                                No restaurants available yet.
+                            </Text>
+                        </View>
+                    }
                 />
 
                 {/* Categories */}
