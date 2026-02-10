@@ -11,6 +11,8 @@ import {
     Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ComingSoonScreen from '../../../components/ComingSoonScreen';
+import { FEATURE_FLAGS } from '../../../constants';
 
 const { width } = Dimensions.get('window');
 
@@ -89,6 +91,15 @@ const MOCK_RESTAURANTS: Restaurant[] = [
 const CUISINES = ['All', 'North Indian', 'Chinese', 'Italian', 'Continental', 'Japanese', 'Mexican'];
 
 export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    if (!FEATURE_FLAGS.ENABLE_DINING_OUT) {
+        return (
+            <ComingSoonScreen
+                title="Dining Out is disabled for the pilot"
+                subtitle="This screen currently uses mock data. Enable FEATURE_FLAGS.ENABLE_DINING_OUT only after wiring real APIs."
+            />
+        );
+    }
+
     const [selectedCategory, setSelectedCategory] = useState('1');
     const [selectedCuisine, setSelectedCuisine] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');

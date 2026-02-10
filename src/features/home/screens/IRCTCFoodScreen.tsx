@@ -10,6 +10,8 @@ import {
     Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ComingSoonScreen from '../../../components/ComingSoonScreen';
+import { FEATURE_FLAGS } from '../../../constants';
 
 interface Station {
     code: string;
@@ -80,6 +82,15 @@ const MOCK_FOOD_ITEMS: TrainFood[] = [
 ];
 
 export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    if (!FEATURE_FLAGS.ENABLE_IRCTC_FOOD) {
+        return (
+            <ComingSoonScreen
+                title="Train Food is disabled for the pilot"
+                subtitle="This screen currently uses mock data. Enable FEATURE_FLAGS.ENABLE_IRCTC_FOOD only after wiring real APIs."
+            />
+        );
+    }
+
     const [pnrNumber, setPnrNumber] = useState('');
     const [isValidated, setIsValidated] = useState(false);
     const [selectedStation, setSelectedStation] = useState<Station | null>(null);

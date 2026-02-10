@@ -9,6 +9,8 @@ import {
     Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ComingSoonScreen from '../../../components/ComingSoonScreen';
+import { FEATURE_FLAGS } from '../../../constants';
 
 const { height } = Dimensions.get('window');
 
@@ -22,6 +24,15 @@ const MOCK_PARTNER = {
 };
 
 export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    if (!FEATURE_FLAGS.ENABLE_LIVE_MAP) {
+        return (
+            <ComingSoonScreen
+                title="Live Tracking is disabled for the pilot"
+                subtitle="This screen currently uses mock driver data. Enable FEATURE_FLAGS.ENABLE_LIVE_MAP only after real driver location is wired."
+            />
+        );
+    }
+
     const [eta, setEta] = useState(8);
     const currentStep = 2;
 
