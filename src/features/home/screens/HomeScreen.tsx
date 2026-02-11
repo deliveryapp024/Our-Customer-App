@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS, FEATURE_FLAGS } from '../../../constants';
-import { homeApi, HomeResponse } from '../../../api';
+import { homeApi, HomeResponse, Restaurant } from '../../../api';
 
 const { width } = Dimensions.get('window');
 
@@ -89,6 +89,7 @@ const restaurants = [
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const [location] = useState('Camp, Belagavi');
     const [homeData, setHomeData] = useState<HomeResponse | null>(null);
+    const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -97,12 +98,24 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         const loadHomeData = async () => {
             setLoading(true);
             setError(null);
-            const result = await homeApi.fetchHome();
-            if (result.success) {
-                setHomeData(result.data);
-            } else {
-                setError(result.error || 'Failed to load home data');
-                // Keep mock data as fallback (already defined below)
+            const [homeResult, nearbyResult] = await Promise.all([
+                homeApi.fetchHome(),
+                homeApi.fetchNearbyBranches({
+                    latitude: 15.8497,
+                    longitude: 74.4977,
+                    radius: 15,
+                }),
+            ]);
+
+            if (homeResult.success) {
+                setHomeData(homeResult.data);
+            }
+            if (nearbyResult.success) {
+                setNearbyRestaurants(Array.isArray(nearbyResult.data) ? nearbyResult.data : []);
+            }
+
+            if (!homeResult.success && !nearbyResult.success) {
+                setError(homeResult.error || nearbyResult.error || 'Failed to load home data');
             }
             setLoading(false);
         };
@@ -111,25 +124,26 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }, []);
 
     // Get categories from API or fallback to mock
-    const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map(tile => ({
-        id: tile.id,
-        name: tile.name,
-        icon: tile.icon,
+    const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map((tile: any) => ({
+        id: String(tile?.id || tile?.categoryId || tile?.name),
+        name: tile?.name || tile?.label || 'Category',
+        icon: tile?.icon || '🍽️',
     })) || categories;
 
     // Get banner items from API or empty
     const bannerItems = homeData?.sections?.find(s => s.type === 'banner_carousel')?.data?.items || [];
 
     // Restaurants from API (preferred).
-    const apiRestaurants =
+    const apiRestaurantsFromHome =
         homeData?.sections?.find(s => s.type === 'restaurant_list')?.data?.restaurants || [];
 
-    // Only fall back to mock restaurants if the home API call itself failed.
-    // If API succeeds but returns empty, show empty state (prevents fake IDs causing 404s).
+    // Prefer dedicated seller endpoint, then /home sections, then dev-only fallback.
     const displayRestaurants =
-        (apiRestaurants.length > 0)
-            ? apiRestaurants
-            : (error ? (__DEV__ ? restaurants : []) : []);
+        (nearbyRestaurants.length > 0)
+            ? nearbyRestaurants
+            : (apiRestaurantsFromHome.length > 0)
+                ? apiRestaurantsFromHome
+                : (error ? (__DEV__ ? restaurants : []) : []);
 
     const renderRestaurantCard = ({ item }: { item: any }) => (
         <TouchableOpacity
@@ -138,7 +152,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.9}>
             <View style={styles.restaurantImageContainer}>
                 <Image
-                    source={{ uri: item.image }}
+                    source={{ uri: item.image || item.imageUrl }}
                     style={styles.restaurantImage}
                     resizeMode="cover"
                 />
@@ -154,13 +168,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         {item.name}
                     </Text>
                     <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingText}>{item.rating} ★</Text>
+                        <Text style={styles.ratingText}>{item.rating || 4.0} ★</Text>
                     </View>
                 </View>
                 <Text style={styles.cuisineText} numberOfLines={1}>
-                    {item.cuisines.join(' • ')} • {item.priceLevel}
+                    {(Array.isArray(item.cuisines) && item.cuisines.length > 0 ? item.cuisines.join(' • ') : 'Multi-cuisine')} • {item.priceLevel || '₹₹'}
                 </Text>
-                <Text style={styles.deliveryText}>🕐 {item.deliveryTime}</Text>
+                <Text style={styles.deliveryText}>🕐 {item.deliveryTime || `${item.prepTimeMin || 30} mins`}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -286,7 +300,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 ) : (
                     <View style={styles.categoriesContainer}>
                         {displayCategories.map((category) => (
-                            <TouchableOpacity key={category.id} style={styles.categoryItem}>
+                            <TouchableOpacity
+                                key={category.id}
+                                style={styles.categoryItem}
+                                onPress={() =>
+                                    navigation.navigate(SCREENS.SEARCH, {
+                                        categoryId: category.id,
+                                        categoryName: category.name,
+                                    })
+                                }
+                            >
                                 <View style={styles.categoryIcon}>
                                     <Text style={styles.categoryEmoji}>{category.icon}</Text>
                                 </View>
@@ -583,3 +606,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+

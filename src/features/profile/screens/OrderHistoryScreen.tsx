@@ -96,11 +96,11 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
         }
     };
 
-    const handleReorder = (order: Order) => {
+    const handleReorder = (order: DisplayOrder) => {
         // Add items to cart and navigate to restaurant
     };
 
-    const getStatusColor = (status: Order['status']) => {
+    const getStatusColor = (status: DisplayOrder['status']) => {
         switch (status) {
             case 'delivered':
                 return '#00C853';
@@ -113,7 +113,7 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
         }
     };
 
-    const getStatusText = (status: Order['status']) => {
+    const getStatusText = (status: DisplayOrder['status']) => {
         switch (status) {
             case 'delivered':
                 return 'Delivered';

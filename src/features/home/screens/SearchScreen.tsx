@@ -12,10 +12,11 @@ import {
     FlatList,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { searchApi, SearchSuggestion } from '../../../api';
+import { searchApi, SearchSuggestion, categoriesApi } from '../../../api';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
+    route: any;
 };
 
 const recentSearches = ['Sushi', 'Vegan Burger', 'Tacos', 'Pasta'];
@@ -28,12 +29,44 @@ const trendingSearches = [
     { id: '4', name: 'Healthy', trend: 'UP 31%', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAnnN7SMnl_G1WavrnyXgwEM0WF1IsZOLbYsR6LE2FgW1OIHQa5r0P8Sb8MEac07iVkABdNVNyGIFgGTKPYyGfJHwRWU1aGF0M4Y25avKcreOukkZDN2oIztMWICjfpMTQFMX7sB8QcQPCo1ru2_9ysH7Nf8LG0Rut6Lk9-B0ZoIGuf8A-8myhSkjVHoaMMNRWGin5-xZ5Y-WBj405Z7_BjB9d_3wmvuqqzrks6t_kJa5oMJzeSN0UXJi6s8uLT-t5TNYAVlbpSTeS' },
 ];
 
-export const SearchScreen: React.FC<Props> = ({ navigation }) => {
+type CategoryProduct = {
+    _id: string;
+    name: string;
+    price?: number;
+    image?: string;
+    description?: string;
+    branchId?: string | null;
+    sellerName?: string | null;
+    branchName?: string | null;
+    branchAddress?: string | null;
+    branchLocation?: { latitude?: number; longitude?: number } | null;
+};
+
+export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
+    const categoryId = route?.params?.categoryId as string | undefined;
+    const categoryName = route?.params?.categoryName as string | undefined;
     const [query, setQuery] = useState('');
     const [recent, setRecent] = useState(recentSearches);
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+    const [categoryProducts, setCategoryProducts] = useState<CategoryProduct[]>([]);
+    const [categoryLoading, setCategoryLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!categoryId) return;
+        setCategoryLoading(true);
+        setError(null);
+        categoriesApi.fetchProductsByCategory(categoryId).then((result: any) => {
+            if (result?.success) {
+                setCategoryProducts(Array.isArray(result.data) ? result.data : []);
+            } else {
+                setCategoryProducts([]);
+                setError(result?.error || 'Failed to load category products');
+            }
+            setCategoryLoading(false);
+        });
+    }, [categoryId]);
 
     const clearRecent = () => setRecent([]);
     const removeSearch = (item: string) => setRecent(recent.filter((r) => r !== item));
@@ -95,6 +128,50 @@ export const SearchScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Category products */}
+                {categoryId && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>{categoryName || 'Category'} Items</Text>
+                        {categoryLoading ? (
+                            <ActivityIndicator size="small" color="#00E5FF" style={styles.suggestionsLoader} />
+                        ) : categoryProducts.length > 0 ? (
+                            <View style={styles.suggestionsContainer}>
+                                {categoryProducts.map((item) => (
+                                    <TouchableOpacity
+                                        key={item._id}
+                                        style={styles.suggestionItem}
+                                        onPress={() => {
+                                            if (!item.branchId) return;
+                                            navigation.navigate('RestaurantDetail', {
+                                                restaurant: {
+                                                    _id: item.branchId,
+                                                    name: item.branchName || item.sellerName || 'Restaurant',
+                                                    address: item.branchAddress || '',
+                                                    location: item.branchLocation || undefined,
+                                                    image: item.image,
+                                                },
+                                            });
+                                        }}
+                                    >
+                                        <Text style={styles.suggestionIcon}>🍽️</Text>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.suggestionText}>{item.name}</Text>
+                                            {!!item.price && (
+                                                <Text style={styles.suggestionType}>Rs {item.price}</Text>
+                                            )}
+                                            {!item.branchId && (
+                                                <Text style={styles.noBranchText}>No active branch linked</Text>
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        ) : (
+                            <Text style={styles.noResultsText}>No products found for this category</Text>
+                        )}
+                    </View>
+                )}
+
                 {/* Search Suggestions (Live) */}
                 {query.length >= 2 && (
                     <View style={styles.section}>
@@ -397,6 +474,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#FF5252',
         marginTop: 8,
+    },
+    noBranchText: {
+        fontSize: 11,
+        color: '#FF8A65',
+        marginTop: 2,
     },
 });
 

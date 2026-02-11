@@ -13,6 +13,8 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { restaurantsApi, Restaurant, MenuItem } from '../../../api';
+import { useCartStore } from '../../../store/cartStore';
+import { SCREENS } from '../../../constants';
 
 const { width } = Dimensions.get('window');
 
@@ -124,34 +126,42 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     };
 
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
-    const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
+    const { items: storeItems, addItem: addCartItem, removeItem: removeCartItem } = useCartStore();
 
     // API menu items use `_id`; mock fallback uses `id`. Normalize to a single key.
     const getItemKey = (item: any) => String(item?._id || item?.id);
 
-    const addToCart = (itemKey: string) => {
-        setCartItems((prev) => ({
-            ...prev,
-            [itemKey]: (prev[itemKey] || 0) + 1,
-        }));
+    const getCartCount = (itemKey: string) => {
+        const found = storeItems.find((entry) => entry.menuItem.id === itemKey);
+        return found?.quantity || 0;
     };
 
-    const removeFromCart = (itemKey: string) => {
-        setCartItems((prev) => {
-            const newCount = (prev[itemKey] || 0) - 1;
-            if (newCount <= 0) {
-                const { [itemKey]: _, ...rest } = prev;
-                return rest;
-            }
-            return { ...prev, [itemKey]: newCount };
-        });
-    };
-
-    const totalItems = Object.values(cartItems).reduce((a, b) => a + b, 0);
-    const totalAmount = menuItems.reduce((sum, item: any) => {
+    const addToCart = (item: any) => {
         const key = getItemKey(item);
-        return sum + (cartItems[key] || 0) * item.price;
-    }, 0);
+        addCartItem(
+            String(restaurantId || restaurant?._id || ''),
+            String(restaurant.name || 'Restaurant'),
+            {
+                id: key,
+                name: item.name,
+                description: item.description || '',
+                price: Number(item.price) || 0,
+                originalPrice: item.originalPrice,
+                image: item.image || '',
+                category: item.category || 'Recommended',
+                isVeg: !!item.isVeg,
+                isBestseller: !!item.isBestseller,
+                isAvailable: item.isAvailable !== false,
+            }
+        );
+    };
+
+    const removeFromCart = (item: any) => {
+        removeCartItem(getItemKey(item));
+    };
+
+    const totalItems = storeItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = storeItems.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
 
     const filteredItems = menuItems.filter(
         (item) => selectedCategory === 'Recommended' || item.category === selectedCategory,
@@ -320,24 +330,24 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                     style={styles.itemImage}
                                     resizeMode="cover"
                                 />
-                                {cartItems[getItemKey(item)] ? (
+                                {getCartCount(getItemKey(item)) ? (
                                     <View style={styles.quantityControls}>
                                         <TouchableOpacity
                                             style={styles.quantityButton}
-                                            onPress={() => removeFromCart(getItemKey(item))}>
+                                            onPress={() => removeFromCart(item)}>
                                             <Text style={styles.quantityButtonText}>−</Text>
                                         </TouchableOpacity>
-                                        <Text style={styles.quantityText}>{cartItems[getItemKey(item)]}</Text>
+                                        <Text style={styles.quantityText}>{getCartCount(getItemKey(item))}</Text>
                                         <TouchableOpacity
                                             style={styles.quantityButton}
-                                            onPress={() => addToCart(getItemKey(item))}>
+                                            onPress={() => addToCart(item)}>
                                             <Text style={styles.quantityButtonText}>+</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
                                     <TouchableOpacity
                                         style={styles.addButton}
-                                        onPress={() => addToCart(getItemKey(item))}>
+                                        onPress={() => addToCart(item)}>
                                         <Text style={styles.addButtonText}>ADD</Text>
                                     </TouchableOpacity>
                                 )}
@@ -351,7 +361,16 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
 
             {/* Cart Bar */}
             {totalItems > 0 && (
-                <TouchableOpacity style={styles.cartBar} activeOpacity={0.9}>
+                <TouchableOpacity
+                    style={styles.cartBar}
+                    activeOpacity={0.9}
+                    onPress={() =>
+                        navigation.navigate(SCREENS.CHECKOUT, {
+                            branchId: restaurantId,
+                            deliveryLocation: route.params?.deliveryLocation || { latitude: 15.8497, longitude: 74.4977 },
+                        })
+                    }
+                >
                     <View style={styles.cartInfo}>
                         <Text style={styles.cartItems}>{totalItems} ITEMS</Text>
                         <Text style={styles.cartTotal}>${totalAmount.toFixed(2)}</Text>

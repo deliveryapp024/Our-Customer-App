@@ -34,8 +34,8 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [orderError, setOrderError] = useState<string | null>(null);
 
-    // Get branch info from navigation params or cart
-    const branchId = route.params?.branchId;
+    // Get branch info from navigation params (preferred) or cart fallback
+    const branchId = route.params?.branchId || useCartStore.getState().restaurantId;
     const deliveryLocation = route.params?.deliveryLocation;
 
     const subtotal = getTotal();
@@ -48,7 +48,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
 
     const handlePlaceOrder = async () => {
         if (!branchId) {
-            Alert.alert('Error', 'Restaurant information is missing');
+            Alert.alert('Error', 'Restaurant branchId is missing. Please re-open restaurant and try again.');
             return;
         }
 
@@ -57,20 +57,35 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
             return;
         }
 
+        // Strict payload guard: every line must carry a real product id.
+        const invalidItem = items.find((item) => !item?.menuItem?.id || String(item.menuItem.id).trim().length === 0);
+        if (invalidItem) {
+            Alert.alert('Error', 'One or more cart items have invalid product IDs. Please remove and add again.');
+            return;
+        }
+
         setIsProcessing(true);
         setOrderError(null);
 
         // Prepare order items
         const orderItems = items.map(item => ({
-            id: item.menuItem.id,
+            id: String(item.menuItem.id),
             item: item.menuItem.name,
             count: item.quantity,
         }));
 
+        if (__DEV__) {
+            console.log('[Checkout] createOrder payload', {
+                branchId: String(branchId),
+                itemCount: orderItems.length,
+                firstProductId: orderItems[0]?.id,
+            });
+        }
+
         // Create order with idempotency key (prevents duplicates on retry)
         const result = await ordersApi.createOrder({
             items: orderItems,
-            branch: branchId,
+            branch: String(branchId),
             totalPrice: total,
             deliveryLocation,
             idempotencyKey, // Same key on retry = same order result

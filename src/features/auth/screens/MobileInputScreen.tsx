@@ -31,6 +31,11 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
         return phoneRegex.test(phone);
     };
 
+    const shouldAllowOtpEntry = (message?: string): boolean => {
+        if (!message) return false;
+        return /(too many|try again later|rate limit|429|wait)/i.test(message);
+    };
+
     const handleContinue = async () => {
         const phone = countryCode + phoneNumber;
 
@@ -52,7 +57,13 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                     devOtp: result.devOtp, // Pass dev OTP for testing if available
                 });
             } else {
-                Alert.alert('Error', result.error || 'Failed to send OTP. Please try again.');
+                const errorMessage = result.error || 'Failed to send OTP. Please try again.';
+                if (shouldAllowOtpEntry(errorMessage)) {
+                    Alert.alert('OTP Request Limited', `${errorMessage}\n\nYou can still enter OTP if you already received one.`);
+                    navigation.navigate(SCREENS.OTP_VERIFICATION, { phone });
+                } else {
+                    Alert.alert('Error', errorMessage);
+                }
             }
         } catch (error) {
             Alert.alert('Error', 'Something went wrong. Please try again.');

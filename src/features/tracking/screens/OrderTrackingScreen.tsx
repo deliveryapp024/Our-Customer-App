@@ -10,6 +10,7 @@ import {
     Dimensions,
     ActivityIndicator,
 } from 'react-native';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
@@ -48,6 +49,12 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
     const [error, setError] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const defaultRegion = {
+        latitude: 15.8497,
+        longitude: 74.4977,
+        latitudeDelta: 0.06,
+        longitudeDelta: 0.06,
+    };
 
     // Polling configuration
     const POLLING_CONFIG = {
@@ -154,7 +161,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
 
     // Update tracking steps based on order status
     const updateTrackingSteps = (status: string) => {
-        const updatedSteps = initialSteps.map((step, index) => {
+        const updatedSteps = getInitialSteps().map((step, index) => {
             const stepStatus = getStepStatus(step.title);
             const statusOrder = ['pending_seller_approval', 'available', 'confirmed', 'arriving', 'delivered'];
             const currentIndex = statusOrder.indexOf(status);
@@ -268,18 +275,38 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                 )}
             </View>
 
-            {/* Map Placeholder */}
+            {/* Live Map */}
             <View style={styles.mapContainer}>
-                <View style={styles.mapPlaceholder}>
-                    <Text style={styles.mapIcon}>🗺️</Text>
-                    <View style={styles.routeLine} />
-                    <View style={styles.destinationMarker}>
-                        <Text style={styles.markerIcon}>📍</Text>
-                    </View>
-                    <View style={styles.driverMarker}>
-                        <Text style={styles.driverIcon}>🛵</Text>
-                    </View>
-                </View>
+                <MapView
+                    style={StyleSheet.absoluteFillObject}
+                    initialRegion={defaultRegion}
+                    showsUserLocation={false}
+                    showsMyLocationButton={false}
+                >
+                    <Marker
+                        coordinate={{
+                            latitude: defaultRegion.latitude,
+                            longitude: defaultRegion.longitude,
+                        }}
+                        title="Delivery location"
+                    />
+                    <Marker
+                        coordinate={{
+                            latitude: defaultRegion.latitude - 0.01,
+                            longitude: defaultRegion.longitude - 0.01,
+                        }}
+                        pinColor="#00E5FF"
+                        title="Driver"
+                    />
+                    <Polyline
+                        coordinates={[
+                            { latitude: defaultRegion.latitude - 0.01, longitude: defaultRegion.longitude - 0.01 },
+                            { latitude: defaultRegion.latitude, longitude: defaultRegion.longitude },
+                        ]}
+                        strokeColor="#00E5FF"
+                        strokeWidth={3}
+                    />
+                </MapView>
             </View>
 
             {/* Driver Info Card */}
@@ -483,43 +510,6 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
         marginBottom: 16,
-    },
-    mapPlaceholder: {
-        flex: 1,
-        backgroundColor: '#1A1A1A',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-    },
-    mapIcon: {
-        fontSize: 60,
-        opacity: 0.5,
-    },
-    routeLine: {
-        position: 'absolute',
-        width: 100,
-        height: 3,
-        backgroundColor: '#00E5FF',
-        top: '50%',
-    },
-    destinationMarker: {
-        position: 'absolute',
-        right: 40,
-        top: '40%',
-    },
-    markerIcon: {
-        fontSize: 24,
-    },
-    driverMarker: {
-        position: 'absolute',
-        left: 60,
-        top: '45%',
-        backgroundColor: '#00E5FF',
-        padding: 8,
-        borderRadius: 20,
-    },
-    driverIcon: {
-        fontSize: 20,
     },
     driverCard: {
         marginHorizontal: 16,
