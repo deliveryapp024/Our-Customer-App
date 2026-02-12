@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,15 +8,30 @@ import {
     StyleSheet,
     ActivityIndicator,
     Alert,
+    Platform,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
+import { BackButton } from '../../../components/ui/BackButton';
+import {
+    startSmsConsent,
+    stopSmsConsent,
+    addSmsConsentListener,
+    removeSmsConsentListeners,
+    SmsUserConsentEvent,
+} from '../../../native-modules/SmsUserConsent';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
     route: RouteProp<any>;
+};
+
+// Extract 6-digit OTP from SMS message
+const extractOtpFromMessage = (message: string): string | null => {
+    const match = message.match(/\b\d{6}\b/);
+    return match ? match[0] : null;
 };
 
 export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -26,16 +41,115 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
     const [timer, setTimer] = useState(45);
     const [isLoading, setIsLoading] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const [smsStatus, setSmsStatus] = useState<'idle' | 'listening' | 'received' | 'denied' | 'error'>('idle');
+    const [smsError, setSmsError] = useState<string | null>(null);
     const inputRefs = useRef<TextInput[]>([]);
     const verifyOTP = useAuthStore((state) => state.verifyOTP);
     const requestOTP = useAuthStore((state) => state.requestOTP);
 
+    // Timer countdown
     useEffect(() => {
         if (timer > 0) {
             const interval = setInterval(() => setTimer((t) => t - 1), 1000);
             return () => clearInterval(interval);
         }
     }, [timer]);
+
+    // Handle SMS event from native module
+    const handleSmsEvent = useCallback((event: SmsUserConsentEvent) => {
+        console.log('[SMS User Consent] Event:', event.status);
+        
+        switch (event.status) {
+            case 'success':
+                // Extract OTP from SMS message
+                const otpCode = extractOtpFromMessage(event.message);
+                if (otpCode) {
+                    console.log('[SMS User Consent] OTP extracted:', otpCode);
+                    setSmsStatus('received');
+                    autoFillOtp(otpCode);
+                } else {
+                    console.log('[SMS User Consent] No 6-digit OTP found in message');
+                    setSmsStatus('error');
+                    setSmsError('Could not read OTP from SMS');
+                }
+                break;
+                
+            case 'denied':
+                console.log('[SMS User Consent] User denied permission');
+                setSmsStatus('denied');
+                setSmsError('SMS access denied. Please enter OTP manually.');
+                // Clear error after 3 seconds
+                setTimeout(() => {
+                    setSmsStatus('idle');
+                    setSmsError(null);
+                }, 3000);
+                break;
+                
+            case 'timeout':
+                console.log('[SMS User Consent] Timeout');
+                setSmsStatus('idle');
+                break;
+                
+            case 'error':
+                console.error('[SMS User Consent] Error:', event.message);
+                setSmsStatus('error');
+                setSmsError(event.message);
+                break;
+        }
+    }, []);
+
+    // Setup SMS User Consent listener
+    useEffect(() => {
+        if (Platform.OS !== 'android') return;
+
+        let subscription: any = null;
+
+        const setupSmsConsent = async () => {
+            try {
+                // Add event listener
+                subscription = addSmsConsentListener(handleSmsEvent);
+                
+                // Start SMS consent with a delay to let screen fully load
+                setTimeout(async () => {
+                    try {
+                        await startSmsConsent();
+                        setSmsStatus('listening');
+                        console.log('[SMS User Consent] Started successfully');
+                    } catch (error: any) {
+                        console.log('[SMS User Consent] Start failed:', error.message);
+                        setSmsStatus('idle');
+                    }
+                }, 1500);
+                
+            } catch (error: any) {
+                console.error('[SMS User Consent] Setup error:', error.message);
+            }
+        };
+
+        setupSmsConsent();
+
+        return () => {
+            // Cleanup
+            if (subscription) {
+                subscription.remove();
+            }
+            removeSmsConsentListeners();
+            stopSmsConsent().catch(() => {});
+        };
+    }, [handleSmsEvent]);
+
+    // Auto-fill OTP from SMS
+    const autoFillOtp = (otpString: string) => {
+        if (otpString.length === 6 && /^\d{6}$/.test(otpString)) {
+            const otpArray = otpString.split('');
+            setOtp(otpArray);
+            
+            // Auto-submit after a short delay to let user see the filled OTP
+            setTimeout(() => {
+                handleVerify(otpString);
+            }, 800);
+        }
+    };
 
     const handleOtpChange = (value: string, index: number) => {
         // Only allow digits
@@ -105,8 +219,21 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
             if (result.success) {
                 setTimer(45);
                 setOtp(['', '', '', '', '', '']);
+                setSmsStatus('idle');
+                setSmsError(null);
                 inputRefs.current[0]?.focus();
                 Alert.alert('OTP Sent', 'A new verification code has been sent to your phone.');
+                
+                // Restart SMS User Consent
+                setTimeout(async () => {
+                    try {
+                        await stopSmsConsent();
+                        await startSmsConsent();
+                        setSmsStatus('listening');
+                    } catch (error: any) {
+                        console.log('[SMS User Consent] Restart failed:', error.message);
+                    }
+                }, 1000);
             } else {
                 Alert.alert('Error', result.error || 'Failed to resend OTP. Please try again.');
             }
@@ -122,12 +249,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
             {/* Back Button */}
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-                disabled={isLoading}>
-                <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
+            <BackButton onPress={() => navigation.goBack()} />
 
             {/* Content */}
             <View style={styles.content}>
@@ -141,6 +263,36 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                 {__DEV__ && devOtp && (
                     <View style={styles.devHint}>
                         <Text style={styles.devHintText}>Dev OTP: {devOtp}</Text>
+                    </View>
+                )}
+
+                {/* SMS User Consent Status */}
+                {Platform.OS === 'android' && smsStatus === 'listening' && (
+                    <View style={styles.smsHint}>
+                        <Text style={styles.smsHintText}>
+                            📱 Waiting for OTP SMS...
+                        </Text>
+                        <Text style={styles.smsHintSubtext}>
+                            You'll see a system popup when SMS arrives
+                        </Text>
+                    </View>
+                )}
+                {smsStatus === 'denied' && (
+                    <View style={[styles.smsHint, styles.smsHintWarning]}>
+                        <Text style={styles.smsHintText}>⚠️ SMS access denied</Text>
+                        <Text style={styles.smsHintSubtext}>
+                            Please enter OTP manually
+                        </Text>
+                    </View>
+                )}
+                {smsStatus === 'received' && (
+                    <View style={[styles.smsHint, styles.smsHintSuccess]}>
+                        <Text style={styles.smsHintText}>✅ OTP auto-filled!</Text>
+                    </View>
+                )}
+                {smsStatus === 'error' && smsError && (
+                    <View style={[styles.smsHint, styles.smsHintError]}>
+                        <Text style={styles.smsHintText}>❌ {smsError}</Text>
                     </View>
                 )}
 
@@ -212,20 +364,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#000000',
     },
-    backButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#2A2A2A',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-        marginLeft: 16,
-    },
-    backIcon: {
-        fontSize: 20,
-        color: '#FFFFFF',
-    },
     content: {
         flex: 1,
         paddingHorizontal: 24,
@@ -258,6 +396,37 @@ const styles = StyleSheet.create({
         color: '#FFB300',
         fontSize: 14,
         fontWeight: '600',
+    },
+    smsHint: {
+        backgroundColor: '#0A2A2A',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: '#00E5FF33',
+        alignItems: 'center',
+    },
+    smsHintSuccess: {
+        backgroundColor: '#0A2A1A',
+        borderColor: '#00C85333',
+    },
+    smsHintWarning: {
+        backgroundColor: '#2A1A0A',
+        borderColor: '#FFB30033',
+    },
+    smsHintError: {
+        backgroundColor: '#2A0A0A',
+        borderColor: '#FF525233',
+    },
+    smsHintText: {
+        color: '#00E5FF',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    smsHintSubtext: {
+        color: '#9E9E9E',
+        fontSize: 12,
     },
     otpContainer: {
         flexDirection: 'row',

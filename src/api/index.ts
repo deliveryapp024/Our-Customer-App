@@ -11,4 +11,6 @@ export { default as restaurantsApi } from './restaurantsApi';
 export * from './restaurantsApi';
 export { default as ordersApi } from './ordersApi';
 export * from './ordersApi';
+export { default as customerApi } from './customerApi';
+export * from './customerApi';
 export type { ApiResponse, ApiResult, ApiFailure, ApiError } from './client';

@@ -206,6 +206,75 @@ PATCH /user                - Update user profile (requires auth)
 
 ---
 
+# SMS User Consent API (OTP Auto-fill)
+
+### Overview
+Custom native Android module for automatic OTP reading using Google's SMS User Consent API.
+
+**Why Custom Module?**
+- NPM packages (`react-native-sms-user-consent`, `@pushpendersingh/react-native-otp-verify`) are **incompatible with RN 0.76+**
+- Custom module uses stable Native Module pattern (not TurboModule)
+- Works with any SMS provider (Fast2SMS, MSG91) - no app hash required
+
+### Files
+```
+android/app/src/main/java/com/customerapp/
+├── SmsUserConsentModule.kt      # Native Kotlin implementation
+└── SmsUserConsentPackage.kt     # RN package registration
+
+src/native-modules/
+└── SmsUserConsent.ts            # TypeScript bridge
+```
+
+### Usage in OTP Screen
+```typescript
+import { 
+    startSmsConsent, 
+    addSmsConsentListener,
+    stopSmsConsent 
+} from '../../../native-modules/SmsUserConsent';
+
+useEffect(() => {
+    // Add listener for SMS events
+    const subscription = addSmsConsentListener((event) => {
+        if (event.status === 'success') {
+            const otp = event.message.match(/\b\d{6}\b/)?.[0];
+            if (otp) autoFillOtp(otp);
+        }
+    });
+    
+    // Start listening
+    startSmsConsent();
+    
+    return () => {
+        subscription?.remove();
+        stopSmsConsent();
+    };
+}, []);
+```
+
+### How It Works
+1. App calls `startSmsConsent()`
+2. SMS arrives from provider
+3. Android shows system dialog: *"Allow App to read this message?"*
+4. User taps **Allow**
+5. App receives SMS text via event emitter
+6. Regex extracts 6-digit OTP
+7. Auto-fills input boxes
+
+### Testing
+- **Requires real Android device** (emulators can't receive SMS)
+- Device must have Google Play Services
+
+### Dependencies
+```gradle
+// android/app/build.gradle
+implementation("com.google.android.gms:play-services-auth:21.2.0")
+implementation("com.google.android.gms:play-services-auth-api-phone:18.1.0")
+```
+
+---
+
 # Testing & Quality
 
 ### Before Committing Code

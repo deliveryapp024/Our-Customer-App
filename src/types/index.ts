@@ -5,6 +5,8 @@ export interface User {
     name?: string;
     email?: string;
     profileImage?: string;
+    profileImageType?: 'upload' | 'avatar';
+    profileAvatarId?: string;
     dietaryPreferences?: DietaryPreference[];
     createdAt: string;
 }

@@ -101,6 +101,9 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
                         phone: String(user.phone),
                         name: user.name,
                         email: user.email,
+                        profileImage: user.profileImage,
+                        profileImageType: user.profileImageType,
+                        profileAvatarId: user.profileAvatarId,
                         createdAt: user.createdAt,
                     },
                     token: accessToken,
@@ -154,13 +157,18 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
 
             if (token[1] && userData[1]) {
                 const user = JSON.parse(userData[1]);
+                const normalizedUser = {
+                    ...user,
+                    id: user.id || user._id,
+                    phone: String(user.phone),
+                };
 
                 // Set token in API client for future requests
                 setAuthToken(token[1]);
 
                 set({
                     token: token[1],
-                    user,
+                    user: normalizedUser,
                     isAuthenticated: true,
                     onboardingComplete: onboardingComplete[1] === 'true',
                     isLoading: false,

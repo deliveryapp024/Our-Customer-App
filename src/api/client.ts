@@ -100,6 +100,60 @@ async function request<T>(
     }
 }
 
+async function requestFormData<T>(
+    endpoint: string,
+    method: 'POST' | 'PATCH',
+    body: FormData,
+    options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+
+    const headers: Record<string, string> = {
+        ...(options.headers as Record<string, string>),
+    };
+
+    if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            method,
+            headers,
+            body,
+            signal: controller.signal,
+        });
+
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            return {
+                success: false,
+                error: data?.message || `HTTP ${response.status}: ${response.statusText}`,
+            };
+        }
+
+        if (data && typeof data.success === 'boolean') {
+            return data as ApiResponse<T>;
+        }
+
+        return {
+            success: true,
+            data: data as T,
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Network error';
+        return {
+            success: false,
+            error: message,
+        };
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 // HTTP methods
 export const api = {
     get: <T>(endpoint: string, options?: RequestInit) =>
@@ -121,6 +175,12 @@ export const api = {
 
     delete: <T>(endpoint: string, options?: RequestInit) =>
         request<T>(endpoint, { ...options, method: 'DELETE' }),
+
+    postFormData: <T>(endpoint: string, body: FormData, options?: RequestInit) =>
+        requestFormData<T>(endpoint, 'POST', body, options),
+
+    patchFormData: <T>(endpoint: string, body: FormData, options?: RequestInit) =>
+        requestFormData<T>(endpoint, 'PATCH', body, options),
 };
 
 export default api;

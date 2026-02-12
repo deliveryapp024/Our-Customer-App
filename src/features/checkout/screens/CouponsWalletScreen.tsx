@@ -9,6 +9,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BackButton } from '../../../components/ui/BackButton';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -85,11 +86,7 @@ export const CouponsWalletScreen: React.FC<Props> = ({ navigation, onApplyCoupon
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()}>
-                    <Text style={styles.backIcon}>←</Text>
-                </TouchableOpacity>
+                <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Coupons & Offers</Text>
                 <View style={styles.placeholder} />
             </View>
@@ -186,18 +183,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 50,
         paddingBottom: 16,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#2A2A2A',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    backIcon: {
-        fontSize: 20,
-        color: '#FFFFFF',
     },
     headerTitle: {
         fontSize: 18,

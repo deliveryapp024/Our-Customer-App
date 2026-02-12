@@ -65,3 +65,5 @@ export const FEATURE_FLAGS = {
     ENABLE_FLASH_DEALS: true,
     ENABLE_GROUP_ORDER: true,
 };
+
+export * from './avatars';

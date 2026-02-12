@@ -114,8 +114,6 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
                 style={styles.slideImage}
                 resizeMode="cover"
             />
-            {/* Gradient overlay for better text readability */}
-            <View style={styles.gradientOverlay} />
         </View>
     ), []);
 
@@ -191,60 +189,49 @@ const styles = StyleSheet.create({
         backgroundColor: '#000000',
     },
     carouselContainer: {
-        height: height * 0.6,
+        height: height * 0.52, // Slightly reduced to shift text up
     },
     slide: {
         width: width,
-        height: height * 0.6,
+        height: height * 0.52,
     },
     slideImage: {
         width: '100%',
         height: '100%',
     },
-    gradientOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    },
+    // Removed gradientOverlay
     contentOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        flex: 1,
         paddingHorizontal: 24,
-        paddingBottom: 40,
-        paddingTop: 24,
+        paddingBottom: 60, // Increased to shift button up
+        paddingTop: 20,
+        justifyContent: 'space-evenly',
+        // Removed alignItems: 'center' to allow button to stretch
     },
     textContainer: {
         alignItems: 'center',
-        marginBottom: 24,
+        justifyContent: 'center',
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#FFFFFF',
         textAlign: 'center',
-        marginBottom: 16,
-        lineHeight: 40,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: -1, height: 1 },
-        textShadowRadius: 10,
+        marginBottom: 12,
+        lineHeight: 36,
     },
     subtitle: {
-        fontSize: 18,
-        color: '#FFFFFF',
+        fontSize: 16,
+        color: '#CCCCCC',
         textAlign: 'center',
-        lineHeight: 26,
-        paddingHorizontal: 16,
-        fontWeight: '500',
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: -1, height: 1 },
-        textShadowRadius: 10,
+        lineHeight: 24,
+        paddingHorizontal: 8,
     },
     dotsContainer: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'center', // Center dots horizontally
         alignItems: 'center',
-        marginBottom: 32,
+        paddingVertical: 10,
     },
     dotButton: {
         padding: 8,
@@ -264,6 +251,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         paddingVertical: 18,
         alignItems: 'center',
+        width: '100%', // Ensure full width
     },
     getStartedButtonText: {
         fontSize: 16,

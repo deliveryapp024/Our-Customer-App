@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ComingSoonScreen from '../../../components/ComingSoonScreen';
 import { FEATURE_FLAGS } from '../../../constants';
+import { BackButton } from '../../../components/ui/BackButton';
 
 const { width } = Dimensions.get('window');
 
@@ -182,9 +183,7 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={styles.backIcon}>←</Text>
-                </TouchableOpacity>
+                <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Dine-Out</Text>
                 <TouchableOpacity style={styles.filterButton}>
                     <Text style={styles.filterIcon}>⚙️</Text>
@@ -285,13 +284,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-    },
-    backButton: {
-        padding: 8,
-    },
-    backIcon: {
-        color: '#FFF',
-        fontSize: 24,
     },
     headerTitle: {
         color: '#FFF',

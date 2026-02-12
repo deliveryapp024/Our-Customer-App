@@ -13,6 +13,7 @@ import { SCREENS, STACKS } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../../constants';
+import { BackButton } from '../../../components/ui/BackButton';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -68,11 +69,7 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
             {/* Back Button */}
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}>
-                <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
+            <BackButton onPress={() => navigation.goBack()} />
 
             {/* Header */}
             <Text style={styles.headerTitle}>Set Location</Text>
@@ -149,20 +146,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
-    },
-    backButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#2A2A2A',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-        marginLeft: 16,
-    },
-    backIcon: {
-        fontSize: 20,
-        color: '#FFFFFF',
     },
     headerTitle: {
         fontSize: 18,

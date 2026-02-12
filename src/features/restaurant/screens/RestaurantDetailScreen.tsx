@@ -15,6 +15,7 @@ import { RouteProp } from '@react-navigation/native';
 import { restaurantsApi, Restaurant, MenuItem } from '../../../api';
 import { useCartStore } from '../../../store/cartStore';
 import { SCREENS } from '../../../constants';
+import { BackButton } from '../../../components/ui/BackButton';
 
 const { width } = Dimensions.get('window');
 
@@ -189,11 +190,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     resizeMode="cover"
                 />
                 <View style={styles.headerOverlay}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}>
-                        <Text style={styles.backIcon}>←</Text>
-                    </TouchableOpacity>
+                    <BackButton onPress={() => navigation.goBack()} />
                     <View style={styles.headerActions}>
                         <TouchableOpacity style={styles.actionButton}>
                             <Text style={styles.actionIcon}>🔍</Text>
@@ -458,18 +455,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingTop: 50,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#00000099',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    backIcon: {
-        fontSize: 20,
-        color: '#FFFFFF',
     },
     headerActions: {
         flexDirection: 'row',

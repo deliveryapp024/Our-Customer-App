@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
 import { CustomModal, ModalButton } from '../../../components/ui/CustomModal';
+import { BackButton } from '../../../components/ui/BackButton';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -118,18 +119,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Header with Back Button */}
                 <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                        disabled={isLoading}
-                        activeOpacity={0.7}>
-                        <View style={styles.backButtonInner}>
-                            {/* Chevron left icon using SVG-like shape */}
-                            <View style={styles.backArrow}>
-                                <View style={styles.chevronLeft} />
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+                    <BackButton onPress={() => navigation.goBack()} />
                 </View>
 
                 {/* Content */}
@@ -211,40 +201,6 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    backButton: {
-        // Larger hit area (48x48 minimum for accessibility)
-        width: 48,
-        height: 48,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    backButtonInner: {
-        // Visual circle
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#2A2A2A',
-        justifyContent: 'center',
-        alignItems: 'center',
-        // Subtle border for depth
-        borderWidth: 1,
-        borderColor: '#3A3A3A',
-    },
-    backArrow: {
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    chevronLeft: {
-        width: 12,
-        height: 12,
-        borderLeftWidth: 2.5,
-        borderBottomWidth: 2.5,
-        borderColor: '#FFFFFF',
-        transform: [{ rotate: '45deg' }],
-        marginLeft: 4,
     },
     content: {
         flex: 1,

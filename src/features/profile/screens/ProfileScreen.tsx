@@ -6,27 +6,30 @@ import {
     ScrollView,
     StatusBar,
     StyleSheet,
+    Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../../store/authStore';
 import { SCREENS } from '../../../constants';
+import { getAvatarOptionById } from '../../../constants/avatars';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
 };
 
 const menuItems = [
-    { id: '1', icon: '📋', label: 'Your Orders', screen: SCREENS.ORDER_HISTORY },
-    { id: '2', icon: '❤️', label: 'Favorites', screen: SCREENS.FAVORITES },
-    { id: '3', icon: '📍', label: 'Saved Addresses', screen: SCREENS.SAVED_ADDRESSES },
-    { id: '4', icon: '💳', label: 'Payments', screen: SCREENS.PAYMENTS_HUB },
-    { id: '5', icon: '🎁', label: 'Refer & Earn', screen: null },
-    { id: '6', icon: '⚙️', label: 'Settings', screen: SCREENS.SETTINGS },
-    { id: '7', icon: '❓', label: 'Help & Support', screen: SCREENS.HELP_SUPPORT },
+    { id: '1', icon: '??', label: 'Your Orders', screen: SCREENS.ORDER_HISTORY },
+    { id: '2', icon: '??', label: 'Favorites', screen: SCREENS.FAVORITES },
+    { id: '3', icon: '??', label: 'Saved Addresses', screen: SCREENS.SAVED_ADDRESSES },
+    { id: '4', icon: '??', label: 'Payments', screen: SCREENS.PAYMENTS_HUB },
+    { id: '5', icon: '??', label: 'Refer & Earn', screen: null },
+    { id: '6', icon: '??', label: 'Settings', screen: SCREENS.SETTINGS },
+    { id: '7', icon: '?', label: 'Help & Support', screen: SCREENS.HELP_SUPPORT },
 ];
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     const { user, logout } = useAuthStore();
+    const selectedAvatar = getAvatarOptionById(user?.profileAvatarId);
 
     const handleLogout = async () => {
         await logout();
@@ -38,26 +41,40 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         }
     };
 
+    const renderAvatar = () => {
+        if (user?.profileImageType === 'upload' && user?.profileImage) {
+            return <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />;
+        }
+
+        if (user?.profileImageType === 'avatar' && selectedAvatar) {
+            return (
+                <View style={[styles.avatarEmojiContainer, { backgroundColor: selectedAvatar.bgColor }]}>
+                    <Text style={styles.avatarEmoji}>{selectedAvatar.emoji}</Text>
+                </View>
+            );
+        }
+
+        return (
+            <Text style={styles.avatarText}>
+                {user?.name?.charAt(0)?.toUpperCase() || '??'}
+            </Text>
+        );
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Profile</Text>
                 <TouchableOpacity style={styles.editButton}>
-                    <Text style={styles.editIcon}>✏️</Text>
+                    <Text style={styles.editIcon}>??</Text>
                 </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Profile Card */}
                 <View style={styles.profileCard}>
-                    <View style={styles.avatarContainer}>
-                        <Text style={styles.avatarText}>
-                            {user?.name?.charAt(0)?.toUpperCase() || '👤'}
-                        </Text>
-                    </View>
+                    <View style={styles.avatarContainer}>{renderAvatar()}</View>
                     <View style={styles.profileInfo}>
                         <Text style={styles.profileName}>{user?.name || 'Guest User'}</Text>
                         <Text style={styles.profilePhone}>{user?.phone || '+91 XXXXXXXXXX'}</Text>
@@ -65,17 +82,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 </View>
 
-                {/* Membership Card */}
                 <TouchableOpacity style={styles.membershipCard}>
                     <View style={styles.membershipInfo}>
                         <Text style={styles.membershipBadge}>ONE</Text>
                         <Text style={styles.membershipTitle}>Swiggy One Member</Text>
                         <Text style={styles.membershipSubtitle}>Free delivery on all orders</Text>
                     </View>
-                    <Text style={styles.membershipArrow}>→</Text>
+                    <Text style={styles.membershipArrow}>?</Text>
                 </TouchableOpacity>
 
-                {/* Quick Stats */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>23</Text>
@@ -83,7 +98,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>₹240</Text>
+                        <Text style={styles.statValue}>?240</Text>
                         <Text style={styles.statLabel}>Saved</Text>
                     </View>
                     <View style={styles.statDivider} />
@@ -93,7 +108,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 </View>
 
-                {/* Menu Items */}
                 <View style={styles.menuContainer}>
                     {menuItems.map((item) => (
                         <TouchableOpacity
@@ -102,18 +116,16 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                             onPress={() => handleMenuPress(item.screen)}>
                             <Text style={styles.menuIcon}>{item.icon}</Text>
                             <Text style={styles.menuLabel}>{item.label}</Text>
-                            <Text style={styles.menuArrow}>→</Text>
+                            <Text style={styles.menuArrow}>?</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                {/* Logout Button */}
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutIcon}>🚪</Text>
+                    <Text style={styles.logoutIcon}>??</Text>
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
-                {/* App Version */}
                 <Text style={styles.versionText}>Version 1.0.0</Text>
 
                 <View style={styles.bottomSpacing} />
@@ -165,6 +177,20 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+    },
+    avatarEmojiContainer: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarEmoji: {
+        fontSize: 30,
     },
     avatarText: {
         fontSize: 28,

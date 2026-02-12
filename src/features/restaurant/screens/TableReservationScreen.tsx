@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BackButton } from '../../../components/ui/BackButton';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
@@ -18,7 +19,7 @@ export const TableReservationScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}><Text style={styles.backIcon}>←</Text></TouchableOpacity>
+                <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Book a Table</Text>
                 <View style={styles.placeholder} />
             </View>
@@ -85,8 +86,6 @@ export const TableReservationScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#000000' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 16 },
-    backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#2A2A2A', justifyContent: 'center', alignItems: 'center' },
-    backIcon: { fontSize: 20, color: '#FFFFFF' },
     headerTitle: { fontSize: 18, fontWeight: '600', color: '#FFFFFF' },
     placeholder: { width: 40 },
     restaurantCard: { flexDirection: 'row', marginHorizontal: 16, backgroundColor: '#1A1A1A', borderRadius: 16, padding: 16, marginBottom: 24 },

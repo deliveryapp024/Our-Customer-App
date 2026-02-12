@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ComingSoonScreen from '../../../components/ComingSoonScreen';
 import { FEATURE_FLAGS } from '../../../constants';
+import { BackButton } from '../../../components/ui/BackButton';
 
 const { height } = Dimensions.get('window');
 
@@ -53,9 +54,7 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.backIcon}>←</Text>
-                </TouchableOpacity>
+                <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Live Tracking</Text>
                 <TouchableOpacity style={styles.sosButton}>
                     <Text style={styles.sosText}>SOS</Text>
@@ -111,7 +110,7 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#000' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-    backIcon: { color: '#FFF', fontSize: 24 },
+
     headerTitle: { color: '#FFF', fontSize: 18, fontWeight: '700' },
     sosButton: { backgroundColor: '#FF5252', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
     sosText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
