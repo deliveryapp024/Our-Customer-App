@@ -15,8 +15,8 @@ type Props = {
 };
 
 const rewards = [
-    { id: '1', icon: '🎁', title: 'Friend gets $10', description: 'On their first order' },
-    { id: '2', icon: '💰', title: 'You get $10', description: 'When they complete an order' },
+    { id: '1', icon: '🎁', title: 'Friend gets ₹10', description: 'On their first order' },
+    { id: '2', icon: '💰', title: 'You get ₹10', description: 'When they complete an order' },
     { id: '3', icon: '🔁', title: 'Unlimited referrals', description: 'Keep earning rewards' },
 ];
 
@@ -34,7 +34,7 @@ export const ReferralScreen: React.FC<Props> = ({ navigation }) => {
     const handleShare = async () => {
         try {
             await Share.share({
-                message: `Get $10 off your first food delivery! Use my code: ${referralCode} | Download: https://app.link/invite/${referralCode}`,
+                message: `Get ₹10 off your first food delivery! Use my code: ${referralCode} | Download: https://app.link/invite/${referralCode}`,
             });
         } catch (error) {
             console.error('Share error:', error);
@@ -60,7 +60,7 @@ export const ReferralScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Hero Card */}
                 <View style={styles.heroCard}>
                     <Text style={styles.heroEmoji}>🎉</Text>
-                    <Text style={styles.heroTitle}>Earn $10 for every friend!</Text>
+                    <Text style={styles.heroTitle}>Earn ₹10 for every friend!</Text>
                     <Text style={styles.heroSubtitle}>
                         Share your code with friends and earn rewards when they order
                     </Text>
@@ -85,12 +85,12 @@ export const ReferralScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Earnings Card */}
                 <View style={styles.earningsCard}>
                     <View style={styles.earningItem}>
-                        <Text style={styles.earningValue}>${totalEarned}</Text>
+                        <Text style={styles.earningValue}>₹{totalEarned}</Text>
                         <Text style={styles.earningLabel}>Total Earned</Text>
                     </View>
                     <View style={styles.earningDivider} />
                     <View style={styles.earningItem}>
-                        <Text style={styles.earningValuePending}>${pendingEarnings}</Text>
+                        <Text style={styles.earningValuePending}>₹{pendingEarnings}</Text>
                         <Text style={styles.earningLabel}>Pending</Text>
                     </View>
                 </View>
@@ -128,7 +128,7 @@ export const ReferralScreen: React.FC<Props> = ({ navigation }) => {
                             <View style={styles.historyStatus}>
                                 {referral.status === 'completed' ? (
                                     <>
-                                        <Text style={styles.earnedText}>+${referral.earned}</Text>
+                                        <Text style={styles.earnedText}>+₹{referral.earned}</Text>
                                         <Text style={styles.completedText}>Completed</Text>
                                     </>
                                 ) : (

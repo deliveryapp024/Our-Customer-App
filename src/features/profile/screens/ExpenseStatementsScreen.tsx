@@ -34,8 +34,8 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.totalCard}>
                     <Text style={styles.totalLabel}>This Month</Text>
-                    <Text style={styles.totalValue}>$245.50</Text>
-                    <Text style={styles.totalMeta}>12 orders • Avg $20.46/order</Text>
+                    <Text style={styles.totalValue}>₹245.50</Text>
+                    <Text style={styles.totalMeta}>12 orders • Avg ₹20.46/order</Text>
                 </View>
 
                 <View style={styles.chartContainer}>
@@ -56,7 +56,7 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.categoryIcon}>{cat.icon}</Text>
                             <Text style={styles.categoryName}>{cat.name}</Text>
                             <View style={styles.categoryProgress}><View style={[styles.progressFill, { width: `${cat.percentage}%` }]} /></View>
-                            <Text style={styles.categoryAmount}>${cat.amount.toFixed(2)}</Text>
+                            <Text style={styles.categoryAmount}>₹{cat.amount.toFixed(2)}</Text>
                         </View>
                     ))}
                 </View>
@@ -66,7 +66,7 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
                     {expenses.map((exp) => (
                         <TouchableOpacity key={exp.id} style={styles.monthCard}>
                             <Text style={styles.monthName}>{exp.month}</Text>
-                            <View style={styles.monthMeta}><Text style={styles.monthOrders}>{exp.orders} orders</Text><Text style={styles.monthTotal}>${exp.total.toFixed(2)}</Text></View>
+                            <View style={styles.monthMeta}><Text style={styles.monthOrders}>{exp.orders} orders</Text><Text style={styles.monthTotal}>₹{exp.total.toFixed(2)}</Text></View>
                         </TouchableOpacity>
                     ))}
                 </View>

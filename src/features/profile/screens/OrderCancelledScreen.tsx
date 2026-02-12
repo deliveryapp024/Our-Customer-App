@@ -73,7 +73,7 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                         <View style={styles.refundInfo}>
                             <Text style={styles.refundTitle}>Refund Processed</Text>
                             <Text style={styles.refundText}>
-                                The total amount of ${refundAmount.toFixed(2)} has been credited back to your Apple Pay account.
+                                The total amount of ₹{refundAmount.toFixed(2)} has been credited back to your Apple Pay account.
                             </Text>
                         </View>
                         <View style={styles.walletIcon}>
@@ -92,7 +92,7 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                                 <Text style={styles.itemName}>{item.name}</Text>
                                 <Text style={styles.itemExtra}>Qty: {item.quantity} • {item.extra}</Text>
                             </View>
-                            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                            <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
                         </View>
                     ))}
                 </View>
@@ -101,15 +101,15 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                 <View style={styles.section}>
                     <View style={styles.billRow}>
                         <Text style={styles.billLabel}>Subtotal</Text>
-                        <Text style={styles.billValue}>$38.50</Text>
+                        <Text style={styles.billValue}>₹38.50</Text>
                     </View>
                     <View style={styles.billRow}>
                         <Text style={styles.billLabel}>Delivery Fee</Text>
-                        <Text style={styles.billValue}>$4.00</Text>
+                        <Text style={styles.billValue}>₹4.00</Text>
                     </View>
                     <View style={[styles.billRow, styles.totalRow]}>
                         <Text style={styles.totalLabel}>Total Refunded</Text>
-                        <Text style={styles.totalValue}>${refundAmount.toFixed(2)}</Text>
+                        <Text style={styles.totalValue}>₹{refundAmount.toFixed(2)}</Text>
                     </View>
                 </View>
 

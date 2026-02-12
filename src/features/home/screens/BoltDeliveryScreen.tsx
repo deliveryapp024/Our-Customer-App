@@ -127,10 +127,10 @@ export const BoltDeliveryScreen: React.FC<Props> = ({ navigation }) => {
                             />
                             <Text style={styles.itemName}>{item.name}</Text>
                             <View style={styles.priceRow}>
-                                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                                <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
                                 {item.originalPrice && (
                                     <Text style={styles.originalPrice}>
-                                        ${item.originalPrice.toFixed(2)}
+                                        ₹{item.originalPrice.toFixed(2)}
                                     </Text>
                                 )}
                             </View>

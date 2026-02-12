@@ -50,7 +50,7 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                 restaurantName: 'Restaurant', // TODO: Get from seller data
                 restaurantImage: '', // TODO: Get from seller data
                 items: `${order.items.length} items`,
-                total: `$${order.totalPrice.toFixed(2)}`,
+                total: `₹${order.totalPrice.toFixed(2)}`,
                 date: new Date(order.createdAt).toLocaleDateString(),
                 status: mapOrderStatus(order.status),
             }));

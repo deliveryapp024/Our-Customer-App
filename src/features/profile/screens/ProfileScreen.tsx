@@ -83,7 +83,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>$240</Text>
+                        <Text style={styles.statValue}>₹240</Text>
                         <Text style={styles.statLabel}>Saved</Text>
                     </View>
                     <View style={styles.statDivider} />

@@ -42,7 +42,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '1.2 km',
         discount: '20% OFF',
         tableFor: '2-6',
-        priceRange: '$$$$',
+        priceRange: '₹₹₹₹',
     },
     {
         id: '2',
@@ -54,7 +54,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '2.5 km',
         discount: '15% OFF',
         tableFor: '2-8',
-        priceRange: '$$$',
+        priceRange: '₹₹₹',
     },
     {
         id: '3',
@@ -66,7 +66,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '3.0 km',
         discount: '10% OFF',
         tableFor: '2-4',
-        priceRange: '$$$$',
+        priceRange: '₹₹₹₹',
     },
 ];
 

@@ -79,7 +79,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                                 {cartItem.menuItem.name}
                             </Text>
                             <Text style={styles.itemPrice}>
-                                ${(cartItem.menuItem.price * cartItem.quantity).toFixed(2)}
+                                ₹{(cartItem.menuItem.price * cartItem.quantity).toFixed(2)}
                             </Text>
                         </View>
                         <View style={styles.quantityControls}>
@@ -116,15 +116,15 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 <Text style={styles.billTitle}>Bill Details</Text>
                 <View style={styles.billRow}>
                     <Text style={styles.billLabel}>Item Total</Text>
-                    <Text style={styles.billValue}>${subtotal.toFixed(2)}</Text>
+                    <Text style={styles.billValue}>₹{subtotal.toFixed(2)}</Text>
                 </View>
                 <View style={styles.billRow}>
                     <Text style={styles.billLabel}>Delivery Fee</Text>
-                    <Text style={styles.billValue}>${deliveryFee.toFixed(2)}</Text>
+                    <Text style={styles.billValue}>₹{deliveryFee.toFixed(2)}</Text>
                 </View>
                 <View style={[styles.billRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>TO PAY</Text>
-                    <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+                    <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
                 </View>
             </View>
 
@@ -132,7 +132,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             <TouchableOpacity style={styles.checkoutButton} onPress={onCheckout}>
                 <View style={styles.checkoutInfo}>
                     <Text style={styles.checkoutItems}>{getItemCount()} ITEMS</Text>
-                    <Text style={styles.checkoutTotal}>${total.toFixed(2)}</Text>
+                    <Text style={styles.checkoutTotal}>₹{total.toFixed(2)}</Text>
                 </View>
                 <View style={styles.checkoutAction}>
                     <Text style={styles.checkoutText}>Proceed to Checkout</Text>

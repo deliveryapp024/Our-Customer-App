@@ -63,7 +63,7 @@ export const PaymentsHubScreen: React.FC<Props> = ({ navigation }) => {
                         <Text style={styles.walletIcon}>💰</Text>
                         <View style={styles.walletInfo}>
                             <Text style={styles.walletLabel}>Wallet Balance</Text>
-                            <Text style={styles.walletBalance}>${walletBalance.toFixed(2)}</Text>
+                            <Text style={styles.walletBalance}>₹{walletBalance.toFixed(2)}</Text>
                         </View>
                     </View>
                     <View style={styles.quickActions}>

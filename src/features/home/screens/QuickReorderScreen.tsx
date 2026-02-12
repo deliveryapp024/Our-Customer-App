@@ -38,7 +38,7 @@ export const QuickReorderScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.orderDate}>{order.date}</Text>
                         </View>
                         <View style={styles.orderAction}>
-                            <Text style={styles.orderTotal}>${order.total.toFixed(2)}</Text>
+                            <Text style={styles.orderTotal}>₹{order.total.toFixed(2)}</Text>
                             <TouchableOpacity style={styles.reorderButton}><Text style={styles.reorderText}>REORDER</Text></TouchableOpacity>
                         </View>
                     </View>

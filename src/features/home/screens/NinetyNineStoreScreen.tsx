@@ -64,7 +64,7 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.valueBanner}>
                 <Text style={styles.bannerEmoji}>💰</Text>
                 <Text style={styles.bannerText}>
-                    Everything at just <Text style={styles.bannerPrice}>$0.99</Text> or less!
+                    Everything at just <Text style={styles.bannerPrice}>₹0.99</Text> or less!
                 </Text>
             </View>
 
@@ -95,7 +95,7 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
                     {products.map((product) => (
                         <View key={product.id} style={styles.productCard}>
                             <View style={styles.priceBadge}>
-                                <Text style={styles.priceBadgeText}>$0.99</Text>
+                                <Text style={styles.priceBadgeText}>₹0.99</Text>
                             </View>
                             <Image
                                 source={{ uri: product.image }}

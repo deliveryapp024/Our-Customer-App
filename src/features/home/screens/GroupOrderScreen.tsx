@@ -121,7 +121,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                                 </View>
                                 <Text style={styles.memberStatus}>
                                     {member.itemCount > 0
-                                        ? `${member.itemCount} items • $${member.total.toFixed(2)}`
+                                        ? `${member.itemCount} items • ₹{member.total.toFixed(2)}`
                                         : 'Browsing menu...'}
                                 </Text>
                             </View>
@@ -144,7 +144,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.totalCard}>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>Group Total</Text>
-                        <Text style={styles.totalValue}>${totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.totalValue}>₹{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalSubLabel}>Total Items</Text>
@@ -160,7 +160,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity style={styles.checkoutButton}>
                     <View style={styles.checkoutInfo}>
                         <Text style={styles.checkoutItems}>{totalItems} ITEMS</Text>
-                        <Text style={styles.checkoutTotal}>${totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.checkoutTotal}>₹{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.checkoutAction}>
                         <Text style={styles.checkoutText}>Place Group Order</Text>

@@ -66,7 +66,7 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.orderInfo}>
                         <Text style={styles.restaurantName}>{restaurantName}</Text>
                         <Text style={styles.orderDetails}>
-                            Order #{orderId} • ${total}
+                            Order #{orderId} • ₹{total}
                         </Text>
                         <View style={styles.addressRow}>
                             <Text style={styles.locationIcon}>📍</Text>

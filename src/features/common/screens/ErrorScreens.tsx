@@ -46,7 +46,7 @@ export const PaymentFailedScreen: React.FC<Props> = ({ navigation, onRetry }) =>
                 </View>
                 <View style={styles.errorRow}>
                     <Text style={styles.errorLabel}>Amount</Text>
-                    <Text style={styles.errorValue}>$42.50</Text>
+                    <Text style={styles.errorValue}>₹42.50</Text>
                 </View>
                 <View style={styles.errorRow}>
                     <Text style={styles.errorLabel}>Payment Method</Text>

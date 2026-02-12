@@ -313,10 +313,10 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                 )}
                                 <Text style={styles.itemName}>{item.name}</Text>
                                 <View style={styles.priceRow}>
-                                    <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                                    <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
                                     {item.originalPrice && (
                                         <Text style={styles.originalPrice}>
-                                            ${item.originalPrice.toFixed(2)}
+                                            ₹{item.originalPrice.toFixed(2)}
                                         </Text>
                                     )}
                                 </View>
@@ -373,7 +373,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 >
                     <View style={styles.cartInfo}>
                         <Text style={styles.cartItems}>{totalItems} ITEMS</Text>
-                        <Text style={styles.cartTotal}>${totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.cartTotal}>₹{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.cartAction}>
                         <Text style={styles.cartActionText}>View Cart</Text>

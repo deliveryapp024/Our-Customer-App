@@ -138,8 +138,8 @@ export const FlashDealsScreen: React.FC<Props> = ({ navigation }) => {
                         <View style={styles.dealInfo}>
                             <Text style={styles.restaurantName}>{deal.restaurantName}</Text>
                             <View style={styles.priceRow}>
-                                <Text style={styles.dealPrice}>${deal.dealPrice.toFixed(2)}</Text>
-                                <Text style={styles.originalPrice}>${deal.originalPrice.toFixed(2)}</Text>
+                                <Text style={styles.dealPrice}>₹{deal.dealPrice.toFixed(2)}</Text>
+                                <Text style={styles.originalPrice}>₹{deal.originalPrice.toFixed(2)}</Text>
                             </View>
 
                             {/* Timer */}

@@ -155,11 +155,11 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
                             {/* Price Row */}
                             <View style={styles.priceRow}>
                                 <View style={styles.priceInfo}>
-                                    <Text style={styles.comboPrice}>${combo.comboPrice.toFixed(2)}</Text>
-                                    <Text style={styles.originalPrice}>${combo.originalPrice.toFixed(2)}</Text>
+                                    <Text style={styles.comboPrice}>₹{combo.comboPrice.toFixed(2)}</Text>
+                                    <Text style={styles.originalPrice}>₹{combo.originalPrice.toFixed(2)}</Text>
                                 </View>
                                 <View style={styles.savingsBadge}>
-                                    <Text style={styles.savingsText}>Save ${combo.savings.toFixed(2)}</Text>
+                                    <Text style={styles.savingsText}>Save ₹{combo.savings.toFixed(2)}</Text>
                                 </View>
                             </View>
 
