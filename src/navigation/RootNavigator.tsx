@@ -18,6 +18,7 @@ import {
     OrderReceiptScreen, EcoDashboardScreen, ExpenseStatementsScreen,
 } from '../features/profile';
 import { PaymentFailedScreen, GenericErrorScreen, LocationUnserviceableScreen, RestaurantClosedScreen } from '../features/common';
+import { LocationPickerScreen } from '../features/auth/screens/LocationPickerScreen';
 import { SCREENS, STACKS, FEATURE_FLAGS } from '../constants';
 
 const Stack = createNativeStackNavigator();
@@ -75,6 +76,8 @@ export const RootNavigator = () => {
                     <Stack.Screen name={SCREENS.GENERIC_ERROR} component={GenericErrorScreen} options={{ animation: 'fade' }} />
                     <Stack.Screen name={SCREENS.LOCATION_UNSERVICEABLE} component={LocationUnserviceableScreen} options={{ animation: 'fade' }} />
                     <Stack.Screen name={SCREENS.RESTAURANT_CLOSED} component={RestaurantClosedScreen} options={{ animation: 'fade' }} />
+                    {/* Location Picker */}
+                    <Stack.Screen name={SCREENS.LOCATION_PICKER} component={LocationPickerScreen} options={{ animation: 'slide_from_bottom' }} />
                 </>
             ) : (
                 <Stack.Screen name={STACKS.AUTH} component={AuthNavigator} />

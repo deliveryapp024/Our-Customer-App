@@ -6,7 +6,9 @@ import {
     StatusBar,
     StyleSheet,
     Image,
+    ScrollView,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
@@ -36,17 +38,25 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}>
+
             {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={handleGoHome}>
                 <Text style={styles.closeIcon}>✕</Text>
             </TouchableOpacity>
 
-            {/* Success Animation Placeholder */}
+            {/* Success Animation */}
             <View style={styles.successContainer}>
-                <View style={styles.successCircle}>
-                    <View style={styles.successInner}>
-                        <Text style={styles.checkIcon}>✓</Text>
-                    </View>
+                <View style={styles.lottieWrapper}>
+                    <LottieView
+                        source={require('../../../assets/animations/success-animation.json')}
+                        autoPlay
+                        loop={true}
+                        style={styles.lottieAnimation}
+                        resizeMode="contain"
+                    />
                 </View>
             </View>
 
@@ -74,7 +84,7 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
                         </View>
                     </View>
                     <View style={styles.foodImageContainer}>
-                        // Image from order_placement_success design
+                        {/* Image from order_placement_success design */}
                         <Image
                             source={{
                                 uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBGWV77IXaL9-FCyvyJNyc-v1nLbCELzS1Uprt0bs6XjY089jM05PHJOowfcwP_lkzgMdvnxJ61SRap2Usbqbw7U7wMBlJ7yEmx-4kzZk5K_2gprNWOOYJHqFbSwlw52z6O_cQNhJw6RU1NgYdUpCWTM5E9a1STRyEQaopEPX2eWHaWdzyZeVABeWBxUaxs7tOTaR54o4hU6UV-gH6bQKl6gV0jiDIEtqSvbYpiLB26OsTkqrwIEeJei0DzfKMCIV3SnXguQismPoXk',
@@ -107,6 +117,8 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
             <TouchableOpacity style={styles.detailsButton}>
                 <Text style={styles.detailsText}>Order details</Text>
             </TouchableOpacity>
+
+            </ScrollView>
         </View>
     );
 };
@@ -115,8 +127,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
-        paddingHorizontal: 24,
         paddingTop: 50,
+    },
+    scrollContent: {
+        paddingHorizontal: 24,
+        paddingBottom: 24,
     },
     closeButton: {
         alignSelf: 'flex-start',
@@ -136,27 +151,15 @@ const styles = StyleSheet.create({
         marginTop: 32,
         marginBottom: 24,
     },
-    successCircle: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        borderWidth: 3,
-        borderColor: '#00E5FF33',
+    lottieWrapper: {
+        width: 150,
+        height: 150,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    successInner: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#00E5FF',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    checkIcon: {
-        fontSize: 40,
-        color: '#000000',
-        fontWeight: 'bold',
+    lottieAnimation: {
+        width: 150,
+        height: 150,
     },
     title: {
         fontSize: 28,

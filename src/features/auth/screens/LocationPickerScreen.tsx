@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,13 +7,43 @@ import {
     StatusBar,
     StyleSheet,
     ScrollView,
+    Dimensions,
+    ActivityIndicator,
+    Alert,
+    Platform,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import MapView, { Marker, MapPressEvent, Region, MarkerDragStartEndEvent } from 'react-native-maps';
+import Geolocation from '@react-native-community/geolocation';
 import { SCREENS, STACKS } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../../constants';
 import { BackButton } from '../../../components/ui/BackButton';
+
+const { width, height } = Dimensions.get('window');
+
+// Default location: Belgaum
+const DEFAULT_REGION: Region = {
+    latitude: 15.8497,
+    longitude: 74.4977,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+};
+
+// Valid coordinate check
+const isValidCoord = (lat: any, lng: any): boolean => {
+    return (
+        typeof lat === 'number' &&
+        typeof lng === 'number' &&
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180
+    );
+};
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -33,28 +63,225 @@ const savedAddresses: SavedAddress[] = [
 
 export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState<{
+        latitude: number;
+        longitude: number;
+        address?: string;
+    } | null>(null);
+    const [region, setRegion] = useState<Region>(DEFAULT_REGION);
+    const [loading, setLoading] = useState(false);
+    const [locating, setLocating] = useState(true); // Start with true for auto-locate
+    const [mapReady, setMapReady] = useState(false);
+    const [addressText, setAddressText] = useState('');
+    
+    const mapRef = useRef<MapView>(null);
+    const pendingLocationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+    
     const setOnboardingComplete = useAuthStore((state) => state.setOnboardingComplete);
 
-    const handleUseCurrentLocation = () => {
-        // Would use react-native-geolocation-service here
-        // For now, just proceed
-        handleContinue();
-    };
+    // Reverse geocode to get address (simplified - in production use proper geocoding API)
+    const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<string> => {
+        // In production, call Google Geocoding API here
+        // For now, return coordinate-based description
+        return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    }, []);
+
+    // Apply location to map (handles map readiness)
+    const applyLocationToMap = useCallback((latitude: number, longitude: number) => {
+        if (!isValidCoord(latitude, longitude)) {
+            console.log('[LocationPicker] Invalid coordinates, skipping');
+            return;
+        }
+
+        const newRegion: Region = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.005, // Zoomed in closer
+            longitudeDelta: 0.005,
+        };
+
+        if (mapReady && mapRef.current) {
+            // Map is ready, animate immediately
+            mapRef.current.animateToRegion(newRegion, 1000);
+            setRegion(newRegion);
+        } else {
+            // Queue for when map is ready
+            console.log('[LocationPicker] Map not ready, queuing location');
+            pendingLocationRef.current = { latitude, longitude };
+            setRegion(newRegion); // Still update state
+        }
+    }, [mapReady]);
+
+    // Fast location strategy: cached first, then fresh GPS
+    const getFastLocation = useCallback(async (): Promise<{ latitude: number; longitude: number; source: string } | null> => {
+        console.log('[LocationPicker] Starting fast location...');
+        
+        // Try 1: Check for cached location in AsyncStorage
+        try {
+            const cachedLocation = await AsyncStorage.getItem(STORAGE_KEYS.LOCATION_DATA);
+            if (cachedLocation) {
+                const parsed = JSON.parse(cachedLocation);
+                if (isValidCoord(parsed.latitude, parsed.longitude)) {
+                    console.log('[LocationPicker] Using cached location');
+                    return { 
+                        latitude: parsed.latitude, 
+                        longitude: parsed.longitude, 
+                        source: 'cache' 
+                    };
+                }
+            }
+        } catch (e) {
+            console.log('[LocationPicker] Cache read failed');
+        }
+
+        // Try 2: Get current GPS position
+        return new Promise((resolve) => {
+            console.log('[LocationPicker] Getting fresh GPS...');
+            
+            Geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    if (isValidCoord(latitude, longitude)) {
+                        console.log('[LocationPicker] Fresh GPS success');
+                        resolve({ latitude, longitude, source: 'gps' });
+                    } else {
+                        console.log('[LocationPicker] GPS returned invalid coords');
+                        resolve(null);
+                    }
+                },
+                (error) => {
+                    console.log('[LocationPicker] GPS error:', error.message);
+                    resolve(null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000, // Accept locations up to 1 minute old
+                }
+            );
+        });
+    }, []);
+
+    // Auto-locate on mount
+    useEffect(() => {
+        const autoLocate = async () => {
+            setLocating(true);
+            
+            const location = await getFastLocation();
+            
+            if (location) {
+                console.log(`[LocationPicker] Auto-located via ${location.source}`);
+                
+                // Apply to map
+                applyLocationToMap(location.latitude, location.longitude);
+                
+                // Set selected location
+                const address = await reverseGeocode(location.latitude, location.longitude);
+                setSelectedLocation({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    address,
+                });
+                setAddressText(address);
+            } else {
+                console.log('[LocationPicker] Auto-locate failed, using default');
+                // Fallback to default region (Belgaum)
+                applyLocationToMap(DEFAULT_REGION.latitude, DEFAULT_REGION.longitude);
+            }
+            
+            setLocating(false);
+        };
+
+        autoLocate();
+    }, [getFastLocation, applyLocationToMap, reverseGeocode]);
+
+    // Handle map ready
+    const handleMapReady = useCallback(() => {
+        console.log('[LocationPicker] Map ready');
+        setMapReady(true);
+        
+        // Apply pending location if exists
+        if (pendingLocationRef.current) {
+            const { latitude, longitude } = pendingLocationRef.current;
+            console.log('[LocationPicker] Applying pending location');
+            
+            const newRegion: Region = {
+                latitude,
+                longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+            };
+            mapRef.current?.animateToRegion(newRegion, 1000);
+            pendingLocationRef.current = null;
+        }
+    }, []);
+
+    // Handle map press - drop pin
+    const handleMapPress = useCallback(async (event: MapPressEvent) => {
+        const { latitude, longitude } = event.nativeEvent.coordinate;
+        console.log('[LocationPicker] Map pressed:', latitude, longitude);
+        
+        setSelectedLocation({ latitude, longitude });
+        
+        // Reverse geocode
+        const address = await reverseGeocode(latitude, longitude);
+        setAddressText(address);
+    }, [reverseGeocode]);
+
+    // Handle marker drag
+    const handleMarkerDrag = useCallback(async (event: MarkerDragStartEndEvent) => {
+        const { latitude, longitude } = event.nativeEvent.coordinate;
+        console.log('[LocationPicker] Marker dragged:', latitude, longitude);
+        
+        setSelectedLocation({ latitude, longitude });
+        
+        const address = await reverseGeocode(latitude, longitude);
+        setAddressText(address);
+    }, [reverseGeocode]);
+
+    // Manual "Use current location" - uses same fast path
+    const handleUseCurrentLocation = useCallback(async () => {
+        setLoading(true);
+        
+        const location = await getFastLocation();
+        
+        if (location) {
+            console.log(`[LocationPicker] Manual location via ${location.source}`);
+            
+            applyLocationToMap(location.latitude, location.longitude);
+            
+            const address = await reverseGeocode(location.latitude, location.longitude);
+            setSelectedLocation({
+                latitude: location.latitude,
+                longitude: location.longitude,
+                address,
+            });
+            setAddressText(address);
+        } else {
+            Alert.alert('Location Error', 'Unable to get your current location. Please check GPS permissions.');
+        }
+        
+        setLoading(false);
+    }, [getFastLocation, applyLocationToMap, reverseGeocode]);
 
     const handleContinue = async () => {
         try {
-            // Mark onboarding as complete
+            if (selectedLocation) {
+                await AsyncStorage.setItem(
+                    STORAGE_KEYS.LOCATION_DATA,
+                    JSON.stringify(selectedLocation)
+                );
+            }
+
             await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
             setOnboardingComplete(true);
 
-            // Navigate to main app - reset navigation stack
             navigation.reset({
                 index: 0,
                 routes: [{ name: STACKS.MAIN }],
             });
         } catch (error) {
             console.error('Location picker error:', error);
-            // Try alternative navigation
             try {
                 setOnboardingComplete(true);
                 navigation.navigate(STACKS.MAIN);
@@ -68,74 +295,146 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-            {/* Back Button */}
-            <BackButton onPress={() => navigation.goBack()} />
-
             {/* Header */}
-            <Text style={styles.headerTitle}>Set Location</Text>
+            <View style={styles.header}>
+                <BackButton onPress={() => navigation.goBack()} />
+                <Text style={styles.headerTitle}>Set Delivery Location</Text>
+                <View style={styles.placeholder} />
+            </View>
 
-            {/* Content */}
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <Text style={styles.searchIcon}>🔍</Text>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search for area, street name..."
-                        placeholderTextColor="#6B6B6B"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
-                </View>
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search for area, street name..."
+                    placeholderTextColor="#6B6B6B"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+            </View>
 
-                {/* Use Current Location */}
-                <TouchableOpacity
-                    style={styles.currentLocationButton}
-                    onPress={handleUseCurrentLocation}
-                    activeOpacity={0.7}>
-                    <View style={styles.locationIconContainer}>
-                        <Text style={styles.locationIcon}>📍</Text>
+            {/* Map with Drop Pin */}
+            <View style={styles.mapContainer}>
+                <MapView
+                    ref={mapRef}
+                    style={styles.map}
+                    initialRegion={region}
+                    onRegionChangeComplete={setRegion}
+                    onPress={handleMapPress}
+                    onMapReady={handleMapReady}
+                    showsUserLocation={true}
+                    showsMyLocationButton={false}
+                    showsCompass={true}
+                    rotateEnabled={true}
+                    pitchEnabled={false}
+                >
+                    {selectedLocation && (
+                        <Marker
+                            coordinate={{
+                                latitude: selectedLocation.latitude,
+                                longitude: selectedLocation.longitude,
+                            }}
+                            draggable
+                            onDragEnd={handleMarkerDrag}
+                            pinColor="#00E5FF"
+                            title="Selected Location"
+                            description={addressText || 'Tap and hold to move'}
+                        />
+                    )}
+                </MapView>
+
+                {/* Locating overlay */}
+                {locating && (
+                    <View style={styles.locatingOverlay}>
+                        <ActivityIndicator color="#00E5FF" size="large" />
+                        <Text style={styles.locatingText}>Locating you...</Text>
                     </View>
-                    <View style={styles.locationTextContainer}>
-                        <Text style={styles.currentLocationText}>Use current location</Text>
-                        <Text style={styles.currentLocationSubtext}>
-                            Enable location services for best experience
-                        </Text>
-                    </View>
-                    <Text style={styles.arrowIcon}>→</Text>
-                </TouchableOpacity>
+                )}
 
-                {/* Divider */}
-                <View style={styles.divider}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>OR</Text>
-                    <View style={styles.dividerLine} />
+                {/* Map Overlay Instructions */}
+                <View style={styles.mapOverlay} pointerEvents="none">
+                    <Text style={styles.mapInstructions}>
+                        {selectedLocation 
+                            ? 'Drag pin to adjust' 
+                            : 'Tap anywhere or wait for GPS'}
+                    </Text>
                 </View>
+            </View>
 
-                {/* Saved Addresses */}
-                <Text style={styles.sectionTitle}>Saved Addresses</Text>
-                {savedAddresses.map((addr) => (
-                    <TouchableOpacity
-                        key={addr.id}
-                        style={styles.addressCard}
-                        activeOpacity={0.7}>
-                        <Text style={styles.addressIcon}>{addr.icon}</Text>
-                        <View style={styles.addressTextContainer}>
-                            <Text style={styles.addressLabel}>{addr.label}</Text>
-                            <Text style={styles.addressText}>{addr.address}</Text>
+            {/* Bottom Sheet */}
+            <View style={styles.bottomSheet}>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    {/* Selected Location Info */}
+                    {selectedLocation && (
+                        <View style={styles.selectedLocationCard}>
+                            <Text style={styles.locationLabel}>📍 Selected Location</Text>
+                            <Text style={styles.locationAddress} numberOfLines={2}>
+                                {addressText || `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`}
+                            </Text>
                         </View>
-                        <Text style={styles.addIcon}>+</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+                    )}
 
-            {/* Continue Button - Always Enabled */}
-            <View style={styles.footer}>
+                    {/* Use Current Location */}
+                    <TouchableOpacity
+                        style={styles.currentLocationButton}
+                        onPress={handleUseCurrentLocation}
+                        activeOpacity={0.7}
+                        disabled={loading}>
+                        {loading ? (
+                            <ActivityIndicator color="#00E5FF" />
+                        ) : (
+                            <>
+                                <View style={styles.locationIconContainer}>
+                                    <Text style={styles.locationIcon}>📍</Text>
+                                </View>
+                                <View style={styles.locationTextContainer}>
+                                    <Text style={styles.currentLocationText}>Use current location</Text>
+                                    <Text style={styles.currentLocationSubtext}>
+                                        Fast GPS定位 (cached + fresh)
+                                    </Text>
+                                </View>
+                                <Text style={styles.arrowIcon}>→</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Divider */}
+                    <View style={styles.divider}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>OR</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+
+                    {/* Saved Addresses */}
+                    <Text style={styles.sectionTitle}>Saved Addresses</Text>
+                    {savedAddresses.map((addr) => (
+                        <TouchableOpacity
+                            key={addr.id}
+                            style={styles.addressCard}
+                            activeOpacity={0.7}>
+                            <Text style={styles.addressIcon}>{addr.icon}</Text>
+                            <View style={styles.addressTextContainer}>
+                                <Text style={styles.addressLabel}>{addr.label}</Text>
+                                <Text style={styles.addressText}>{addr.address}</Text>
+                            </View>
+                            <Text style={styles.addIcon}>+</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
+                {/* Continue Button */}
                 <TouchableOpacity
-                    style={styles.continueButton}
+                    style={[
+                        styles.continueButton,
+                        !selectedLocation && styles.continueButtonDisabled,
+                    ]}
                     onPress={handleContinue}
-                    activeOpacity={0.8}>
-                    <Text style={styles.continueButtonText}>Continue</Text>
+                    activeOpacity={0.8}
+                    disabled={!selectedLocation}>
+                    <Text style={styles.continueButtonText}>
+                        {selectedLocation ? 'Confirm Location' : 'Select a Location'}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -147,17 +446,21 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#000000',
     },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 50,
+        paddingBottom: 16,
+    },
     headerTitle: {
         fontSize: 18,
         fontWeight: '600',
         color: '#FFFFFF',
-        textAlign: 'center',
-        marginTop: -34,
     },
-    content: {
-        flex: 1,
-        paddingHorizontal: 24,
-        paddingTop: 32,
+    placeholder: {
+        width: 40,
     },
     searchContainer: {
         flexDirection: 'row',
@@ -165,20 +468,86 @@ const styles = StyleSheet.create({
         backgroundColor: '#1A1A1A',
         borderRadius: 12,
         paddingHorizontal: 16,
-        paddingVertical: 4,
-        marginBottom: 20,
+        marginHorizontal: 16,
+        marginBottom: 12,
         borderWidth: 1,
         borderColor: '#00E5FF',
     },
     searchIcon: {
         fontSize: 16,
         marginRight: 12,
+        color: '#6B6B6B',
     },
     searchInput: {
         flex: 1,
         fontSize: 16,
         color: '#FFFFFF',
         paddingVertical: 12,
+    },
+    mapContainer: {
+        height: height * 0.4,
+        marginHorizontal: 16,
+        borderRadius: 16,
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    map: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    locatingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    locatingText: {
+        marginTop: 12,
+        fontSize: 16,
+        color: '#00E5FF',
+        fontWeight: '600',
+    },
+    mapOverlay: {
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        right: 16,
+        alignItems: 'center',
+    },
+    mapInstructions: {
+        fontSize: 12,
+        color: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    bottomSheet: {
+        flex: 1,
+        backgroundColor: '#000000',
+        marginTop: -20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 24,
+        paddingHorizontal: 16,
+    },
+    selectedLocationCard: {
+        backgroundColor: '#0A2A2A',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#00E5FF',
+    },
+    locationLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#00E5FF',
+        marginBottom: 4,
+    },
+    locationAddress: {
+        fontSize: 14,
+        color: '#FFFFFF',
     },
     currentLocationButton: {
         flexDirection: 'row',
@@ -188,6 +557,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderWidth: 1,
         borderColor: '#00E5FF',
+        marginBottom: 16,
     },
     locationIconContainer: {
         width: 44,
@@ -221,7 +591,7 @@ const styles = StyleSheet.create({
     divider: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 24,
+        marginVertical: 16,
     },
     dividerLine: {
         flex: 1,
@@ -237,7 +607,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
-        marginBottom: 16,
+        marginBottom: 12,
     },
     addressCard: {
         flexDirection: 'row',
@@ -268,15 +638,16 @@ const styles = StyleSheet.create({
         fontSize: 24,
         color: '#00E5FF',
     },
-    footer: {
-        paddingHorizontal: 24,
-        paddingBottom: 40,
-    },
     continueButton: {
         backgroundColor: '#00E5FF',
         borderRadius: 30,
         paddingVertical: 16,
         alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 24,
+    },
+    continueButtonDisabled: {
+        backgroundColor: '#2A2A2A',
     },
     continueButtonText: {
         fontSize: 16,

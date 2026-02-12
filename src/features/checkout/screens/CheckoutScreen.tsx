@@ -69,18 +69,19 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         setOrderError(null);
 
         // Prepare order items
-        // Server expects: item = product ID (ObjectId), count = quantity, name = display name
+        // Server expects: id = product ID (ObjectId), item = product ID (ObjectId), count = quantity, name = display name
         const orderItems = items.map(item => ({
-            item: String(item.menuItem.id),  // Product ID (ObjectId) - REQUIRED by server
+            id: String(item.menuItem.id),    // Product ID (ObjectId) - REQUIRED by server schema
+            item: String(item.menuItem.id),  // Product ID (ObjectId) - REQUIRED by server schema
             count: item.quantity,
-            name: item.menuItem.name,  // Display name (optional, for reference)
+            name: item.menuItem.name,        // Display name (optional, for reference)
         }));
 
         if (__DEV__) {
             console.log('[Checkout] createOrder payload', {
                 branchId: String(branchId),
                 itemCount: orderItems.length,
-                firstProductId: orderItems[0]?.item,
+                firstProductId: orderItems[0]?.id,
             });
         }
 
