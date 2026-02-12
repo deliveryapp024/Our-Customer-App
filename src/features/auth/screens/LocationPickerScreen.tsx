@@ -11,6 +11,7 @@ import {
     ActivityIndicator,
     Alert,
     Platform,
+    PermissionsAndroid,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Marker, MapPressEvent, Region, MarkerDragStartEndEvent } from 'react-native-maps';
@@ -79,6 +80,56 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
     
     const setOnboardingComplete = useAuthStore((state) => state.setOnboardingComplete);
 
+    // Request location permissions on Android
+    const requestLocationPermission = useCallback(async (): Promise<boolean> => {
+        if (Platform.OS !== 'android') {
+            return true; // iOS permissions are handled differently
+        }
+
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'We need access to your location to show nearby restaurants and deliver food to your address.',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                }
+            );
+
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('[LocationPicker] Location permission granted');
+                return true;
+            } else if (granted === PermissionsAndroid.RESULTS.DENIED) {
+                console.log('[LocationPicker] Location permission denied');
+                Alert.alert(
+                    'Permission Required',
+                    'Location permission is needed to find your current location. You can manually select a location on the map or grant permission in settings.',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Open Settings', onPress: () => PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION) },
+                    ]
+                );
+                return false;
+            } else if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+                console.log('[LocationPicker] Location permission denied permanently');
+                Alert.alert(
+                    'Permission Required',
+                    'Location permission was denied permanently. Please enable it in your device settings to use automatic location detection.',
+                    [
+                        { text: 'OK', style: 'cancel' },
+                    ]
+                );
+                return false;
+            }
+            return false;
+        } catch (err) {
+            console.warn('[LocationPicker] Permission request error:', err);
+            return false;
+        }
+    }, []);
+
     // Reverse geocode to get address (simplified - in production use proper geocoding API)
     const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<string> => {
         // In production, call Google Geocoding API here
@@ -134,7 +185,13 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
             console.log('[LocationPicker] Cache read failed');
         }
 
-        // Try 2: Get current GPS position
+        // Try 2: Request permission and get current GPS position
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+            console.log('[LocationPicker] Location permission not granted');
+            return null;
+        }
+
         return new Promise((resolve) => {
             console.log('[LocationPicker] Getting fresh GPS...');
             
@@ -160,7 +217,7 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
                 }
             );
         });
-    }, []);
+    }, [requestLocationPermission]);
 
     // Auto-locate on mount
     useEffect(() => {
