@@ -196,7 +196,16 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
             const result = await verifyOTP(phone, finalOtp);
 
             if (result.success) {
-                navigation.navigate(SCREENS.PROFILE_SETUP);
+                // Check if profile is already complete
+                if (result.isProfileComplete) {
+                    // User has completed profile, go directly to Main app
+                    console.log('[Auth] Profile complete, navigating to Main');
+                    navigation.navigate(SCREENS.HOME);
+                } else {
+                    // New user or incomplete profile, go to Profile Setup
+                    console.log('[Auth] Profile incomplete, navigating to Profile Setup');
+                    navigation.navigate(SCREENS.PROFILE_SETUP);
+                }
             } else {
                 Alert.alert('Verification Failed', result.error || 'Invalid OTP. Please try again.');
                 // Clear OTP inputs on failure

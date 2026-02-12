@@ -8,10 +8,14 @@ import {
     StatusBar,
     StyleSheet,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { BackButton } from '../../../components/ui/BackButton';
+import { customerApi } from '../../../api';
+import { CustomModal } from '../../../components/ui/CustomModal';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -23,12 +27,16 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
     const [tips] = useState([
-        { id: '1', emoji: '👍', label: 'Good' },
-        { id: '2', emoji: '⚡', label: 'Fast' },
-        { id: '3', emoji: '🔥', label: 'Hot' },
-        { id: '4', emoji: '📦', label: 'Packed Well' },
+        { id: '1', emoji: '??', label: 'Good' },
+        { id: '2', emoji: '?', label: 'Fast' },
+        { id: '3', emoji: '??', label: 'Hot' },
+        { id: '4', emoji: '??', label: 'Packed Well' },
     ]);
     const [selectedTips, setSelectedTips] = useState<string[]>([]);
+    const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const toggleTip = (tipId: string) => {
         setSelectedTips((prev) =>
@@ -36,13 +44,56 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
         );
     };
 
+    const showError = (message: string) => {
+        setErrorMessage(message);
+        setErrorModalVisible(true);
+    };
+
+    const handleUploadPhoto = async () => {
+        const result = await launchImageLibrary({
+            mediaType: 'photo',
+            quality: 0.8,
+            selectionLimit: 1,
+        });
+
+        if (result.didCancel || !result.assets?.length) {
+            return;
+        }
+
+        const asset = result.assets[0];
+        if (!asset.uri || !asset.type || !asset.fileName) {
+            showError('Could not read selected image. Please try another photo.');
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', {
+                uri: asset.uri,
+                type: asset.type,
+                name: asset.fileName,
+            } as any);
+
+            const uploadResponse = await customerApi.uploadProfileImage(formData);
+            if (!uploadResponse.success) {
+                showError(uploadResponse.error || 'Failed to upload image. Please try again.');
+                return;
+            }
+
+            setUploadedMediaUrl(uploadResponse.data.imageUrl);
+        } catch {
+            showError('Failed to upload image. Please check your connection and retry.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleSubmit = () => {
-        // Submit review - all fields optional
         navigation.goBack();
     };
 
     const handleSkip = () => {
-        // Skip review completely
         navigation.goBack();
     };
 
@@ -50,7 +101,6 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Rate Your Order</Text>
@@ -60,7 +110,6 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Order Card */}
                 <View style={styles.orderCard}>
                     <Image
                         source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMd4hcbYRiik7yUchVf4T6ukX0uuAgveYEpJ1GXiCRv2bEd8vUWg-PnALtRkZfb-mOJIR59TSigydxDcGVC4ZKz3q0OgyzXWImb7dzlt3KO2Wzw1qdeEyPLL3Ig9Yn3cLaaxUHSaDaK1q-mg24bW_KKeI2AOxm9J9BMWJYfCYwdYDgDnHIYMiBueRRBYBI5IqUMqf1_h3UMCE87kuDJLVy2MNc4wFO_7DGbCSqldxpG7Bj0aFV4caHNZsLVvRD-R1n4BxkMHyxbhjk' }}
@@ -68,11 +117,10 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                     <View style={styles.orderInfo}>
                         <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
-                        <Text style={styles.orderDetails}>Order {orderId} • 3 items</Text>
+                        <Text style={styles.orderDetails}>Order {orderId} � 3 items</Text>
                     </View>
                 </View>
 
-                {/* Star Rating */}
                 <View style={styles.ratingContainer}>
                     <Text style={styles.ratingTitle}>How was your food?</Text>
                     <View style={styles.starsContainer}>
@@ -81,13 +129,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                                 key={star}
                                 onPress={() => setRating(star)}
                                 activeOpacity={0.7}>
-                                <Text
-                                    style={[
-                                        styles.star,
-                                        star <= rating && styles.starActive,
-                                    ]}>
-                                    ★
-                                </Text>
+                                <Text style={[styles.star, star <= rating && styles.starActive]}>?</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -101,7 +143,6 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     </Text>
                 </View>
 
-                {/* Quick Tips */}
                 <View style={styles.tipsContainer}>
                     <Text style={styles.tipsTitle}>Quick tips</Text>
                     <View style={styles.tipsGrid}>
@@ -126,7 +167,6 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     </View>
                 </View>
 
-                {/* Review Text */}
                 <View style={styles.reviewContainer}>
                     <Text style={styles.reviewTitle}>Write a review (optional)</Text>
                     <TextInput
@@ -141,14 +181,30 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                 </View>
 
-                {/* Add Photo */}
-                <TouchableOpacity style={styles.addPhotoButton}>
-                    <Text style={styles.addPhotoIcon}>📷</Text>
-                    <Text style={styles.addPhotoText}>Add Photo or Video</Text>
+                <TouchableOpacity style={styles.addPhotoButton} onPress={handleUploadPhoto} disabled={isUploading}>
+                    {isUploading ? (
+                        <>
+                            <ActivityIndicator color="#00E5FF" />
+                            <Text style={styles.addPhotoText}> Uploading photo...</Text>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={styles.addPhotoIcon}>??</Text>
+                            <Text style={styles.addPhotoText}>{uploadedMediaUrl ? 'Replace Photo' : 'Add Photo'}</Text>
+                        </>
+                    )}
                 </TouchableOpacity>
+
+                {uploadedMediaUrl && (
+                    <View style={styles.uploadedPreviewContainer}>
+                        <Image source={{ uri: uploadedMediaUrl }} style={styles.uploadedPreviewImage} />
+                        <TouchableOpacity onPress={() => setUploadedMediaUrl(null)} style={styles.removePhotoButton}>
+                            <Text style={styles.removePhotoText}>Remove</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </ScrollView>
 
-            {/* Submit Button */}
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={styles.submitButton}
@@ -157,6 +213,15 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     <Text style={styles.submitText}>Submit Review</Text>
                 </TouchableOpacity>
             </View>
+
+            <CustomModal
+                visible={errorModalVisible}
+                title="Upload Error"
+                message={errorMessage}
+                icon="?"
+                buttons={[{ text: 'OK', style: 'default' }]}
+                onClose={() => setErrorModalVisible(false)}
+            />
         </View>
     );
 };
@@ -174,7 +239,6 @@ const styles = StyleSheet.create({
         paddingTop: 50,
         paddingBottom: 16,
     },
-
     headerTitle: {
         fontSize: 18,
         fontWeight: '600',
@@ -307,7 +371,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#2A2A2A',
         borderStyle: 'dashed',
-        marginBottom: 100,
+        marginBottom: 24,
     },
     addPhotoIcon: {
         fontSize: 20,
@@ -316,6 +380,27 @@ const styles = StyleSheet.create({
     addPhotoText: {
         fontSize: 14,
         color: '#9E9E9E',
+    },
+    uploadedPreviewContainer: {
+        marginBottom: 100,
+    },
+    uploadedPreviewImage: {
+        width: '100%',
+        height: 180,
+        borderRadius: 12,
+        marginBottom: 10,
+    },
+    removePhotoButton: {
+        alignSelf: 'flex-end',
+        backgroundColor: '#2A2A2A',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 10,
+    },
+    removePhotoText: {
+        color: '#FF5252',
+        fontSize: 13,
+        fontWeight: '600',
     },
     footer: {
         position: 'absolute',

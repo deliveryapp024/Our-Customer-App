@@ -69,17 +69,18 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         setOrderError(null);
 
         // Prepare order items
+        // Server expects: item = product ID (ObjectId), count = quantity, name = display name
         const orderItems = items.map(item => ({
-            id: String(item.menuItem.id),
-            item: item.menuItem.name,
+            item: String(item.menuItem.id),  // Product ID (ObjectId) - REQUIRED by server
             count: item.quantity,
+            name: item.menuItem.name,  // Display name (optional, for reference)
         }));
 
         if (__DEV__) {
             console.log('[Checkout] createOrder payload', {
                 branchId: String(branchId),
                 itemCount: orderItems.length,
-                firstProductId: orderItems[0]?.id,
+                firstProductId: orderItems[0]?.item,
             });
         }
 
@@ -235,7 +236,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                     disabled={isProcessing}
                     activeOpacity={0.8}>
                     <Text style={styles.placeOrderText}>
-                        {isProcessing ? 'Processing...' : `PAY ₹{total.toFixed(2)}`}
+                        {isProcessing ? 'Processing...' : `PAY ₹${total.toFixed(2)}`}
                     </Text>
                     {!isProcessing && <Text style={styles.arrowIcon}>→</Text>}
                 </TouchableOpacity>

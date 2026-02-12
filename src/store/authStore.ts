@@ -10,7 +10,7 @@ interface AuthActions {
     setLoading: (isLoading: boolean) => void;
     setOnboardingComplete: (complete: boolean) => void;
     requestOTP: (phone: string) => Promise<{ success: boolean; error?: string; devOtp?: string }>;
-    verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+    verifyOTP: (phone: string, otp: string) => Promise<{ success: boolean; error?: string; isProfileComplete?: boolean }>;
     logout: () => Promise<void>;
     loadStoredAuth: () => Promise<void>;
 }
@@ -95,6 +95,14 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
                 // Set token in API client for future requests (Authorization: Bearer <token>)
                 setAuthToken(accessToken);
 
+                // Check if profile is complete (has name)
+                const isProfileComplete = !!user.name && user.name.trim().length > 0;
+                
+                // Store onboarding status
+                if (isProfileComplete) {
+                    await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
+                }
+
                 set({
                     user: {
                         id: user._id,
@@ -108,9 +116,10 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
                     },
                     token: accessToken,
                     isAuthenticated: true,
+                    onboardingComplete: isProfileComplete,
                 });
 
-                return { success: true };
+                return { success: true, isProfileComplete };
             }
             return {
                 success: false,
