@@ -9,6 +9,9 @@ import {
     Modal,
     ActivityIndicator,
     Image,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -220,7 +223,11 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.headerSpacer} />
             </View>
 
-            <View style={styles.content}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}>
                 <View style={styles.photoContainer}>
                     <View style={styles.photoCircle}>
                         {renderPhotoPreview()}
@@ -266,7 +273,7 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                         onBlur={() => setFocusedInput(null)}
                     />
                 </View>
-            </View>
+            </ScrollView>
 
             <View style={styles.footer}>
                 <TouchableOpacity
@@ -360,11 +367,15 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
     },
-    content: {
+    scrollView: {
         flex: 1,
+    },
+    scrollContent: {
         paddingHorizontal: 24,
         paddingTop: 32,
+        paddingBottom: 20,
         alignItems: 'center',
+        flexGrow: 1,
     },
     photoContainer: {
         position: 'relative',

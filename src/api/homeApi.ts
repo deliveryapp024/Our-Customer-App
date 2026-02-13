@@ -20,13 +20,31 @@ export interface CategoryTile {
     deeplink?: string;
 }
 
+export interface MainCard {
+    id: string;
+    title: string;
+    badgeText?: string;
+    badgeColor?: string;
+    badgeTextColor?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+    imageUrl: string;
+    cardWidth?: number;
+    cardHeight?: number;
+    imageWidth?: number;
+    imageHeight?: number;
+    order?: number;
+    deepLink?: string;
+}
+
 export interface HomeSection {
-    type: 'banner_carousel' | 'category_grid' | 'restaurant_list';
+    type: 'banner_carousel' | 'category_grid' | 'restaurant_list' | 'main_cards';
     data: {
         title?: string;
         items?: BannerItem[];
         tiles?: CategoryTile[];
         restaurants?: any[];
+        cards?: MainCard[];
     };
 }
 

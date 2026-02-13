@@ -11,10 +11,12 @@ import {
     Dimensions,
     FlatList,
     ActivityIndicator,
+    Linking,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SCREENS, FEATURE_FLAGS } from '../../../constants';
 import { homeApi, HomeResponse, Restaurant } from '../../../api';
+import type { MainCard } from '../../../api/homeApi';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +40,12 @@ const quickActions = [
     { id: '3', name: 'Offers', icon: '🏷️', color: '#FF5252', enabled: FEATURE_FLAGS.ENABLE_FLASH_DEALS },
     { id: '4', name: 'Dining', icon: '🍽️', color: '#00C853', enabled: FEATURE_FLAGS.ENABLE_DINING_OUT },
 ].filter(action => action.enabled);
+
+const clampNumber = (value: unknown, min: number, max: number): number | undefined => {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return undefined;
+    return Math.max(min, Math.min(max, n));
+};
 
 // Mock restaurants (dev-only fallback). For pilot/release we prefer real API data.
 const restaurants = [
@@ -133,6 +141,43 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     // Get banner items from API or empty
     const bannerItems = homeData?.sections?.find(s => s.type === 'banner_carousel')?.data?.items || [];
 
+    const mainCards =
+        (homeData?.sections?.find((s) => s.type === 'main_cards')?.data?.cards as MainCard[] | undefined) ?? [];
+
+    const handleMainCardPress = async (deepLink?: string) => {
+        if (!deepLink || typeof deepLink !== 'string') return;
+
+        if (deepLink.startsWith('screen:')) {
+            const target = deepLink.slice('screen:'.length).trim();
+            if (!target) return;
+
+            // Allow either SCREENS key (e.g. BOLT_DELIVERY) or route name (e.g. BoltDelivery).
+            const routeFromKey = (SCREENS as any)[target];
+            const routeName = typeof routeFromKey === 'string' ? routeFromKey : target;
+
+            // Enforce enabled routes (avoid navigating to disabled screens).
+            const enabledRoutes = new Set<string>([
+                FEATURE_FLAGS.ENABLE_BOLT_DELIVERY ? SCREENS.BOLT_DELIVERY : '',
+                FEATURE_FLAGS.ENABLE_NINETY_NINE_STORE ? SCREENS.NINETY_NINE_STORE : '',
+                FEATURE_FLAGS.ENABLE_FLASH_DEALS ? SCREENS.FLASH_DEALS : '',
+            ].filter(Boolean));
+
+            if (!enabledRoutes.has(routeName)) return;
+
+            navigation.navigate(routeName as never);
+            return;
+        }
+
+        if (deepLink.startsWith('url:')) {
+            const url = deepLink.slice('url:'.length).trim();
+            if (!url) return;
+            const canOpen = await Linking.canOpenURL(url);
+            if (canOpen) {
+                await Linking.openURL(url);
+            }
+        }
+    };
+
     // Restaurants from API (preferred).
     const apiRestaurantsFromHome =
         homeData?.sections?.find(s => s.type === 'restaurant_list')?.data?.restaurants || [];
@@ -215,22 +260,71 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
 
                 {/* Main Cards */}
-                <View style={styles.mainCardsContainer}>
-                    <TouchableOpacity style={[styles.mainCard, styles.foodCard]}>
-                        <View style={styles.cardBadge}>
-                            <Text style={styles.cardBadgeText}>30% OFF</Text>
-                        </View>
-                        <Text style={styles.mainCardTitle}>Food{'\n'}Delivery</Text>
-                        <View style={styles.neonBox} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.mainCard, styles.groceryCard]}>
-                        <View style={[styles.cardBadge, styles.timeBadge]}>
-                            <Text style={styles.cardBadgeText}>10 MINS</Text>
-                        </View>
-                        <Text style={styles.mainCardTitle}>Instamart{'\n'}Groceries</Text>
-                        <View style={[styles.neonBox, styles.greenNeon]} />
-                    </TouchableOpacity>
-                </View>
+                {mainCards.length === 0 ? (
+                    <View style={styles.mainCardsContainer}>
+                        <TouchableOpacity style={[styles.mainCard, styles.foodCard]}>
+                            <View style={styles.cardBadge}>
+                                <Text style={styles.cardBadgeText}>30% OFF</Text>
+                            </View>
+                            <Text style={styles.mainCardTitle}>Food{'\n'}Delivery</Text>
+                            <View style={styles.neonBox} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.mainCard, styles.groceryCard]}>
+                            <View style={[styles.cardBadge, styles.timeBadge]}>
+                                <Text style={styles.cardBadgeText}>10 MINS</Text>
+                            </View>
+                            <Text style={styles.mainCardTitle}>Instamart{'\n'}Groceries</Text>
+                            <View style={[styles.neonBox, styles.greenNeon]} />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.mainCardsContainer}>
+                        {mainCards.map((card) => {
+                            const cardHeight = clampNumber(card.cardHeight, 120, 220) ?? 160;
+                            const cardWidth = clampNumber(card.cardWidth, 140, 220);
+                            const imageWidth = clampNumber(card.imageWidth, 24, 120) ?? 60;
+                            const imageHeight = clampNumber(card.imageHeight, 24, 120) ?? 40;
+
+                            return (
+                                <TouchableOpacity
+                                    key={card.id}
+                                    style={[
+                                        styles.mainCard,
+                                        {
+                                            height: cardHeight,
+                                            ...(cardWidth ? { width: cardWidth, flex: undefined as any } : null),
+                                            backgroundColor: card.backgroundColor || '#0A1A2A',
+                                            borderColor: card.borderColor || 'transparent',
+                                            borderWidth: card.borderColor ? 1 : 0,
+                                        },
+                                    ]}
+                                    activeOpacity={0.9}
+                                    onPress={() => handleMainCardPress(card.deepLink)}>
+                                    {card.badgeText ? (
+                                        <View style={[styles.cardBadge, { backgroundColor: card.badgeColor || '#00E5FF' }]}>
+                                            <Text style={[styles.cardBadgeText, { color: card.badgeTextColor || '#000000' }]}>
+                                                {card.badgeText}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+
+                                    <Text style={styles.mainCardTitle}>{card.title}</Text>
+                                    <Image
+                                        source={{ uri: card.imageUrl }}
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: 40,
+                                            right: 20,
+                                            width: imageWidth,
+                                            height: imageHeight,
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                )}
 
                 {/* Quick Actions */}
                 <ScrollView
