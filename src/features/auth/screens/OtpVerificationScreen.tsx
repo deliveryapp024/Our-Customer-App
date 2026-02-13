@@ -37,6 +37,7 @@ const extractOtpFromMessage = (message: string): string | null => {
 export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     const phone = route.params?.phone || '+91 XXXXXXXXXX';
     const devOtp = route.params?.devOtp;
+    const [isBypass, setIsBypass] = useState(false);
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [timer, setTimer] = useState(45);
     const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +47,19 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
     const inputRefs = useRef<TextInput[]>([]);
     const verifyOTP = useAuthStore((state) => state.verifyOTP);
     const requestOTP = useAuthStore((state) => state.requestOTP);
+
+    // Hard bypass credential (as requested): auto-fill and auto-submit OTP.
+    useEffect(() => {
+        const digits = String(phone || '').replace(/\D/g, '');
+        const last10 = digits.length >= 10 ? digits.slice(-10) : '';
+        if (last10 === '9876543210') {
+            setIsBypass(true);
+            // Force-fill and force-submit so we know exactly what is being verified.
+            setOtp(['1', '2', '3', '4', '5', '6']);
+            setTimeout(() => handleVerify('123456'), 300);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [phone]);
 
     // Timer countdown
     useEffect(() => {
@@ -269,9 +283,11 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                 </Text>
 
                 {/* Development OTP Hint */}
-                {__DEV__ && devOtp && (
+                {__DEV__ && (devOtp || isBypass) && (
                     <View style={styles.devHint}>
-                        <Text style={styles.devHintText}>Dev OTP: {devOtp}</Text>
+                        <Text style={styles.devHintText}>
+                            Dev OTP: {isBypass ? '123456 (bypass)' : devOtp}
+                        </Text>
                     </View>
                 )}
 

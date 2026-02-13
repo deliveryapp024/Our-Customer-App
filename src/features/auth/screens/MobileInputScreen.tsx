@@ -55,6 +55,13 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
     const handleContinue = async () => {
         const phone = countryCode + phoneNumber;
 
+        // Hard bypass credential (as requested): skip SMS request and jump to OTP screen.
+        // OTP screen will auto-fill and auto-submit 123456 for this number.
+        if (phoneNumber === '9876543210') {
+            navigation.navigate(SCREENS.OTP_VERIFICATION, { phone });
+            return;
+        }
+
         // Validate phone number
         if (!validatePhoneNumber(phoneNumber)) {
             showModal({
