@@ -7,6 +7,7 @@ interface CartState {
     restaurantId: string | null;
     restaurantName: string | null;
     items: CartItem[];
+    couponCode: string | null;
     isLoading: boolean;
 }
 
@@ -15,6 +16,7 @@ interface CartActions {
     removeItem: (itemId: string) => void;
     updateQuantity: (itemId: string, quantity: number) => void;
     clearCart: () => void;
+    setCouponCode: (code: string | null) => void;
     loadCart: () => Promise<void>;
     saveCart: () => Promise<void>;
     getTotal: () => number;
@@ -26,6 +28,7 @@ export const useCartStore = create<CartState & CartActions>((set, get) => ({
     restaurantId: null,
     restaurantName: null,
     items: [],
+    couponCode: null,
     isLoading: false,
 
     // Actions
@@ -38,6 +41,7 @@ export const useCartStore = create<CartState & CartActions>((set, get) => ({
                 restaurantId,
                 restaurantName,
                 items: [{ menuItem: item, quantity: 1 }],
+                couponCode: null, // coupon cannot carry across restaurants
             });
         } else {
             // Check if item already exists
@@ -106,8 +110,14 @@ export const useCartStore = create<CartState & CartActions>((set, get) => ({
     },
 
     clearCart: () => {
-        set({ restaurantId: null, restaurantName: null, items: [] });
+        set({ restaurantId: null, restaurantName: null, items: [], couponCode: null });
         AsyncStorage.removeItem(STORAGE_KEYS.CART_DATA);
+    },
+
+    setCouponCode: (code) => {
+        const normalized = code ? String(code).trim().toUpperCase() : null;
+        set({ couponCode: normalized });
+        get().saveCart();
     },
 
     loadCart: async () => {
@@ -120,6 +130,7 @@ export const useCartStore = create<CartState & CartActions>((set, get) => ({
                     restaurantId: parsed.restaurantId,
                     restaurantName: parsed.restaurantName,
                     items: parsed.items,
+                    couponCode: parsed.couponCode || null,
                 });
             }
         } catch (error) {
@@ -138,6 +149,7 @@ export const useCartStore = create<CartState & CartActions>((set, get) => ({
                     restaurantId: state.restaurantId,
                     restaurantName: state.restaurantName,
                     items: state.items,
+                    couponCode: state.couponCode,
                 }),
             );
         } catch (error) {

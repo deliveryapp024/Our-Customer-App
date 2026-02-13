@@ -22,6 +22,7 @@ export interface CreateOrderRequest {
     deliveryLocation?: DeliveryLocation;
     addressId?: string;
     idempotencyKey?: string; // Optional: prevents duplicate orders on retry
+    couponCode?: string;
 }
 
 export interface Order {
@@ -45,6 +46,9 @@ export interface QuoteRequest {
     cartValue?: number;
     vehicleType?: string;
     addressId?: string;
+    couponCode?: string;
+    // Optional: lets server validate coupon correctly without client needing category/seller ids.
+    items?: OrderItem[];
 }
 
 export interface QuoteResponse {
@@ -62,6 +66,18 @@ export interface QuoteResponse {
     };
     city?: string;
     distance_km?: number;
+    coupon?: {
+        _id?: string;
+        code: string;
+        name?: string;
+        description?: string;
+        type?: string;
+        displayDiscount?: string;
+    } | null;
+    subtotal?: number;
+    discountAmount?: number;
+    finalSubtotal?: number;
+    freeDeliveryApplied?: boolean;
 }
 
 // Create order

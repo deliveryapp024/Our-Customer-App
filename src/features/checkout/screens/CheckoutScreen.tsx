@@ -16,6 +16,7 @@ import { SCREENS } from '../../../constants';
 import { useCartStore } from '../../../store/cartStore';
 import { ordersApi, Order } from '../../../api';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useQuery } from '@tanstack/react-query';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -30,7 +31,7 @@ const paymentMethods = [
 ];
 
 export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
-    const { items, restaurantName, getTotal, getItemCount, clearCart } = useCartStore();
+    const { items, restaurantName, getTotal, getItemCount, clearCart, couponCode, setCouponCode } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState('cod'); // COD for Phase 0
     const [isProcessing, setIsProcessing] = useState(false);
     const [orderError, setOrderError] = useState<string | null>(null);
@@ -40,9 +41,44 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
     const deliveryLocation = route.params?.deliveryLocation;
 
     const subtotal = getTotal();
-    const deliveryFee = 2.99;
-    const discount = 5.00;
-    const total = subtotal + deliveryFee - discount;
+
+    const orderItems = items.map(item => ({
+        id: String(item.menuItem.id),
+        item: String(item.menuItem.id),
+        count: item.quantity,
+        name: item.menuItem.name,
+    }));
+
+    const canQuote =
+        !!branchId &&
+        !!deliveryLocation &&
+        Number.isFinite(Number(deliveryLocation?.latitude)) &&
+        Number.isFinite(Number(deliveryLocation?.longitude)) &&
+        orderItems.length > 0;
+
+    const quoteQuery = useQuery({
+        queryKey: ['orderQuote', String(branchId || ''), String(couponCode || ''), subtotal, deliveryLocation?.latitude, deliveryLocation?.longitude, orderItems.length],
+        enabled: canQuote,
+        queryFn: async () => {
+            const res = await ordersApi.getOrderQuote({
+                branchId: String(branchId),
+                deliveryLocation,
+                cartValue: subtotal,
+                vehicleType: 'Bike',
+                couponCode: couponCode || undefined,
+                items: orderItems,
+            });
+            if (!res.success) throw new Error(res.error || 'Failed to fetch quote');
+            return res.data;
+        },
+        staleTime: 30 * 1000,
+        refetchOnWindowFocus: true,
+    });
+
+    const deliveryFee = quoteQuery.data?.final_fee ?? 0;
+    const discount = quoteQuery.data?.discountAmount ?? 0;
+    const finalSubtotal = quoteQuery.data?.finalSubtotal ?? subtotal;
+    const total = finalSubtotal + deliveryFee;
 
     // Generate idempotency key for this checkout session
     const [idempotencyKey] = useState(() => `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -65,17 +101,20 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
             return;
         }
 
+        // Require a successful quote when we have enough data to quote.
+        if (canQuote) {
+            if (quoteQuery.isLoading) {
+                Alert.alert('Please wait', 'Calculating delivery charges...');
+                return;
+            }
+            if (quoteQuery.isError) {
+                Alert.alert('Error', 'Unable to calculate delivery charges right now. Please pull to refresh and try again.');
+                return;
+            }
+        }
+
         setIsProcessing(true);
         setOrderError(null);
-
-        // Prepare order items
-        // Server expects: id = product ID (ObjectId), item = product ID (ObjectId), count = quantity, name = display name
-        const orderItems = items.map(item => ({
-            id: String(item.menuItem.id),    // Product ID (ObjectId) - REQUIRED by server schema
-            item: String(item.menuItem.id),  // Product ID (ObjectId) - REQUIRED by server schema
-            count: item.quantity,
-            name: item.menuItem.name,        // Display name (optional, for reference)
-        }));
 
         if (__DEV__) {
             console.log('[Checkout] createOrder payload', {
@@ -89,9 +128,11 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         const result = await ordersApi.createOrder({
             items: orderItems,
             branch: String(branchId),
-            totalPrice: total,
+            // Server recomputes totals; this field is kept for backwards compatibility.
+            totalPrice: finalSubtotal,
             deliveryLocation,
             idempotencyKey, // Same key on retry = same order result
+            couponCode: couponCode || undefined,
         });
 
         setIsProcessing(false);
@@ -99,6 +140,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         if (result.success) {
             const order = result.data;
             clearCart();
+            setCouponCode(null);
             navigation.navigate(SCREENS.ORDER_SUCCESS, {
                 orderId: order._id,
                 total: total.toFixed(2),

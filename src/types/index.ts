@@ -66,6 +66,7 @@ export interface MenuItem {
     image: string;
     category: string;
     isVeg: boolean;
+    foodType?: 'veg' | 'nonveg' | 'egg';
     isBestseller?: boolean;
     isAvailable: boolean;
 }

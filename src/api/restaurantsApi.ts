@@ -16,6 +16,30 @@ export interface Restaurant {
         longitude: number;
     };
     isActive?: boolean;
+    publicProfile?: {
+        tagline?: string;
+        description?: string;
+        cuisines?: string[];
+        priceForTwo?: number;
+        heroMedia?: {
+            type?: 'image' | 'video';
+            url?: string;
+            thumbnailUrl?: string;
+            aspectRatio?: string;
+        };
+        coupons?: Array<{
+            couponCode: string;
+            displayOrder?: number;
+            backgroundColor?: string;
+            textColor?: string;
+            badgeText?: string;
+        }>;
+        cacheConfig?: {
+            ttlSeconds?: number;
+            isEnabled?: boolean;
+        };
+        profileUpdatedAt?: string;
+    };
 }
 
 export interface MenuItem {
@@ -26,6 +50,7 @@ export interface MenuItem {
     originalPrice?: number;
     image?: string;
     isVeg?: boolean;
+    foodType?: 'veg' | 'nonveg' | 'egg';
     isBestseller?: boolean;
     category?: string;
     isAvailable?: boolean;
