@@ -12,5 +12,13 @@
 		{
 			"path": "../Seller-App"
 		}
-	]
+	],
+	"settings": {
+		"chatgpt.openOnStartup": true
+	},
+	"extensions": {
+		"recommendations": [
+			"openai.chatgpt"
+		]
+	}
 }
