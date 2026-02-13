@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -12,11 +12,19 @@ import {
     FlatList,
     ActivityIndicator,
     Linking,
+    RefreshControl,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MagnifyingGlass, Lightning, Storefront, Tag, Hamburger, Pizza, IceCream, Coffee, BowlFood, CookingPot, Clock, Star } from 'phosphor-react-native';
 import { SCREENS, FEATURE_FLAGS } from '../../../constants';
 import { homeApi, HomeResponse, Restaurant } from '../../../api';
 import type { MainCard } from '../../../api/homeApi';
+import { AnimatedButton } from '../../../components/ui/AnimatedButton';
+import { AnimatedCard } from '../../../components/ui/AnimatedCard';
+import { GlassmorphismCard } from '../../../components/ui/GlassmorphismCard';
+import { HomeSkeleton } from '../../../components/ui/Skeleton';
+import { AnimatedRestaurantCard } from '../../../components/ui/AnimatedRestaurantCard';
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -24,21 +32,32 @@ type Props = {
     navigation: NativeStackNavigationProp<any>;
 };
 
+// Phosphor icon components for categories
+const categoryIcons: Record<string, React.FC<{ size?: number; color?: string; weight?: any }>> = {
+    '1': Hamburger,
+    '2': Pizza,
+    '3': IceCream,
+    '4': Coffee,
+    '5': BowlFood,
+    '6': CookingPot,
+};
+
 // Mock data
 const categories = [
-    { id: '1', name: 'Burgers', icon: '🍔' },
-    { id: '2', name: 'Pizza', icon: '🍕' },
-    { id: '3', name: 'Desserts', icon: '🍰' },
-    { id: '4', name: 'Drinks', icon: '🥤' },
-    { id: '5', name: 'Biryani', icon: '🍛' },
-    { id: '6', name: 'Chinese', icon: '🥡' },
+    { id: '1', name: 'Burgers', icon: 'hamburger' },
+    { id: '2', name: 'Pizza', icon: 'pizza' },
+    { id: '3', name: 'Desserts', icon: 'dessert' },
+    { id: '4', name: 'Drinks', icon: 'drinks' },
+    { id: '5', name: 'Biryani', icon: 'biryani' },
+    { id: '6', name: 'Chinese', icon: 'chinese' },
 ];
 
+// Quick actions with Phosphor icons
 const quickActions = [
-    { id: '1', name: 'Bolt', icon: '⚡', color: '#00E5FF', enabled: FEATURE_FLAGS.ENABLE_BOLT_DELIVERY },
-    { id: '2', name: '99 Store', icon: '🏪', color: '#FFB300', enabled: FEATURE_FLAGS.ENABLE_NINETY_NINE_STORE },
-    { id: '3', name: 'Offers', icon: '🏷️', color: '#FF5252', enabled: FEATURE_FLAGS.ENABLE_FLASH_DEALS },
-    { id: '4', name: 'Dining', icon: '🍽️', color: '#00C853', enabled: FEATURE_FLAGS.ENABLE_DINING_OUT },
+    { id: '1', name: 'Bolt', IconComponent: Lightning, color: '#00E5FF', enabled: FEATURE_FLAGS.ENABLE_BOLT_DELIVERY },
+    { id: '2', name: '99 Store', IconComponent: Storefront, color: '#FFB300', enabled: FEATURE_FLAGS.ENABLE_NINETY_NINE_STORE },
+    { id: '3', name: 'Offers', IconComponent: Tag, color: '#FF5252', enabled: FEATURE_FLAGS.ENABLE_FLASH_DEALS },
+    { id: '4', name: 'Dining', IconComponent: BowlFood, color: '#00C853', enabled: FEATURE_FLAGS.ENABLE_DINING_OUT },
 ].filter(action => action.enabled);
 
 const clampNumber = (value: unknown, min: number, max: number): number | undefined => {
@@ -100,36 +119,58 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Scroll tracking for 3D tilt effect
+    const scrollY = useSharedValue(0);
+    const scrollHandler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+            scrollY.value = event.contentOffset.y;
+        },
+    });
 
     // Fetch home data from API
-    useEffect(() => {
-        const loadHomeData = async () => {
+    const loadHomeData = async (isRefresh = false) => {
+        if (!isRefresh) {
             setLoading(true);
-            setError(null);
-            const [homeResult, nearbyResult] = await Promise.all([
-                homeApi.fetchHome(),
-                homeApi.fetchNearbyBranches({
-                    latitude: 15.8497,
-                    longitude: 74.4977,
-                    radius: 15,
-                }),
-            ]);
+        }
+        setError(null);
+        
+        const [homeResult, nearbyResult] = await Promise.all([
+            homeApi.fetchHome(),
+            homeApi.fetchNearbyBranches({
+                latitude: 15.8497,
+                longitude: 74.4977,
+                radius: 15,
+            }),
+        ]);
 
-            if (homeResult.success) {
-                setHomeData(homeResult.data);
-            }
-            if (nearbyResult.success) {
-                setNearbyRestaurants(Array.isArray(nearbyResult.data) ? nearbyResult.data : []);
-            }
+        if (homeResult.success) {
+            setHomeData(homeResult.data);
+        }
+        if (nearbyResult.success) {
+            setNearbyRestaurants(Array.isArray(nearbyResult.data) ? nearbyResult.data : []);
+        }
 
-            if (!homeResult.success && !nearbyResult.success) {
-                setError(homeResult.error || nearbyResult.error || 'Failed to load home data');
-            }
+        if (!homeResult.success && !nearbyResult.success) {
+            setError(homeResult.error || nearbyResult.error || 'Failed to load home data');
+        }
+        
+        if (!isRefresh) {
             setLoading(false);
-        };
+        }
+    };
 
+    useEffect(() => {
         loadHomeData();
     }, []);
+
+    // Pull to refresh handler
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadHomeData(true);
+        setRefreshing(false);
+    };
 
     // Get categories from API or fallback to mock
     const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map((tile: any) => ({
@@ -190,38 +231,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 ? apiRestaurantsFromHome
                 : (error ? (__DEV__ ? restaurants : []) : []);
 
-    const renderRestaurantCard = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            style={styles.restaurantCard}
+    // New animated restaurant card with staggered entrance and 3D tilt
+    const renderRestaurantCard = ({ item, index }: { item: any; index: number }) => (
+        <AnimatedRestaurantCard
+            item={item}
+            index={index}
+            scrollY={scrollY}
             onPress={() => navigation.navigate(SCREENS.RESTAURANT_DETAIL, { restaurant: item })}
-            activeOpacity={0.9}>
-            <View style={styles.restaurantImageContainer}>
-                <Image
-                    source={{ uri: item.image || item.imageUrl }}
-                    style={styles.restaurantImage}
-                    resizeMode="cover"
-                />
-                {item.hasOffer && (
-                    <View style={styles.offerBadge}>
-                        <Text style={styles.offerText}>{item.offerText}</Text>
-                    </View>
-                )}
-            </View>
-            <View style={styles.restaurantInfo}>
-                <View style={styles.restaurantHeader}>
-                    <Text style={styles.restaurantName} numberOfLines={1}>
-                        {item.name}
-                    </Text>
-                    <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingText}>{item.rating || 4.0} ★</Text>
-                    </View>
-                </View>
-                <Text style={styles.cuisineText} numberOfLines={1}>
-                    {(Array.isArray(item.cuisines) && item.cuisines.length > 0 ? item.cuisines.join(' • ') : 'Multi-cuisine')} • {item.priceLevel || '₹₹'}
-                </Text>
-                <Text style={styles.deliveryText}>🕐 {item.deliveryTime || `${item.prepTimeMin || 30} mins`}</Text>
-            </View>
-        </TouchableOpacity>
+        />
     );
 
     return (
@@ -233,7 +250,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity 
                     style={styles.locationContainer}
                     onPress={() => navigation.navigate(SCREENS.LOCATION_PICKER)}>
-                    <Text style={styles.locationIcon}>📍</Text>
                     <View>
                         <Text style={styles.locationLabel}>{location}</Text>
                         <Text style={styles.locationAddress}>Home • 45-2/A Main Street</Text>
@@ -243,39 +259,51 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity 
                     style={styles.profileButton}
                     onPress={() => navigation.navigate(SCREENS.PROFILE)}>
-                    <Text style={styles.profileIcon}>👤</Text>
+                    <View style={styles.profileAvatar}>
+                        <Text style={styles.profileInitial}>U</Text>
+                    </View>
                 </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <Animated.ScrollView 
+                showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#00E5FF"
+                        colors={['#00E5FF']}
+                    />
+                }>
                 {/* Search Bar */}
-                <TouchableOpacity
+                <AnimatedButton
                     style={styles.searchBar}
-                    onPress={() => navigation.navigate(SCREENS.SEARCH)}
-                    activeOpacity={0.8}>
-                    <Text style={styles.searchIcon}>🔍</Text>
+                    onPress={() => navigation.navigate(SCREENS.SEARCH)}>
+                    <MagnifyingGlass size={20} color="#6B6B6B" weight="bold" style={styles.searchIcon} />
                     <Text style={styles.searchPlaceholder}>
                         Search for burgers, pizza or groceries
                     </Text>
-                </TouchableOpacity>
+                </AnimatedButton>
 
                 {/* Main Cards */}
                 {mainCards.length === 0 ? (
                     <View style={styles.mainCardsContainer}>
-                        <TouchableOpacity style={[styles.mainCard, styles.foodCard]}>
+                        <AnimatedCard style={[styles.mainCard, styles.foodCard]}>
                             <View style={styles.cardBadge}>
                                 <Text style={styles.cardBadgeText}>30% OFF</Text>
                             </View>
                             <Text style={styles.mainCardTitle}>Food{'\n'}Delivery</Text>
                             <View style={styles.neonBox} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.mainCard, styles.groceryCard]}>
+                        </AnimatedCard>
+                        <AnimatedCard style={[styles.mainCard, styles.groceryCard]}>
                             <View style={[styles.cardBadge, styles.timeBadge]}>
                                 <Text style={styles.cardBadgeText}>10 MINS</Text>
                             </View>
                             <Text style={styles.mainCardTitle}>Instamart{'\n'}Groceries</Text>
                             <View style={[styles.neonBox, styles.greenNeon]} />
-                        </TouchableOpacity>
+                        </AnimatedCard>
                     </View>
                 ) : (
                     <View style={styles.mainCardsContainer}>
@@ -286,41 +314,43 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                             const imageHeight = clampNumber(card.imageHeight, 24, 120) ?? 40;
 
                             return (
-                                <TouchableOpacity
+                                <AnimatedCard
                                     key={card.id}
-                                    style={[
-                                        styles.mainCard,
-                                        {
-                                            height: cardHeight,
-                                            ...(cardWidth ? { width: cardWidth, flex: undefined as any } : null),
-                                            backgroundColor: card.backgroundColor || '#0A1A2A',
-                                            borderColor: card.borderColor || 'transparent',
-                                            borderWidth: card.borderColor ? 1 : 0,
-                                        },
-                                    ]}
-                                    activeOpacity={0.9}
+                                    style={{ flex: cardWidth ? undefined : 1 }}
                                     onPress={() => handleMainCardPress(card.deepLink)}>
-                                    {card.badgeText ? (
-                                        <View style={[styles.cardBadge, { backgroundColor: card.badgeColor || '#00E5FF' }]}>
-                                            <Text style={[styles.cardBadgeText, { color: card.badgeTextColor || '#000000' }]}>
-                                                {card.badgeText}
-                                            </Text>
-                                        </View>
-                                    ) : null}
+                                    <GlassmorphismCard
+                                        intensity="medium"
+                                        borderColor={card.borderColor || '#00E5FF'}
+                                        style={[
+                                            styles.mainCard,
+                                            {
+                                                height: cardHeight,
+                                                ...(cardWidth ? { width: cardWidth } : null),
+                                                backgroundColor: card.backgroundColor || '#0A1A2A',
+                                            },
+                                        ]}>
+                                        {card.badgeText ? (
+                                            <View style={[styles.cardBadge, { backgroundColor: card.badgeColor || '#00E5FF' }]}>
+                                                <Text style={[styles.cardBadgeText, { color: card.badgeTextColor || '#000000' }]}>
+                                                    {card.badgeText}
+                                                </Text>
+                                            </View>
+                                        ) : null}
 
-                                    <Text style={styles.mainCardTitle}>{card.title}</Text>
-                                    <Image
-                                        source={{ uri: card.imageUrl }}
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: 40,
-                                            right: 20,
-                                            width: imageWidth,
-                                            height: imageHeight,
-                                        }}
-                                        resizeMode="contain"
-                                    />
-                                </TouchableOpacity>
+                                        <Text style={styles.mainCardTitle}>{card.title}</Text>
+                                        <Image
+                                            source={{ uri: card.imageUrl }}
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: 40,
+                                                right: 20,
+                                                width: imageWidth,
+                                                height: imageHeight,
+                                            }}
+                                            resizeMode="contain"
+                                        />
+                                    </GlassmorphismCard>
+                                </AnimatedCard>
                             );
                         })}
                     </View>
@@ -332,29 +362,39 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     showsHorizontalScrollIndicator={false}
                     style={styles.quickActionsContainer}
                     contentContainerStyle={styles.quickActionsContent}>
-                    {quickActions.map((action) => (
-                        <TouchableOpacity
-                            key={action.id}
-                            style={[
-                                styles.quickActionButton,
-                                { backgroundColor: action.id === '1' ? '#00E5FF' : '#2A2A2A' },
-                            ]}
-                            onPress={() => {
-                                if (action.id === '1') navigation.navigate(SCREENS.BOLT_DELIVERY);
-                                if (action.id === '2') navigation.navigate(SCREENS.NINETY_NINE_STORE);
-                                if (action.id === '3') navigation.navigate(SCREENS.FLASH_DEALS);
-                                if (action.id === '4') navigation.navigate(SCREENS.DINE_IN);
-                            }}>
-                            <Text style={styles.quickActionIcon}>{action.icon}</Text>
-                            <Text
+                    {quickActions.map((action) => {
+                        const IconComponent = action.IconComponent;
+                        const isPrimary = action.id === '1';
+                        return (
+                            <AnimatedButton
+                                key={action.id}
+                                scale={0.92}
                                 style={[
-                                    styles.quickActionText,
-                                    { color: action.id === '1' ? '#000000' : '#FFFFFF' },
-                                ]}>
-                                {action.name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+                                    styles.quickActionButton,
+                                    { backgroundColor: isPrimary ? '#00E5FF' : '#2A2A2A' },
+                                ]}
+                                onPress={() => {
+                                    if (action.id === '1') navigation.navigate(SCREENS.BOLT_DELIVERY);
+                                    if (action.id === '2') navigation.navigate(SCREENS.NINETY_NINE_STORE);
+                                    if (action.id === '3') navigation.navigate(SCREENS.FLASH_DEALS);
+                                    if (action.id === '4') navigation.navigate(SCREENS.DINE_IN);
+                                }}>
+                                <IconComponent 
+                                    size={18} 
+                                    color={isPrimary ? '#000000' : '#FFFFFF'} 
+                                    weight="bold"
+                                    style={styles.quickActionIcon}
+                                />
+                                <Text
+                                    style={[
+                                        styles.quickActionText,
+                                        { color: isPrimary ? '#000000' : '#FFFFFF' },
+                                    ]}>
+                                    {action.name}
+                                </Text>
+                            </AnimatedButton>
+                        );
+                    })}
                 </ScrollView>
 
                 {/* Top Recommendations */}
@@ -388,28 +428,29 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="small" color="#00E5FF" />
-                    </View>
+                    <HomeSkeleton />
                 ) : (
                     <View style={styles.categoriesContainer}>
-                        {displayCategories.map((category) => (
-                            <TouchableOpacity
-                                key={category.id}
-                                style={styles.categoryItem}
-                                onPress={() =>
-                                    navigation.navigate(SCREENS.SEARCH, {
-                                        categoryId: category.id,
-                                        categoryName: category.name,
-                                    })
-                                }
-                            >
-                                <View style={styles.categoryIcon}>
-                                    <Text style={styles.categoryEmoji}>{category.icon}</Text>
-                                </View>
-                                <Text style={styles.categoryName}>{category.name}</Text>
-                            </TouchableOpacity>
-                        ))}
+                        {displayCategories.map((category, index) => {
+                            const IconComponent = categoryIcons[category.id] || BowlFood;
+                            return (
+                                <AnimatedButton
+                                    key={category.id}
+                                    scale={0.9}
+                                    style={styles.categoryItem}
+                                    onPress={() =>
+                                        navigation.navigate(SCREENS.SEARCH, {
+                                            categoryId: category.id,
+                                            categoryName: category.name,
+                                        })
+                                    }>
+                                    <View style={styles.categoryIcon}>
+                                        <IconComponent size={28} color="#00E5FF" weight="duotone" />
+                                    </View>
+                                    <Text style={styles.categoryName}>{category.name}</Text>
+                                </AnimatedButton>
+                            );
+                        })}
                     </View>
                 )}
 
@@ -422,7 +463,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Bottom Spacing */}
                 <View style={styles.bottomSpacing} />
-            </ScrollView>
+            </Animated.ScrollView>
         </View>
     );
 };
@@ -437,18 +478,15 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     locationContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
-    locationIcon: {
-        fontSize: 20,
-        marginRight: 8,
-    },
+
     locationLabel: {
         fontSize: 16,
         fontWeight: '600',
@@ -471,8 +509,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    profileIcon: {
-        fontSize: 20,
+    profileAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#00E5FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    profileInitial: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#000000',
     },
     searchBar: {
         flexDirection: 'row',
@@ -485,7 +533,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     searchIcon: {
-        fontSize: 16,
         marginRight: 12,
     },
     searchPlaceholder: {
@@ -563,7 +610,6 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     quickActionIcon: {
-        fontSize: 16,
         marginRight: 6,
     },
     quickActionText: {
@@ -634,10 +680,13 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     ratingBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#00C853',
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
+        gap: 2,
     },
     ratingText: {
         fontSize: 12,
@@ -648,6 +697,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#9E9E9E',
         marginBottom: 4,
+    },
+    deliveryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     },
     deliveryText: {
         fontSize: 12,
@@ -674,9 +728,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#00E5FF33',
     },
-    categoryEmoji: {
-        fontSize: 24,
-    },
+
     categoryName: {
         fontSize: 12,
         color: '#FFFFFF',

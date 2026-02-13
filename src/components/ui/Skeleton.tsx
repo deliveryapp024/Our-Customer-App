@@ -1,11 +1,21 @@
-import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Dimensions, ViewStyle } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withRepeat,
+    withTiming,
+    interpolate,
+    Easing,
+} from 'react-native-reanimated';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface SkeletonProps {
     width?: number | string;
     height?: number;
     borderRadius?: number;
-    style?: any;
+    style?: ViewStyle;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -14,96 +24,109 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     borderRadius = 8,
     style,
 }) => {
-    const animatedValue = React.useRef(new Animated.Value(0)).current;
+    const shimmerProgress = useSharedValue(0);
 
-    React.useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(animatedValue, {
-                    toValue: 1,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(animatedValue, {
-                    toValue: 0,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-            ]),
-        ).start();
-    }, [animatedValue]);
+    useEffect(() => {
+        shimmerProgress.value = withRepeat(
+            withTiming(1, {
+                duration: 1500,
+                easing: Easing.ease,
+            }),
+            -1,
+            false
+        );
+    }, []);
 
-    const opacity = animatedValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.3, 0.7],
+    const shimmerStyle = useAnimatedStyle(() => {
+        const translateX = interpolate(
+            shimmerProgress.value,
+            [0, 1],
+            [-SCREEN_WIDTH, SCREEN_WIDTH]
+        );
+        return {
+            transform: [{ translateX }],
+        };
     });
 
+    const widthValue = typeof width === 'number' ? width : '100%';
+
     return (
-        <Animated.View
+        <View
             style={[
-                styles.skeleton,
-                { width, height, borderRadius, opacity },
+                styles.container,
+                {
+                    width: widthValue,
+                    height,
+                    borderRadius,
+                },
                 style,
-            ]}
-        />
+            ]}>
+            {/* Base background */}
+            <View style={styles.background} />
+            
+            {/* Shimmer overlay - using pure Reanimated instead of LinearGradient */}
+            <Animated.View
+                style={[
+                    styles.shimmerContainer,
+                    shimmerStyle,
+                ]}>
+                <View style={styles.shimmerGradient} />
+            </Animated.View>
+        </View>
     );
 };
 
-export const RestaurantCardSkeleton = () => (
+// Pre-built skeleton layouts
+export const RestaurantCardSkeleton: React.FC = () => (
     <View style={styles.cardContainer}>
-        <Skeleton height={140} borderRadius={12} />
+        <Skeleton width={200} height={120} borderRadius={12} />
         <View style={styles.cardContent}>
-            <View style={styles.headerRow}>
-                <Skeleton width="70%" height={18} />
-                <Skeleton width={40} height={24} borderRadius={4} />
+            <Skeleton width={140} height={16} borderRadius={4} />
+            <View style={styles.row}>
+                <Skeleton width={80} height={12} borderRadius={4} />
+                <Skeleton width={40} height={20} borderRadius={4} />
             </View>
-            <Skeleton width="50%" height={14} style={{ marginTop: 8 }} />
-            <Skeleton width="30%" height={14} style={{ marginTop: 8 }} />
+            <Skeleton width={100} height={12} borderRadius={4} />
         </View>
     </View>
 );
 
-export const HomeScreenSkeleton = () => (
-    <View style={styles.container}>
-        {/* Header Skeleton */}
-        <View style={styles.header}>
-            <View style={styles.locationRow}>
-                <Skeleton width={24} height={24} borderRadius={12} />
-                <View style={{ marginLeft: 8, flex: 1 }}>
-                    <Skeleton width="60%" height={16} />
-                    <Skeleton width="80%" height={12} style={{ marginTop: 4 }} />
-                </View>
-            </View>
+export const CategorySkeleton: React.FC = () => (
+    <View style={styles.categoryContainer}>
+        <Skeleton width={56} height={56} borderRadius={28} />
+        <Skeleton width={50} height={12} borderRadius={4} style={styles.categoryText} />
+    </View>
+);
+
+export const HomeSkeleton: React.FC = () => (
+    <View style={styles.homeContainer}>
+        {/* Header skeleton */}
+        <View style={styles.headerRow}>
+            <Skeleton width={150} height={40} borderRadius={8} />
             <Skeleton width={40} height={40} borderRadius={20} />
         </View>
-
-        {/* Search Skeleton */}
-        <View style={styles.searchRow}>
-            <Skeleton height={50} borderRadius={12} />
-        </View>
-
-        {/* Main Cards Skeleton */}
-        <View style={styles.mainCards}>
+        
+        {/* Search skeleton */}
+        <Skeleton width="100%" height={48} borderRadius={12} />
+        
+        {/* Main cards skeleton */}
+        <View style={styles.mainCardsRow}>
             <Skeleton width="48%" height={160} borderRadius={16} />
             <Skeleton width="48%" height={160} borderRadius={16} />
         </View>
-
-        {/* Quick Actions Skeleton */}
-        <View style={styles.quickActions}>
-            <Skeleton width={80} height={40} borderRadius={20} />
-            <Skeleton width={100} height={40} borderRadius={20} />
-            <Skeleton width={70} height={40} borderRadius={20} />
-            <Skeleton width={80} height={40} borderRadius={20} />
+        
+        {/* Quick actions skeleton */}
+        <View style={styles.quickActionsRow}>
+            <Skeleton width={80} height={36} borderRadius={18} />
+            <Skeleton width={80} height={36} borderRadius={18} />
+            <Skeleton width={80} height={36} borderRadius={18} />
         </View>
-
-        {/* Section Title Skeleton */}
-        <View style={styles.sectionHeader}>
-            <Skeleton width="50%" height={20} />
-            <Skeleton width={60} height={16} />
-        </View>
-
-        {/* Restaurant Cards Skeleton */}
-        <View style={styles.cardsRow}>
+        
+        {/* Section title skeleton */}
+        <Skeleton width={180} height={24} borderRadius={4} />
+        
+        {/* Restaurant cards skeleton */}
+        <View style={styles.restaurantsRow}>
             <RestaurantCardSkeleton />
             <RestaurantCardSkeleton />
         </View>
@@ -111,66 +134,65 @@ export const HomeScreenSkeleton = () => (
 );
 
 const styles = StyleSheet.create({
-    skeleton: {
-        backgroundColor: '#2A2A2A',
-    },
     container: {
-        flex: 1,
-        backgroundColor: '#000000',
+        overflow: 'hidden',
+        backgroundColor: '#1A1A1A',
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
+    background: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#252525',
     },
-    locationRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
+    shimmerContainer: {
+        ...StyleSheet.absoluteFillObject,
+        width: '200%',
+        height: '100%',
     },
-    searchRow: {
-        paddingHorizontal: 16,
-        marginBottom: 20,
+    shimmerGradient: {
+        width: '50%',
+        height: '100%',
+        backgroundColor: '#FFFFFF10',
     },
-    mainCards: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        marginBottom: 16,
-    },
-    quickActions: {
-        flexDirection: 'row',
-        paddingHorizontal: 16,
-        gap: 10,
-        marginBottom: 24,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        marginBottom: 16,
-    },
-    cardsRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 16,
-        gap: 16,
-    },
+    // Pre-built layout styles
     cardContainer: {
         width: 200,
-        backgroundColor: '#1A1A1A',
-        borderRadius: 16,
-        overflow: 'hidden',
+        marginRight: 16,
     },
     cardContent: {
         padding: 12,
+        gap: 8,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    categoryContainer: {
+        alignItems: 'center',
+        width: (SCREEN_WIDTH - 64) / 4,
+    },
+    categoryText: {
+        marginTop: 8,
+    },
+    homeContainer: {
+        padding: 16,
+        gap: 16,
     },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    mainCardsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    quickActionsRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    restaurantsRow: {
+        flexDirection: 'row',
+        gap: 16,
     },
 });
 

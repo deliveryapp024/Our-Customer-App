@@ -2,16 +2,25 @@ import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
-    ScrollView,
     TouchableOpacity,
     Image,
     StatusBar,
     StyleSheet,
     Dimensions,
     ActivityIndicator,
+    TextInput,
+    ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { MagnifyingGlass } from 'phosphor-react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    useAnimatedScrollHandler,
+    interpolate,
+    Extrapolate,
+} from 'react-native-reanimated';
 import { restaurantsApi, Restaurant, MenuItem } from '../../../api';
 import { useCartStore } from '../../../store/cartStore';
 import { SCREENS } from '../../../constants';
@@ -127,7 +136,123 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     };
 
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
     const { items: storeItems, addItem: addCartItem, removeItem: removeCartItem } = useCartStore();
+
+    // Scroll tracking for parallax and sticky header
+    const scrollY = useSharedValue(0);
+    const scrollHandler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+            scrollY.value = event.contentOffset.y;
+        },
+    });
+
+    // Parallax image style
+    const imageAnimatedStyle = useAnimatedStyle(() => {
+        const translateY = interpolate(
+            scrollY.value,
+            [0, 200],
+            [0, -100],
+            Extrapolate.CLAMP
+        );
+        const opacity = interpolate(
+            scrollY.value,
+            [0, 150],
+            [1, 0],
+            Extrapolate.CLAMP
+        );
+        const scale = interpolate(
+            scrollY.value,
+            [0, 200],
+            [1, 1.1],
+            Extrapolate.CLAMP
+        );
+        return {
+            transform: [{ translateY }, { scale }],
+            opacity,
+        };
+    });
+
+    // Sticky header background opacity
+    const headerAnimatedStyle = useAnimatedStyle(() => {
+        const backgroundOpacity = interpolate(
+            scrollY.value,
+            [100, 200],
+            [0, 1],
+            Extrapolate.CLAMP
+        );
+        return {
+            backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity * 0.9})`,
+        };
+    });
+
+    // Search bar morphing animation: icon → full bar
+    const searchBarAnimatedStyle = useAnimatedStyle(() => {
+        const progress = interpolate(
+            scrollY.value,
+            [100, 200],
+            [0, 1],
+            Extrapolate.CLAMP
+        );
+
+        // Width: 85px (icon + "search" text on one line) → full width
+        const width = interpolate(
+            scrollY.value,
+            [100, 200],
+            [90, 280], // Start at 85px to fit icon + "search" text horizontally
+            Extrapolate.CLAMP
+        );
+
+        // Background: transparent when icon, opaque when bar
+        const backgroundColor = progress > 0.3
+            ? '#1A1A1A'  // Opaque when scrolled
+            : '#1A1A1A00'; // Transparent when on image (icon mode)
+
+        return {
+            width,
+            backgroundColor,
+        };
+    });
+
+    // Search input text opacity (hidden when icon, visible when bar)
+    const searchInputAnimatedStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollY.value,
+            [120, 180],
+            [0, 1],
+            Extrapolate.CLAMP
+        );
+        return {
+            opacity,
+        };
+    });
+
+    // Search icon scale animation
+    const searchIconAnimatedStyle = useAnimatedStyle(() => {
+        const scale = interpolate(
+            scrollY.value,
+            [100, 200],
+            [1, 0.8],
+            Extrapolate.CLAMP
+        );
+        return {
+            transform: [{ scale }],
+        };
+    });
+
+    // "search" text label opacity (visible when icon, fades out when bar expands)
+    const searchLabelAnimatedStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollY.value,
+            [100, 160],
+            [1, 0],
+            Extrapolate.CLAMP
+        );
+        return {
+            opacity,
+        };
+    });
 
     // API menu items use `_id`; mock fallback uses `id`. Normalize to a single key.
     const getItemKey = (item: any) => String(item?._id || item?.id);
@@ -164,9 +289,14 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const totalItems = storeItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalAmount = storeItems.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
 
-    const filteredItems = menuItems.filter(
-        (item) => selectedCategory === 'Recommended' || item.category === selectedCategory,
-    );
+    // Filter items by category AND search query
+    const filteredItems = menuItems.filter((item) => {
+        const matchesCategory = selectedCategory === 'Recommended' || item.category === selectedCategory;
+        const matchesSearch = searchQuery === '' ||
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesCategory && matchesSearch;
+    });
 
     // Show loading state while fetching
     if (loading && !navRestaurant) {
@@ -182,27 +312,53 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-            {/* Header Image */}
-            <View style={styles.headerImage}>
+            {/* Parallax Header Image */}
+            <Animated.View style={[styles.parallaxImageContainer, imageAnimatedStyle]}>
                 <Image
-                    source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6' }}
+                    source={{ uri: restaurant.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6' }}
                     style={styles.coverImage}
                     resizeMode="cover"
                 />
-                <View style={styles.headerOverlay}>
-                    <BackButton onPress={() => navigation.goBack()} />
-                    <View style={styles.headerActions}>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionIcon}>🔍</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionIcon}>❤️</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
+            </Animated.View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Sticky Glassmorphism Header */}
+            <Animated.View style={[styles.stickyHeader, headerAnimatedStyle]}>
+                <View style={styles.headerContent}>
+                    <BackButton onPress={() => navigation.goBack()} />
+
+                    {/* Morphing Search: Icon → Bar (RIGHT SIDE) */}
+                    <Animated.View style={[styles.glassSearchContainer, searchBarAnimatedStyle]}>
+                        <Animated.View style={searchIconAnimatedStyle}>
+                            <MagnifyingGlass size={18} color="#9E9E9E" weight="bold" />
+                        </Animated.View>
+                        {/* "search" label - visible in icon mode, fades out */}
+                        <Animated.Text style={[styles.searchLabel, searchLabelAnimatedStyle]}>
+                            search
+                        </Animated.Text>
+                        <Animated.View style={[styles.searchInputWrapper, searchInputAnimatedStyle]}>
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search menu items..."
+                                placeholderTextColor="#9E9E9E"
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                onFocus={() => setIsSearching(true)}
+                                onBlur={() => !searchQuery && setIsSearching(false)}
+                            />
+                        </Animated.View>
+                        {searchQuery !== '' && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')}>
+                                <Text style={styles.clearButton}>✕</Text>
+                            </TouchableOpacity>
+                        )}
+                    </Animated.View>
+                </View>
+            </Animated.View>
+
+            <Animated.ScrollView
+                showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}>
                 {/* Restaurant Info */}
                 <View style={styles.restaurantInfo}>
                     <View style={styles.restaurantHeader}>
@@ -354,7 +510,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 </View>
 
                 <View style={styles.bottomSpacing} />
-            </ScrollView>
+            </Animated.ScrollView>
 
             {/* Cart Bar */}
             {totalItems > 0 && (
@@ -438,43 +594,75 @@ const styles = StyleSheet.create({
         color: '#FFB300',
         textAlign: 'center',
     },
-    headerImage: {
-        height: 200,
-        position: 'relative',
+    // Parallax Image Styles
+    parallaxImageContainer: {
+        height: 220,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1,
     },
     coverImage: {
         width: '100%',
         height: '100%',
     },
-    headerOverlay: {
+    // Sticky Glassmorphism Header
+    stickyHeader: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        zIndex: 100,
+        paddingTop: 12,
         paddingHorizontal: 16,
-        paddingTop: 50,
+        paddingBottom: 12,
     },
-    headerActions: {
+    headerContent: {
         flexDirection: 'row',
-        gap: 10,
-    },
-    actionButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#00000099',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'space-between', // Push search to right
     },
-    actionIcon: {
-        fontSize: 18,
+    // Glassmorphism Search Bar
+    glassSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center', // Center icon when small
+        backgroundColor: '#1A1A1A00', // Start transparent
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 1,
+        borderColor: '#00E5FF20', // Subtle cyan border
+        overflow: 'hidden',
+    },
+    searchInputWrapper: {
+        flex: 1,
+        marginLeft: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 14,
+        color: '#FFFFFF',
+        padding: 0,
+    },
+    searchLabel: {
+        fontSize: 11,
+        color: '#9E9E9E',
+        marginLeft: 3,
+        flexShrink: 1,
+    },
+    clearButton: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        paddingHorizontal: 4,
     },
     restaurantInfo: {
         padding: 16,
+        paddingTop: 240, // Space for parallax image (220) + overlap
         borderBottomWidth: 1,
         borderBottomColor: '#2A2A2A',
+        backgroundColor: '#000000',
     },
     restaurantHeader: {
         flexDirection: 'row',
