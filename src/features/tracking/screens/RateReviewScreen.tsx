@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { BackButton } from '../../../components/ui/BackButton';
-import { customerApi } from '../../../api';
+import { reviewsApi } from '../../../api';
 import { CustomModal } from '../../../components/ui/CustomModal';
 
 type Props = {
@@ -24,6 +24,7 @@ type Props = {
 
 export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
     const orderId = route.params?.orderId || '#8821';
+    const branchId = route.params?.branchId || null;
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
     const [tips] = useState([
@@ -35,6 +36,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
     const [selectedTips, setSelectedTips] = useState<string[]>([]);
     const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorModalVisible, setErrorModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -75,7 +77,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                 name: asset.fileName,
             } as any);
 
-            const uploadResponse = await customerApi.uploadProfileImage(formData);
+            const uploadResponse = await reviewsApi.uploadReviewMedia(formData);
             if (!uploadResponse.success) {
                 showError(uploadResponse.error || 'Failed to upload image. Please try again.');
                 return;
@@ -89,8 +91,42 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
         }
     };
 
-    const handleSubmit = () => {
-        navigation.goBack();
+    const handleSubmit = async () => {
+        if (!branchId) {
+            showError('Missing restaurant id for review. Please go back and try again.');
+            return;
+        }
+        if (!rating) {
+            showError('Please select a rating first.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const selectedTagLabels = selectedTips
+                .map((id) => tips.find((t) => t.id === id)?.label)
+                .filter(Boolean) as string[];
+
+            const payload: any = {
+                rating,
+                comment: review.trim(),
+                tags: selectedTagLabels,
+            };
+
+            if (uploadedMediaUrl) payload.images = [uploadedMediaUrl];
+            // Optional: pass concrete order ObjectId if provided by caller.
+            if (route.params?.orderMongoId) payload.orderId = String(route.params.orderMongoId);
+
+            const res = await reviewsApi.createBranchReview(String(branchId), payload);
+            if (!res.success) {
+                showError(res.error || 'Failed to submit review.');
+                return;
+            }
+
+            navigation.goBack();
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSkip = () => {
@@ -117,7 +153,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                     <View style={styles.orderInfo}>
                         <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
-                        <Text style={styles.orderDetails}>Order {orderId} • 3 items</Text>
+                        <Text style={styles.orderDetails}>Order {orderId} â€¢ 3 items</Text>
                     </View>
                 </View>
 
@@ -209,8 +245,9 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                 <TouchableOpacity
                     style={styles.submitButton}
                     onPress={handleSubmit}
+                    disabled={isSubmitting}
                     activeOpacity={0.8}>
-                    <Text style={styles.submitText}>Submit Review</Text>
+                    <Text style={styles.submitText}>{isSubmitting ? 'Submitting...' : 'Submit Review'}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -424,4 +461,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default RateReviewScreen;
+export default RateReviewScreen;

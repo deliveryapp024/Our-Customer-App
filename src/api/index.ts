@@ -13,4 +13,6 @@ export { default as ordersApi } from './ordersApi';
 export * from './ordersApi';
 export { default as customerApi } from './customerApi';
 export * from './customerApi';
+export { default as reviewsApi } from './reviewsApi';
+export * from './reviewsApi';
 export type { ApiResponse, ApiResult, ApiFailure, ApiError } from './client';

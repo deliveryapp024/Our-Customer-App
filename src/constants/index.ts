@@ -34,7 +34,7 @@ export const SCREENS = {
     GROUP_ORDER: 'GroupOrder', AI_COMBO: 'AICombo', DINE_IN: 'DineIn', SMART_FILTERS: 'SmartFilters',
     TRAIN_DELIVERY: 'TrainDelivery', QUICK_REORDER: 'QuickReorder', FOOD_STORIES: 'FoodStories',
     // Restaurant
-    FAN_CLUB: 'FanClub', TABLE_RESERVATION: 'TableReservation',
+    FAN_CLUB: 'FanClub', TABLE_RESERVATION: 'TableReservation', BRANCH_REVIEWS: 'BranchReviews',
     // Tracking
     TRACKING: 'Tracking', RATE_REVIEW: 'RateReview',
     // Profile

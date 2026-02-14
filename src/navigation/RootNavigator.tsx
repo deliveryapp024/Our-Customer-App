@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { AuthNavigator } from './AuthNavigator';
 import { MainTabNavigator } from './MainTabNavigator';
-import { RestaurantDetailScreen, FanClubScreen, TableReservationScreen } from '../features/restaurant';
+import { RestaurantDetailScreen, BranchReviewsScreen, FanClubScreen, TableReservationScreen } from '../features/restaurant';
 import { CheckoutScreen, OrderSuccessScreen, CouponsWalletScreen } from '../features/checkout';
 import { OrderTrackingScreen, RateReviewScreen } from '../features/tracking';
 import {
@@ -35,6 +35,7 @@ export const RootNavigator = () => {
                     <Stack.Screen name={STACKS.MAIN} component={MainTabNavigator} />
                     {/* Restaurant & Checkout */}
                     <Stack.Screen name={SCREENS.RESTAURANT_DETAIL} component={RestaurantDetailScreen} options={{ animation: 'slide_from_right' }} />
+                    <Stack.Screen name={SCREENS.BRANCH_REVIEWS} component={BranchReviewsScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.CHECKOUT} component={CheckoutScreen} options={{ animation: 'slide_from_bottom' }} />
                     <Stack.Screen name={SCREENS.ORDER_SUCCESS} component={OrderSuccessScreen} options={{ animation: 'fade' }} />
                     <Stack.Screen name={SCREENS.COUPONS_WALLET} component={CouponsWalletScreen} options={{ animation: 'slide_from_bottom' }} />

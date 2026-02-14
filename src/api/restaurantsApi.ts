@@ -27,6 +27,22 @@ export interface Restaurant {
             thumbnailUrl?: string;
             aspectRatio?: string;
         };
+        gallery?: Array<{
+            url: string;
+            type?: 'image' | 'video';
+            thumbnailUrl?: string;
+            kind?: string;
+            caption?: string;
+        }>;
+        ratings?: {
+            ratingSource?: 'admin' | 'computed';
+            overall?: number;
+            food?: number;
+            service?: number;
+            delivery?: number;
+            totalReviews?: number;
+            reviewBreakdown?: { 5?: number; 4?: number; 3?: number; 2?: number; 1?: number };
+        };
         coupons?: Array<{
             couponCode: string;
             displayOrder?: number;

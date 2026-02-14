@@ -112,6 +112,26 @@ const { data, isLoading, error } = useQuery({
 
 ---
 
+# Restaurant Detail Notes (Media + Coupons + Reviews)
+
+## Native Dependency: Hero/Gallery Video
+- `RestaurantDetailScreen` renders hero/gallery videos using `react-native-video`.
+- Install/update:
+  - `npm install`
+  - iOS: `cd ios && pod install`
+  - Rebuild the app (clean build recommended after native deps change).
+
+## TTL Refresh Signal
+- `Branch.publicProfile.profileUpdatedAt` is the client "content changed" signal:
+  - It updates when `publicProfile` changes server-side.
+  - It also updates when computed ratings change after a review submission.
+- Client uses this to show the debounced toast: `"Updated just now"`.
+
+## Coupon Flow (Restaurant -> Checkout -> Server Enforcement)
+1. Restaurant coupon carousel tap sets `cartStore.couponCode`.
+2. Checkout calls `POST /api/order/quote` with `couponCode` to preview discount + delivery fee.
+3. Checkout sends `couponCode` in `POST /api/order` and the server re-validates/applies it (authoritative).
+
 # UI/UX Standards
 
 ### Design System (Theme)

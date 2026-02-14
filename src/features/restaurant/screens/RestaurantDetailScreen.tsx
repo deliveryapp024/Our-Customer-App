@@ -4,6 +4,7 @@ import {
     Text,
     TouchableOpacity,
     Image,
+    Modal,
     StatusBar,
     StyleSheet,
     Dimensions,
@@ -15,16 +16,19 @@ import {
     AccessibilityInfo,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { MagnifyingGlass } from 'phosphor-react-native';
+import { RouteProp, useIsFocused } from '@react-navigation/native';
+import { MagnifyingGlass, Play } from 'phosphor-react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
     useAnimatedScrollHandler,
+    useAnimatedReaction,
+    runOnJS,
     interpolate,
     Extrapolate,
 } from 'react-native-reanimated';
-import { restaurantsApi, Restaurant, MenuItem } from '../../../api';
+import Video from 'react-native-video';
+import { restaurantsApi, reviewsApi, Restaurant, MenuItem } from '../../../api';
 import { useCartStore } from '../../../store/cartStore';
 import { SCREENS } from '../../../constants';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -99,6 +103,20 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
 
     const [ttlSeconds, setTtlSeconds] = useState(300);
     const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
+    const isFocused = useIsFocused();
+
+    // Phase 2: Hero video support (tap-to-play) + safe pause when offscreen/unfocused.
+    const [heroVideoWantsPlay, setHeroVideoWantsPlay] = useState(false);
+    const [heroVideoHasError, setHeroVideoHasError] = useState(false);
+    const [heroVideoIsLoading, setHeroVideoIsLoading] = useState(false);
+    const [heroIsVisible, setHeroIsVisible] = useState(true);
+
+    // Phase 2: Gallery thumbnails + full-screen viewer (image-first).
+    const [galleryModalVisible, setGalleryModalVisible] = useState(false);
+    const [galleryStartIndex, setGalleryStartIndex] = useState(0);
+    const galleryViewerRef = React.useRef<FlatList<any> | null>(null);
+    const [galleryViewerIndex, setGalleryViewerIndex] = useState(0);
+    const [galleryViewerVideoPlayIndex, setGalleryViewerVideoPlayIndex] = useState<number | null>(null);
 
     // Toast: "Updated just now" (debounced)
     const [toastVisible, setToastVisible] = useState(false);
@@ -118,6 +136,18 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         queryFn: async () => {
             const res = await restaurantsApi.fetchRestaurantMenu(String(restaurantId));
             if (!res.success) throw new Error(res.error || 'Failed to load menu');
+            return res.data;
+        },
+        staleTime: ttlSeconds * 1000,
+        refetchOnWindowFocus: true,
+    });
+
+    const reviewsQuery = useQuery({
+        queryKey: ['branchReviews', String(restaurantId || '')],
+        enabled: !!restaurantId,
+        queryFn: async () => {
+            const res = await reviewsApi.listBranchReviews(String(restaurantId), 10);
+            if (!res.success) throw new Error(res.error || 'Failed to load reviews');
             return res.data;
         },
         staleTime: ttlSeconds * 1000,
@@ -156,6 +186,26 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         }
     }, [menuQuery.data]);
 
+    const heroMediaTypeDep = String((restaurant as any)?.publicProfile?.heroMedia?.type || '');
+    const heroMediaUrlDep = String((restaurant as any)?.publicProfile?.heroMedia?.url || '');
+    const heroMediaThumbDep = String((restaurant as any)?.publicProfile?.heroMedia?.thumbnailUrl || '');
+
+    // If hero media changes, reset video state so we don't stick on a broken URL.
+    useEffect(() => {
+        const hm = (restaurant as any)?.publicProfile?.heroMedia;
+        const type = String(hm?.type || '');
+        const url = String(hm?.url || '');
+        if (type !== 'video' || !url) {
+            setHeroVideoWantsPlay(false);
+            setHeroVideoHasError(false);
+            setHeroVideoIsLoading(false);
+            return;
+        }
+        setHeroVideoHasError(false);
+        setHeroVideoIsLoading(false);
+        // Note: keep heroVideoWantsPlay (user intent) as-is.
+    }, [heroMediaTypeDep, heroMediaUrlDep, heroMediaThumbDep]);
+
     useEffect(() => {
         if (!menuQuery.isError) return;
         setApiFailed(true);
@@ -168,7 +218,6 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
     const [foodFilter, setFoodFilter] = useState<'all' | 'veg' | 'nonveg'>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
     const { items: storeItems, addItem: addCartItem, removeItem: removeCartItem, setCouponCode, couponCode: selectedCouponCode } = useCartStore();
 
     // Scroll tracking for parallax and sticky header
@@ -178,6 +227,15 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
             scrollY.value = event.contentOffset.y;
         },
     });
+
+    // Pause hero video when it's offscreen to avoid background playback.
+    useAnimatedReaction(
+        () => scrollY.value < 230,
+        (isVis, prev) => {
+            if (isVis === prev) return;
+            runOnJS(setHeroIsVisible)(!!isVis);
+        }
+    );
 
     // Coupon carousel state (UI Polish Appendix A)
     const couponListRef = React.useRef<FlatList<any> | null>(null);
@@ -342,7 +400,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         );
 
         // Width: 85px (icon + "search" text on one line) â†’ full width
-        const width = interpolate(
+        const barWidth = interpolate(
             scrollY.value,
             [100, 200],
             [90, 280], // Start at 85px to fit icon + "search" text horizontally
@@ -355,7 +413,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
             : '#1A1A1A00'; // Transparent when on image (icon mode)
 
         return {
-            width,
+            width: barWidth,
             backgroundColor,
         };
     });
@@ -431,6 +489,44 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         removeCartItem(getItemKey(item));
     };
 
+    const heroMedia = (restaurant as any)?.publicProfile?.heroMedia;
+    const heroType = String(heroMedia?.type || 'image');
+    const heroVideoUrl = String(heroMedia?.url || '');
+    const heroVideoThumb = String(heroMedia?.thumbnailUrl || '');
+    const heroImageUrl = String(restaurant.image || '');
+
+    const galleryDep = (restaurant as any)?.publicProfile?.gallery;
+    const profileUpdatedAtDep = String((restaurant as any)?.publicProfile?.profileUpdatedAt || '');
+
+    const normalizedGallery = React.useMemo(() => {
+        const raw = (restaurant as any)?.publicProfile?.gallery;
+        if (!Array.isArray(raw)) return [];
+        return raw
+            .map((g: any) => {
+                if (!g) return null;
+                if (typeof g === 'string') return { type: 'image', url: g, thumbnailUrl: '' };
+                const url = String(g?.url || g?.imageUrl || '');
+                const type = String(g?.type || 'image'); // server uses `type` (Phase 2)
+                const thumbnailUrl = String(g?.thumbnailUrl || '');
+                if (!url && !thumbnailUrl) return null;
+                return { type, url, thumbnailUrl };
+            })
+            .filter(Boolean);
+    }, [galleryDep, profileUpdatedAtDep]);
+
+    const computedRatings = (restaurant as any)?.publicProfile?.ratings || null;
+    const ratingOverall = Number(computedRatings?.overall ?? (restaurant as any)?.rating ?? 0) || 0;
+    const ratingTotalReviews = Number(computedRatings?.totalReviews ?? 0) || 0;
+    const ratingBreakdown = computedRatings?.reviewBreakdown || {};
+    const ratingMaxCount = Math.max(
+        1,
+        Number(ratingBreakdown?.[5] || 0),
+        Number(ratingBreakdown?.[4] || 0),
+        Number(ratingBreakdown?.[3] || 0),
+        Number(ratingBreakdown?.[2] || 0),
+        Number(ratingBreakdown?.[1] || 0),
+    );
+
     const totalItems = storeItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalAmount = storeItems.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
 
@@ -464,11 +560,60 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
 
             {/* Parallax Header Image */}
             <Animated.View style={[styles.parallaxImageContainer, imageAnimatedStyle]}>
-                <Image
-                    source={{ uri: restaurant.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6' }}
-                    style={styles.coverImage}
-                    resizeMode="cover"
-                />
+                {heroType === 'video' && heroVideoUrl && !heroVideoHasError ? (
+                    <View style={styles.heroVideoWrap}>
+                        {!!heroVideoThumb && (
+                            <Image source={{ uri: heroVideoThumb }} style={styles.coverImage} resizeMode="cover" />
+                        )}
+
+                        {heroVideoWantsPlay && (
+                            <Video
+                                source={{ uri: heroVideoUrl }}
+                                style={styles.coverImage}
+                                resizeMode="cover"
+                                muted
+                                repeat
+                                paused={!(isFocused && heroIsVisible && heroVideoWantsPlay)}
+                                onLoadStart={() => setHeroVideoIsLoading(true)}
+                                onLoad={() => setHeroVideoIsLoading(false)}
+                                onError={() => {
+                                    setHeroVideoHasError(true);
+                                    setHeroVideoIsLoading(false);
+                                    setHeroVideoWantsPlay(false);
+                                }}
+                            />
+                        )}
+
+                        {!heroVideoWantsPlay && (
+                            <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => setHeroVideoWantsPlay(true)}
+                                style={styles.videoOverlay}
+                            >
+                                <View style={styles.videoOverlayInner}>
+                                    <Play size={36} color="#FFFFFF" weight="fill" />
+                                </View>
+                            </TouchableOpacity>
+                        )}
+
+                        {heroVideoIsLoading && (
+                            <View style={styles.videoLoadingOverlay}>
+                                <ActivityIndicator size="small" color="#00E5FF" />
+                                <Text style={styles.videoLoadingText}>Loading video...</Text>
+                            </View>
+                        )}
+                    </View>
+                ) : (
+                    <Image
+                        source={{
+                            uri:
+                                heroImageUrl ||
+                                'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6',
+                        }}
+                        style={styles.coverImage}
+                        resizeMode="cover"
+                    />
+                )}
             </Animated.View>
 
             {/* Sticky Glassmorphism Header */}
@@ -492,8 +637,6 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                 placeholderTextColor="#9E9E9E"
                                 value={searchQuery}
                                 onChangeText={setSearchQuery}
-                                onFocus={() => setIsSearching(true)}
-                                onBlur={() => !searchQuery && setIsSearching(false)}
                             />
                         </Animated.View>
                         {searchQuery !== '' && (
@@ -542,6 +685,45 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                         <Text style={styles.metaText}>ðŸ• {restaurant.deliveryTime}</Text>
                     </View>
                 </View>
+
+                {/* Gallery (Phase 2): thumbnails below hero */}
+                {normalizedGallery.length > 0 && (
+                    <View style={styles.galleryContainer}>
+                        <FlatList
+                            data={normalizedGallery}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            keyExtractor={(g, idx) => `${String((g as any)?.url || (g as any)?.thumbnailUrl || idx)}_${idx}`}
+                            contentContainerStyle={styles.galleryContent}
+                            renderItem={({ item, index }) => {
+                                const thumb = String((item as any)?.thumbnailUrl || (item as any)?.url || '');
+                                const isVideo = String((item as any)?.type || '') === 'video';
+                                return (
+                                    <TouchableOpacity
+                                        activeOpacity={0.85}
+                                        onPress={() => {
+                                            setGalleryStartIndex(index);
+                                            setGalleryViewerIndex(index);
+                                            setGalleryViewerVideoPlayIndex(null);
+                                            setGalleryModalVisible(true);
+                                            setTimeout(() => {
+                                                galleryViewerRef.current?.scrollToIndex?.({ index, animated: false });
+                                            }, 0);
+                                        }}
+                                        style={styles.galleryThumbWrap}
+                                    >
+                                        <Image source={{ uri: thumb }} style={styles.galleryThumb} resizeMode="cover" />
+                                        {isVideo && (
+                                            <View style={styles.galleryVideoBadge}>
+                                                <Play size={14} color="#FFFFFF" weight="fill" />
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
+                        />
+                    </View>
+                )}
                 {/* Coupons (Auto-rotating carousel) */}
                 <View style={styles.offersContainer}>
                     <FlatList
@@ -604,6 +786,92 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                             );
                         }}
                     />
+                </View>
+
+                {/* Ratings + Reviews (Phase 3) */}
+                <View style={styles.reviewsContainer}>
+                    <View style={styles.reviewsHeaderRow}>
+                        <Text style={styles.reviewsTitle}>Reviews</Text>
+                        <View style={styles.reviewsHeaderActions}>
+                            <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate(SCREENS.BRANCH_REVIEWS, { branchId: restaurantId, branchName: restaurant.name })}
+                                style={styles.seeAllBtn}
+                            >
+                                <Text style={styles.seeAllText}>See all</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate(SCREENS.RATE_REVIEW, { branchId: restaurantId })}
+                                style={styles.writeReviewBtn}
+                            >
+                                <Text style={styles.writeReviewText}>Write</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <View style={styles.ratingSummaryRow}>
+                        <View style={styles.ratingLeft}>
+                            <Text style={styles.ratingBig}>{ratingOverall.toFixed(1)}</Text>
+                            <Text style={styles.ratingSmall}>{ratingTotalReviews} ratings</Text>
+                        </View>
+
+                        <View style={styles.ratingBars}>
+                            {[5, 4, 3, 2, 1].map((s) => {
+                                const count = Number((ratingBreakdown as any)?.[s] || 0) || 0;
+                                const w = Math.max(0.02, count / ratingMaxCount);
+                                return (
+                                    <View key={String(s)} style={styles.ratingBarRow}>
+                                        <Text style={styles.ratingStarLabel}>{s}</Text>
+                                        <View style={styles.ratingTrack}>
+                                            <View style={[styles.ratingFill, { width: `${Math.round(w * 100)}%` }]} />
+                                        </View>
+                                        <Text style={styles.ratingCount}>{count}</Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+
+                    {reviewsQuery.isLoading && (
+                        <Text style={styles.reviewsLoadingText}>Loading reviews...</Text>
+                    )}
+
+                    {!reviewsQuery.isLoading && reviewsQuery.data?.items?.length ? (
+                        <View style={styles.reviewsList}>
+                            {reviewsQuery.data.items.slice(0, 3).map((r: any) => (
+                                <View key={String(r._id)} style={styles.reviewCard}>
+                                    <View style={styles.reviewTopRow}>
+                                        <Text style={styles.reviewName} numberOfLines={1}>
+                                            {r.customer?.name || 'Customer'}
+                                        </Text>
+                                        <View style={styles.reviewRatingPill}>
+                                            <Text style={styles.reviewRatingText}>{Number(r.rating).toFixed(1)} ★</Text>
+                                        </View>
+                                    </View>
+                                    {!!r.comment && (
+                                        <Text style={styles.reviewComment} numberOfLines={3}>
+                                            {r.comment}
+                                        </Text>
+                                    )}
+                                    {Array.isArray(r.images) && r.images.length > 0 && (
+                                        <View style={styles.reviewImagesRow}>
+                                            {r.images.slice(0, 3).map((u: string, idx: number) => (
+                                                <Image key={`${String(r._id)}_img_${idx}`} source={{ uri: u }} style={styles.reviewImageThumb} />
+                                            ))}
+                                        </View>
+                                    )}
+                                    {r.isVerifiedPurchase && (
+                                        <Text style={styles.reviewVerified}>Verified order</Text>
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    ) : (
+                        !reviewsQuery.isLoading && (
+                            <Text style={styles.reviewsEmptyText}>No reviews yet.</Text>
+                        )
+                    )}
                 </View>
 
                 {/* Menu Categories + Veg Filter */}
@@ -748,6 +1016,91 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 <View style={styles.bottomSpacing} />
             </Animated.ScrollView>
 
+            {/* Gallery Viewer Modal */}
+            <Modal
+                visible={galleryModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => {
+                    setGalleryModalVisible(false);
+                    setGalleryViewerVideoPlayIndex(null);
+                }}
+            >
+                <View style={styles.galleryModalBackdrop}>
+                    <TouchableOpacity
+                        style={styles.galleryModalClose}
+                        onPress={() => {
+                            setGalleryModalVisible(false);
+                            setGalleryViewerVideoPlayIndex(null);
+                        }}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={styles.galleryModalCloseText}>Close</Text>
+                    </TouchableOpacity>
+
+                    <FlatList
+                        ref={(r) => {
+                            galleryViewerRef.current = r;
+                        }}
+                        data={normalizedGallery}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        initialScrollIndex={Math.max(0, Math.min(galleryStartIndex, normalizedGallery.length - 1))}
+                        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+                        onScrollToIndexFailed={() => {
+                            // Ignore; user can still swipe from the nearest rendered item.
+                        }}
+                        onMomentumScrollEnd={(e) => {
+                            const x = e.nativeEvent.contentOffset.x;
+                            const idx = Math.round(x / width);
+                            setGalleryViewerIndex(Math.max(0, Math.min(idx, normalizedGallery.length - 1)));
+                            setGalleryViewerVideoPlayIndex(null);
+                        }}
+                        keyExtractor={(g, idx) => `viewer_${String((g as any)?.url || (g as any)?.thumbnailUrl || idx)}_${idx}`}
+                        renderItem={({ item, index }) => {
+                            const url = String((item as any)?.url || '');
+                            const thumb = String((item as any)?.thumbnailUrl || url || '');
+                            const isVideo = String((item as any)?.type || '') === 'video';
+                            const canPlayVideo = isVideo && !!url;
+                            const isActive = index === galleryViewerIndex;
+                            const wantsPlay = galleryViewerVideoPlayIndex === index;
+                            const display = isVideo ? thumb : (url || thumb);
+                            return (
+                                <View style={styles.galleryModalPage}>
+                                    {canPlayVideo && wantsPlay ? (
+                                        <Video
+                                            source={{ uri: url }}
+                                            style={styles.galleryModalVideo}
+                                            resizeMode="contain"
+                                            muted
+                                            repeat
+                                            paused={!(galleryModalVisible && isFocused && isActive && wantsPlay)}
+                                            onError={() => setGalleryViewerVideoPlayIndex(null)}
+                                        />
+                                    ) : (
+                                        <View style={styles.galleryModalMediaWrap}>
+                                            <Image source={{ uri: display }} style={styles.galleryModalImage} resizeMode="contain" />
+                                            {canPlayVideo && (
+                                                <TouchableOpacity
+                                                    activeOpacity={0.85}
+                                                    onPress={() => setGalleryViewerVideoPlayIndex(index)}
+                                                    style={styles.galleryModalPlayOverlay}
+                                                >
+                                                    <View style={styles.galleryModalPlayInner}>
+                                                        <Play size={36} color="#FFFFFF" weight="fill" />
+                                                    </View>
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    )}
+                                </View>
+                            );
+                        }}
+                    />
+                </View>
+            </Modal>
+
             {/* Toast: Updated just now */}
             {toastVisible && (
                 <View style={styles.toast}>
@@ -850,6 +1203,49 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    heroVideoWrap: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#000000',
+    },
+    videoOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    videoOverlayInner: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+    },
+    videoLoadingOverlay: {
+        position: 'absolute',
+        left: 16,
+        bottom: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.12)',
+    },
+    videoLoadingText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
+    },
     // Sticky Glassmorphism Header
     stickyHeader: {
         position: 'absolute',
@@ -943,6 +1339,104 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#9E9E9E',
     },
+    galleryContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 10,
+        backgroundColor: '#000000',
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    galleryContent: {
+        paddingRight: 12,
+        gap: 10,
+    },
+    galleryThumbWrap: {
+        width: 72,
+        height: 72,
+        borderRadius: 14,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#00E5FF22',
+        backgroundColor: '#111111',
+    },
+    galleryThumb: {
+        width: '100%',
+        height: '100%',
+    },
+    galleryVideoBadge: {
+        position: 'absolute',
+        right: 6,
+        bottom: 6,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+    },
+    galleryModalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.95)',
+    },
+    galleryModalClose: {
+        position: 'absolute',
+        top: 52,
+        right: 16,
+        zIndex: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.10)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+    },
+    galleryModalCloseText: {
+        color: '#FFFFFF',
+        fontWeight: '700',
+        fontSize: 12,
+    },
+    galleryModalPage: {
+        width,
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+    },
+    galleryModalImage: {
+        width: '100%',
+        height: '85%',
+    },
+    galleryModalMediaWrap: {
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    galleryModalVideo: {
+        width: '100%',
+        height: '85%',
+    },
+    galleryModalPlayOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    galleryModalPlayInner: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+    },
     offersContainer: {
         borderBottomWidth: 1,
         borderBottomColor: '#2A2A2A',
@@ -991,6 +1485,170 @@ const styles = StyleSheet.create({
         height: 3,
         backgroundColor: '#00E5FF',
         borderRadius: 3,
+    },
+    reviewsContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    reviewsHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    reviewsHeaderActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    seeAllBtn: {
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#1A1A1A',
+        borderWidth: 1,
+        borderColor: '#00E5FF22',
+    },
+    seeAllText: {
+        color: '#00E5FF',
+        fontWeight: '800',
+        fontSize: 12,
+    },
+    reviewsTitle: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    writeReviewBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#00E5FF',
+    },
+    writeReviewText: {
+        color: '#000000',
+        fontWeight: '800',
+        fontSize: 12,
+    },
+    ratingSummaryRow: {
+        flexDirection: 'row',
+        gap: 16,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    ratingLeft: {
+        width: 86,
+        alignItems: 'flex-start',
+    },
+    ratingBig: {
+        color: '#FFFFFF',
+        fontSize: 32,
+        fontWeight: '800',
+        lineHeight: 36,
+    },
+    ratingSmall: {
+        color: '#9E9E9E',
+        fontSize: 12,
+        marginTop: 2,
+    },
+    ratingBars: {
+        flex: 1,
+        gap: 6,
+    },
+    ratingBarRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    ratingStarLabel: {
+        width: 10,
+        color: '#9E9E9E',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    ratingTrack: {
+        flex: 1,
+        height: 8,
+        borderRadius: 6,
+        backgroundColor: '#1A1A1A',
+        overflow: 'hidden',
+    },
+    ratingFill: {
+        height: 8,
+        backgroundColor: '#00E5FF',
+    },
+    ratingCount: {
+        width: 34,
+        textAlign: 'right',
+        color: '#9E9E9E',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    reviewsLoadingText: {
+        color: '#9E9E9E',
+        fontSize: 12,
+    },
+    reviewsEmptyText: {
+        color: '#9E9E9E',
+        fontSize: 12,
+    },
+    reviewsList: {
+        gap: 10,
+    },
+    reviewCard: {
+        padding: 12,
+        borderRadius: 14,
+        backgroundColor: '#111111',
+        borderWidth: 1,
+        borderColor: '#00E5FF22',
+    },
+    reviewTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 6,
+    },
+    reviewName: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+        flex: 1,
+        marginRight: 10,
+    },
+    reviewRatingPill: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+        backgroundColor: '#00C853',
+    },
+    reviewRatingText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '800',
+    },
+    reviewComment: {
+        color: '#CFCFCF',
+        fontSize: 12,
+        lineHeight: 16,
+    },
+    reviewImagesRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 10,
+    },
+    reviewImageThumb: {
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        backgroundColor: '#1A1A1A',
+    },
+    reviewVerified: {
+        marginTop: 8,
+        color: '#00E5FF',
+        fontSize: 11,
+        fontWeight: '700',
     },
     categoriesBar: {
         flexDirection: 'row',
