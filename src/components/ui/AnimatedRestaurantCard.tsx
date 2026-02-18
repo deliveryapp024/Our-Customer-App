@@ -145,8 +145,8 @@ export const AnimatedRestaurantCard: React.FC<AnimatedRestaurantCardProps> = ({
                 </View>
                 <Text style={styles.cuisine} numberOfLines={1}>
                     {(Array.isArray(item.cuisines) && item.cuisines.length > 0 
-                        ? item.cuisines.join(' • ') 
-                        : 'Multi-cuisine')} • {item.priceLevel || '₹₹'}
+                        ? item.cuisines.join('  ') 
+                        : 'Multi-cuisine')}  {item.priceLevel || ''}
                 </Text>
                 <View style={styles.deliveryRow}>
                     <Clock size={14} color="#9E9E9E" weight="fill" />

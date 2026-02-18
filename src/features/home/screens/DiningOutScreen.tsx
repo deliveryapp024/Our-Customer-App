@@ -31,12 +31,12 @@ interface Restaurant {
 }
 
 const DINING_CATEGORIES = [
-    { id: '1', name: 'Trending', icon: '🔥' },
-    { id: '2', name: 'Romantic', icon: '💕' },
-    { id: '3', name: 'Family', icon: '👨‍👩‍👧‍👦' },
-    { id: '4', name: 'Rooftop', icon: '🌆' },
-    { id: '5', name: 'Buffet', icon: '🍽️' },
-    { id: '6', name: 'Cafe', icon: '☕' },
+    { id: '1', name: 'Trending', icon: '' },
+    { id: '2', name: 'Romantic', icon: '' },
+    { id: '3', name: 'Family', icon: '' },
+    { id: '4', name: 'Rooftop', icon: '' },
+    { id: '5', name: 'Buffet', icon: '' },
+    { id: '6', name: 'Cafe', icon: '' },
 ];
 
 // Images from dining_out_discovery_feed design
@@ -44,10 +44,10 @@ const MOCK_RESTAURANTS: Restaurant[] = [
     {
         id: '1',
         name: 'The Grand Pavilion',
-        cuisine: 'Multi-Cuisine • Fine Dining',
+        cuisine: 'Multi-Cuisine  Fine Dining',
         rating: 4.5,
         distance: '2.3 km',
-        priceForTwo: '₹1,500',
+        priceForTwo: '1,500',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAqqTiN1dhT5dCugD0v8WlEZudmhA5xvvOtYa59g9enwAuEf2eQKnRCOgW6Xyf9I6-6gc1dHznfkxFZwytC1UGr4jSHDnViZtE0LrKj2J5clBc3shkWWQ3bKsdsEcDg8tyEetrFsieLE-54XqK8pDaL32E_ng2akbVhbD9YqyvK8WdlAITRIHO_vUOF3rf12p6PR02DnbDaJrUU-qO9Bvc77ciDadzrkQF_D8u38hFJ0pgMCdRlG2k5o-r6UqUVIKwm7FYLuraUJ59U',
         offers: ['20% OFF', 'Free Dessert'],
         hasTableBooking: true,
@@ -56,10 +56,10 @@ const MOCK_RESTAURANTS: Restaurant[] = [
     {
         id: '2',
         name: 'Sky Lounge & Bar',
-        cuisine: 'Continental • Rooftop',
+        cuisine: 'Continental  Rooftop',
         rating: 4.3,
         distance: '3.1 km',
-        priceForTwo: '₹2,000',
+        priceForTwo: '2,000',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4dEvPWoHC0f2U1T8KMeirU5V1DHMw3nIgxZ4H2lxpjwxJrSg9A3qDE8mz8toFq7MPoeh5yyxcFlRVtd3swIjs3QzLtj1znkjbSo6f42Fypb0k7658C9L4Va30rO2r5ckQ_Ma1dqYKhtmEiJUCybe_1CS4z6ZpJ0oytN6EfpMp9r2BQWON20ZW2PldsJiDSkSeKtBqobyGkpHbEt1zgAqX03k93Ee2kn6MSy8t5XpzmH6yj7CrY1OsQmRObWwZT7E6JunV6-oXkjRO',
         offers: ['1+1 on Drinks'],
         hasTableBooking: true,
@@ -67,10 +67,10 @@ const MOCK_RESTAURANTS: Restaurant[] = [
     {
         id: '3',
         name: 'Spice Garden',
-        cuisine: 'North Indian • Mughlai',
+        cuisine: 'North Indian  Mughlai',
         rating: 4.2,
         distance: '1.8 km',
-        priceForTwo: '₹800',
+        priceForTwo: '800',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwU7Aw-djD82T_HiBcJeZQYYwhSob1ftFoy_-LoDZ4KQVzY_DrbPt8-F-JaM-LIJkbcHB0PipVezmL9DKqa8OW0kepAbDZxitF7uZJn2Ybhi5uLhFRDes5HB27AI-RJtlr7nPm6xa7GmHB45HLGQT1ABRO9nGatNkGbzqIV1FWartun9zjSH3wmEIqInU2lnBvLJha5zm95MCyBdj-IGKQJjr1vaJN_7Acitb1Huf-zplyDVuNDMmzcgzVc8QjGbnNHwxyP-NPhuIp',
         offers: ['Flat 30% OFF'],
         hasTableBooking: true,
@@ -79,10 +79,10 @@ const MOCK_RESTAURANTS: Restaurant[] = [
     {
         id: '4',
         name: 'Cafe Latte',
-        cuisine: 'Cafe • Italian',
+        cuisine: 'Cafe  Italian',
         rating: 4.4,
         distance: '0.9 km',
-        priceForTwo: '₹600',
+        priceForTwo: '600',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpVdOCfYUXsUTWXNOmhRKv9is_U4CtlHqbFv8HXP8oGmsg83MUaxWSUg2_VLnUUxpCVwnn-d5kHlg7Ju_fLL69bNHtv7XKUQexirABgfUsqQJhYa0VnQo4rsywD-asRuofyX7gdvhT2UfJX47JNxOGKtb9E1M88Iyl9lFQZlJxdnp4C309T4q2xjTiVVyHBUDnUXBataLN4akLxeVaq1zUMmU4aMyxrTdmy5DEzLI_vWYBvGUx-ctKrTSoTmmTiZrX8FaRhoIsKmO_',
         offers: ['Buy 1 Get 1 Coffee'],
         hasTableBooking: false,
@@ -145,15 +145,15 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                         {item.name}
                     </Text>
                     <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingText}>★ {item.rating}</Text>
+                        <Text style={styles.ratingText}> {item.rating}</Text>
                     </View>
                 </View>
 
                 <Text style={styles.cuisineText}>{item.cuisine}</Text>
 
                 <View style={styles.restaurantMeta}>
-                    <Text style={styles.metaText}>📍 {item.distance}</Text>
-                    <Text style={styles.metaText}>💰 {item.priceForTwo} for two</Text>
+                    <Text style={styles.metaText}> {item.distance}</Text>
+                    <Text style={styles.metaText}> {item.priceForTwo} for two</Text>
                 </View>
 
                 {/* Table Booking Section */}
@@ -163,7 +163,7 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                             style={styles.bookButton}
                             onPress={() => navigation.navigate('TableReservation', { restaurant: item })}
                         >
-                            <Text style={styles.bookButtonText}>🪑 Book Table</Text>
+                            <Text style={styles.bookButtonText}> Book Table</Text>
                         </TouchableOpacity>
                     ) : (
                         <Text style={styles.noBookingText}>Walk-in only</Text>
@@ -171,7 +171,7 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
                     {item.waitTime && (
                         <View style={styles.waitTimeBadge}>
-                            <Text style={styles.waitTimeText}>⏱️ {item.waitTime} wait</Text>
+                            <Text style={styles.waitTimeText}> {item.waitTime} wait</Text>
                         </View>
                     )}
                 </View>
@@ -186,13 +186,13 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Dine-Out</Text>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterIcon}>⚙️</Text>
+                    <Text style={styles.filterIcon}></Text>
                 </TouchableOpacity>
             </View>
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-                <Text style={styles.searchIcon}>🔍</Text>
+                <Text style={styles.searchIcon}>Search</Text>
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search restaurants, cuisines..."
@@ -245,7 +245,7 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Popular Near You</Text>
                     <TouchableOpacity>
-                        <Text style={styles.seeAllText}>See All →</Text>
+                        <Text style={styles.seeAllText}>See All </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -258,7 +258,7 @@ export const DiningOutScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
                 {/* Promotional Banner */}
                 <View style={styles.promoBanner}>
-                    <Text style={styles.promoTitle}>🎉 First Dine-Out?</Text>
+                    <Text style={styles.promoTitle}> First Dine-Out?</Text>
                     <Text style={styles.promoText}>
                         Get FLAT 50% OFF on your first table booking!
                     </Text>

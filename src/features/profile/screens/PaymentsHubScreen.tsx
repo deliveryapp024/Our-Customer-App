@@ -25,18 +25,18 @@ interface PaymentMethod {
 }
 
 const paymentMethods: PaymentMethod[] = [
-    { id: '1', type: 'wallet', icon: '💼', name: 'App Wallet', balance: 124.50, isDefault: true },
-    { id: '2', type: 'upi', icon: '🔵', name: 'Google Pay', detail: 'user@okaxis' },
-    { id: '3', type: 'upi', icon: '🟣', name: 'PhonePe', detail: 'user@ybl' },
-    { id: '4', type: 'card', icon: '💳', name: 'Visa •••• 4242', detail: 'Expires 12/26' },
-    { id: '5', type: 'card', icon: '💳', name: 'Mastercard •••• 8888', detail: 'Expires 08/25' },
+    { id: '1', type: 'wallet', icon: '', name: 'App Wallet', balance: 124.50, isDefault: true },
+    { id: '2', type: 'upi', icon: '', name: 'Google Pay', detail: 'user@okaxis' },
+    { id: '3', type: 'upi', icon: '', name: 'PhonePe', detail: 'user@ybl' },
+    { id: '4', type: 'card', icon: 'Card', name: 'Visa  4242', detail: 'Expires 12/26' },
+    { id: '5', type: 'card', icon: 'Card', name: 'Mastercard  8888', detail: 'Expires 08/25' },
 ];
 
 const quickActions = [
-    { id: '1', icon: '➕', label: 'Add Money' },
-    { id: '2', icon: '🔄', label: 'Send' },
-    { id: '3', icon: '📜', label: 'History' },
-    { id: '4', icon: '🎁', label: 'Offers' },
+    { id: '1', icon: '', label: 'Add Money' },
+    { id: '2', icon: 'Reorder', label: 'Send' },
+    { id: '3', icon: '', label: 'History' },
+    { id: '4', icon: 'Deals', label: 'Offers' },
 ];
 
 export const PaymentsHubScreen: React.FC<Props> = ({ navigation }) => {
@@ -57,10 +57,10 @@ export const PaymentsHubScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Wallet Card */}
                 <View style={styles.walletCard}>
                     <View style={styles.walletHeader}>
-                        <Text style={styles.walletIcon}>💰</Text>
+                        <Text style={styles.walletIcon}></Text>
                         <View style={styles.walletInfo}>
                             <Text style={styles.walletLabel}>Wallet Balance</Text>
-                            <Text style={styles.walletBalance}>₹{walletBalance.toFixed(2)}</Text>
+                            <Text style={styles.walletBalance}>{walletBalance.toFixed(2)}</Text>
                         </View>
                     </View>
                     <View style={styles.quickActions}>
@@ -117,7 +117,7 @@ export const PaymentsHubScreen: React.FC<Props> = ({ navigation }) => {
                                     <Text style={styles.paymentDetail}>{method.detail}</Text>
                                 </View>
                                 <TouchableOpacity style={styles.deleteButton}>
-                                    <Text style={styles.deleteIcon}>🗑️</Text>
+                                    <Text style={styles.deleteIcon}></Text>
                                 </TouchableOpacity>
                             </TouchableOpacity>
                         ))}
@@ -127,25 +127,25 @@ export const PaymentsHubScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>More Options</Text>
                     <TouchableOpacity style={styles.optionItem}>
-                        <Text style={styles.optionIcon}>🏦</Text>
+                        <Text style={styles.optionIcon}></Text>
                         <Text style={styles.optionText}>Net Banking</Text>
-                        <Text style={styles.optionArrow}>→</Text>
+                        <Text style={styles.optionArrow}></Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.optionItem}>
-                        <Text style={styles.optionIcon}>💵</Text>
+                        <Text style={styles.optionIcon}></Text>
                         <Text style={styles.optionText}>Cash on Delivery</Text>
-                        <Text style={styles.optionArrow}>→</Text>
+                        <Text style={styles.optionArrow}></Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.optionItem}>
-                        <Text style={styles.optionIcon}>🎫</Text>
+                        <Text style={styles.optionIcon}></Text>
                         <Text style={styles.optionText}>Gift Cards</Text>
-                        <Text style={styles.optionArrow}>→</Text>
+                        <Text style={styles.optionArrow}></Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Security Notice */}
                 <View style={styles.securityNotice}>
-                    <Text style={styles.securityIcon}>🔒</Text>
+                    <Text style={styles.securityIcon}></Text>
                     <Text style={styles.securityText}>
                         Your payment information is encrypted and secure. We never store your card CVV.
                     </Text>

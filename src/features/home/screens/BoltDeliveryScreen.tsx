@@ -51,11 +51,11 @@ const boltItems = [
 ];
 
 const categories = [
-    { id: '1', name: 'Dairy', icon: '🥛' },
-    { id: '2', name: 'Fruits', icon: '🍎' },
-    { id: '3', name: 'Veggies', icon: '🥬' },
-    { id: '4', name: 'Snacks', icon: '🍿' },
-    { id: '5', name: 'Drinks', icon: '🥤' },
+    { id: '1', name: 'Dairy', icon: '' },
+    { id: '2', name: 'Fruits', icon: '' },
+    { id: '3', name: 'Veggies', icon: '' },
+    { id: '4', name: 'Snacks', icon: '' },
+    { id: '5', name: 'Drinks', icon: '' },
 ];
 
 export const BoltDeliveryScreen: React.FC<Props> = ({ navigation }) => {
@@ -68,19 +68,19 @@ export const BoltDeliveryScreen: React.FC<Props> = ({ navigation }) => {
                 <BackButton onPress={() => navigation.goBack()} />
                 <View style={styles.headerCenter}>
                     <View style={styles.boltBadge}>
-                        <Text style={styles.boltIcon}>⚡</Text>
+                        <Text style={styles.boltIcon}></Text>
                     </View>
                     <Text style={styles.headerTitle}>Bolt</Text>
                     <Text style={styles.headerSubtitle}>10-15 min delivery</Text>
                 </View>
                 <TouchableOpacity style={styles.searchButton}>
-                    <Text style={styles.searchIcon}>🔍</Text>
+                    <Text style={styles.searchIcon}>Search</Text>
                 </TouchableOpacity>
             </View>
 
             {/* Timer Banner */}
             <View style={styles.timerBanner}>
-                <Text style={styles.timerIcon}>⏱️</Text>
+                <Text style={styles.timerIcon}></Text>
                 <Text style={styles.timerText}>
                     Order in <Text style={styles.timerHighlight}>4:32</Text> for guaranteed 10-min delivery
                 </Text>
@@ -124,10 +124,10 @@ export const BoltDeliveryScreen: React.FC<Props> = ({ navigation }) => {
                             />
                             <Text style={styles.itemName}>{item.name}</Text>
                             <View style={styles.priceRow}>
-                                <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
+                                <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
                                 {item.originalPrice && (
                                     <Text style={styles.originalPrice}>
-                                        ₹{item.originalPrice.toFixed(2)}
+                                        {item.originalPrice.toFixed(2)}
                                     </Text>
                                 )}
                             </View>
@@ -140,7 +140,7 @@ export const BoltDeliveryScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Info Card */}
                 <View style={styles.infoCard}>
-                    <Text style={styles.infoIcon}>🚀</Text>
+                    <Text style={styles.infoIcon}></Text>
                     <View style={styles.infoContent}>
                         <Text style={styles.infoTitle}>How Bolt Works</Text>
                         <Text style={styles.infoText}>

@@ -27,7 +27,7 @@ const savedAddresses: Address[] = [
     {
         id: '1',
         type: 'home',
-        icon: '🏠',
+        icon: 'Home',
         label: 'Home',
         address: '45-2/A Main Street, Camp Area, Belagavi, Karnataka 590001',
         isDefault: true,
@@ -35,7 +35,7 @@ const savedAddresses: Address[] = [
     {
         id: '2',
         type: 'work',
-        icon: '💼',
+        icon: '',
         label: 'Work',
         address: 'Tech Park, 5th Floor, MG Road, Bangalore, Karnataka 560001',
         isDefault: false,
@@ -43,7 +43,7 @@ const savedAddresses: Address[] = [
     {
         id: '3',
         type: 'other',
-        icon: '📍',
+        icon: '',
         label: "Mom's Place",
         address: '123, Gandhi Nagar, Hubli, Karnataka 580001',
         isDefault: false,
@@ -85,14 +85,14 @@ export const SavedAddressesScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Current Location */}
                 <TouchableOpacity style={styles.currentLocation}>
-                    <Text style={styles.locationIcon}>📍</Text>
+                    <Text style={styles.locationIcon}></Text>
                     <View style={styles.locationInfo}>
                         <Text style={styles.locationTitle}>Use Current Location</Text>
                         <Text style={styles.locationSubtitle}>
                             Using GPS to locate you
                         </Text>
                     </View>
-                    <Text style={styles.locationArrow}>→</Text>
+                    <Text style={styles.locationArrow}></Text>
                 </TouchableOpacity>
 
                 {/* Saved Addresses */}
@@ -117,15 +117,15 @@ export const SavedAddressesScreen: React.FC<Props> = ({ navigation }) => {
                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={() => handleSetDefault(address.id)}>
-                                <Text style={styles.actionIcon}>✓</Text>
+                                <Text style={styles.actionIcon}></Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.actionButton}>
-                                <Text style={styles.actionIcon}>✏️</Text>
+                                <Text style={styles.actionIcon}></Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={() => handleDelete(address.id)}>
-                                <Text style={styles.actionIcon}>🗑️</Text>
+                                <Text style={styles.actionIcon}></Text>
                             </TouchableOpacity>
                         </View>
                     </View>

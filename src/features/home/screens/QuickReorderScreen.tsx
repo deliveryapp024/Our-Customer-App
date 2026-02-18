@@ -24,7 +24,7 @@ export const QuickReorderScreen: React.FC<Props> = ({ navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.heroSection}>
-                    <Text style={styles.heroEmoji}>🔄</Text>
+                    <Text style={styles.heroEmoji}>Reorder</Text>
                     <Text style={styles.heroTitle}>Reorder in one tap!</Text>
                     <Text style={styles.heroSubtitle}>Your recent favorites ready to order again</Text>
                 </View>
@@ -39,14 +39,14 @@ export const QuickReorderScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.orderDate}>{order.date}</Text>
                         </View>
                         <View style={styles.orderAction}>
-                            <Text style={styles.orderTotal}>₹{order.total.toFixed(2)}</Text>
+                            <Text style={styles.orderTotal}>{order.total.toFixed(2)}</Text>
                             <TouchableOpacity style={styles.reorderButton}><Text style={styles.reorderText}>REORDER</Text></TouchableOpacity>
                         </View>
                     </View>
                 ))}
 
                 <View style={styles.tipCard}>
-                    <Text style={styles.tipIcon}>💡</Text>
+                    <Text style={styles.tipIcon}></Text>
                     <Text style={styles.tipText}>Tip: Long press to customize your order before reordering</Text>
                 </View>
                 <View style={{ height: 40 }} />

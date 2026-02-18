@@ -223,7 +223,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
         return (
             <View style={[styles.container, styles.centered]}>
                 <StatusBar barStyle="light-content" backgroundColor="#000000" />
-                <Text style={styles.emptyIcon}>📦</Text>
+                <Text style={styles.emptyIcon}></Text>
                 <Text style={styles.emptyTitle}>Order Not Found</Text>
                 <Text style={styles.emptyText}>
                     {error || 'We couldn\'t find this order.\nIt may have been removed or expired.'}
@@ -320,14 +320,14 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                     <View style={styles.driverDetails}>
                         <Text style={styles.driverName}>Rahul Kumar</Text>
-                        <Text style={styles.vehicleInfo}>DL 4C 1234 • Honda Activa</Text>
+                        <Text style={styles.vehicleInfo}>DL 4C 1234  Honda Activa</Text>
                     </View>
                     <View style={styles.driverActions}>
                         <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionIcon}>💬</Text>
+                            <Text style={styles.actionIcon}></Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionIcon}>📞</Text>
+                            <Text style={styles.actionIcon}></Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -345,7 +345,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                                         step.isCompleted && styles.timelineDotCompleted,
                                         step.isActive && styles.timelineDotActive,
                                     ]}>
-                                    {step.isCompleted && <Text style={styles.checkIcon}>✓</Text>}
+                                    {step.isCompleted && <Text style={styles.checkIcon}></Text>}
                                     {step.isActive && <View style={styles.activePulse} />}
                                 </View>
                                 {index < steps.length - 1 && (
@@ -376,7 +376,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                 {/* View Order Details */}
                 <TouchableOpacity style={styles.viewDetailsButton}>
                     <Text style={styles.viewDetailsText}>View Order Details</Text>
-                    <Text style={styles.viewDetailsArrow}>→</Text>
+                    <Text style={styles.viewDetailsArrow}></Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useIsFocused } from '@react-navigation/native';
-import { MagnifyingGlass, Play } from 'phosphor-react-native';
+import { MagnifyingGlass, Play, Star, CaretRight } from 'phosphor-react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -87,7 +87,7 @@ const mockMenuItems: MenuItem[] = [
 ];
 
 const fallbackOffers = [
-    { id: '1', text: 'Flat 20% OFF above â‚¹500', code: 'SAVE20' },
+    { id: '1', text: 'Flat 20% OFF above Rs.500', code: 'SAVE20' },
     { id: '2', text: 'Free Delivery on first order', code: 'FREEDEL' },
 ];
 
@@ -105,8 +105,8 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
     const isFocused = useIsFocused();
 
-    // Phase 2: Hero video support (tap-to-play) + safe pause when offscreen/unfocused.
-    const [heroVideoWantsPlay, setHeroVideoWantsPlay] = useState(false);
+    // Phase 2: Hero video support (auto-play) + safe pause when offscreen/unfocused.
+    const [heroVideoWantsPlay, setHeroVideoWantsPlay] = useState(true);
     const [heroVideoHasError, setHeroVideoHasError] = useState(false);
     const [heroVideoIsLoading, setHeroVideoIsLoading] = useState(false);
     const [heroIsVisible, setHeroIsVisible] = useState(true);
@@ -203,8 +203,9 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         }
         setHeroVideoHasError(false);
         setHeroVideoIsLoading(false);
-        // Note: keep heroVideoWantsPlay (user intent) as-is.
-    }, [heroMediaTypeDep, heroMediaUrlDep, heroMediaThumbDep]);
+        // Auto-play hero video by default (unless Reduce Motion is enabled).
+        setHeroVideoWantsPlay(!reduceMotionEnabled);
+    }, [heroMediaTypeDep, heroMediaUrlDep, heroMediaThumbDep, reduceMotionEnabled]);
 
     useEffect(() => {
         if (!menuQuery.isError) return;
@@ -390,7 +391,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         };
     });
 
-    // Search bar morphing animation: icon â†’ full bar
+    // Search bar morphing animation: icon -> full bar
     const searchBarAnimatedStyle = useAnimatedStyle(() => {
         const progress = interpolate(
             scrollY.value,
@@ -399,7 +400,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
             Extrapolate.CLAMP
         );
 
-        // Width: 85px (icon + "search" text on one line) â†’ full width
+        // Width: 85px (icon + "search" text on one line) -> full width
         const barWidth = interpolate(
             scrollY.value,
             [100, 200],
@@ -527,6 +528,60 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         Number(ratingBreakdown?.[1] || 0),
     );
 
+    const publicProfile = (restaurant as any)?.publicProfile || {};
+    const aboutTagline = String(publicProfile?.tagline || '').trim();
+    const aboutDescription = String(publicProfile?.description || '').trim();
+    const priceForTwo = Number(publicProfile?.priceForTwo || 0) || 0;
+    const certifications = Array.isArray(publicProfile?.certifications) ? publicProfile.certifications : [];
+    const operationalHours = publicProfile?.operationalHours || null;
+
+    const [aboutExpanded, setAboutExpanded] = useState(false);
+
+    const getTodayKey = () => {
+        const d = new Date().getDay();
+        // JS: 0=Sunday
+        const keys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return keys[d] || 'monday';
+    };
+
+    const parseHHMM = (hhmm: string) => {
+        const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '').trim());
+        if (!m) return null;
+        const h = Number(m[1]);
+        const min = Number(m[2]);
+        if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+        if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+        return h * 60 + min;
+    };
+
+    const getOpenStatus = () => {
+        if (!operationalHours) return { label: 'Open', isOpen: true, hoursText: '' };
+        const todayKey = getTodayKey();
+        const h = operationalHours?.[todayKey] || null;
+        const isEnabled = h?.isOpen !== false;
+        const open = String(h?.open || '').trim();
+        const close = String(h?.close || '').trim();
+        const openMin = parseHHMM(open);
+        const closeMin = parseHHMM(close);
+        const hoursText = open && close ? `${open} - ${close}` : '';
+
+        if (!isEnabled) return { label: 'Closed', isOpen: false, hoursText };
+        if (openMin == null || closeMin == null) return { label: 'Open', isOpen: true, hoursText };
+
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+
+        // Handle overnight windows (e.g., 20:00 - 02:00)
+        const isOvernight = closeMin < openMin;
+        const openNow = isOvernight
+            ? (nowMin >= openMin || nowMin <= closeMin)
+            : (nowMin >= openMin && nowMin <= closeMin);
+
+        return { label: openNow ? 'Open now' : 'Closed', isOpen: openNow, hoursText };
+    };
+
+    const openStatus = getOpenStatus();
+
     const totalItems = storeItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalAmount = storeItems.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
 
@@ -566,25 +621,40 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                             <Image source={{ uri: heroVideoThumb }} style={styles.coverImage} resizeMode="cover" />
                         )}
 
-                        {heroVideoWantsPlay && (
-                            <Video
-                                source={{ uri: heroVideoUrl }}
-                                style={styles.coverImage}
-                                resizeMode="cover"
-                                muted
-                                repeat
-                                paused={!(isFocused && heroIsVisible && heroVideoWantsPlay)}
-                                onLoadStart={() => setHeroVideoIsLoading(true)}
-                                onLoad={() => setHeroVideoIsLoading(false)}
-                                onError={() => {
-                                    setHeroVideoHasError(true);
-                                    setHeroVideoIsLoading(false);
-                                    setHeroVideoWantsPlay(false);
-                                }}
-                            />
-                        )}
+                        <Video
+                            source={{ uri: heroVideoUrl }}
+                            style={styles.coverImage}
+                            resizeMode="cover"
+                            muted
+                            repeat
+                            playInBackground={false}
+                            playWhenInactive={false}
+                            paused={!(isFocused && heroIsVisible && heroVideoWantsPlay)}
+                            poster={heroVideoThumb || undefined}
+                            posterResizeMode="cover"
+                            onLoadStart={() => setHeroVideoIsLoading(true)}
+                            onLoad={() => setHeroVideoIsLoading(false)}
+                            onError={(e) => {
+                                if (__DEV__) {
+                                    console.log('[HeroVideo] playback error', {
+                                        url: heroVideoUrl,
+                                        // react-native-video error shape varies by platform
+                                        error: (e as any)?.error || e,
+                                    });
+                                    // Heuristic: Cloudflare Stream "watch/iframe" URLs are not playable.
+                                    const lowerUrl = String(heroVideoUrl || '').toLowerCase();
+                                    if (lowerUrl.includes('/watch/') || lowerUrl.includes('/iframe/')) {
+                                        console.log('[HeroVideo] Hint: use Cloudflare Stream HLS/MP4 URL, not watch/iframe page.');
+                                    }
+                                }
+                                setHeroVideoHasError(true);
+                                setHeroVideoIsLoading(false);
+                                setHeroVideoWantsPlay(false);
+                            }}
+                        />
 
-                        {!heroVideoWantsPlay && (
+                        {/* Reduce Motion: disable auto-play, show play overlay */}
+                        {(!heroVideoWantsPlay || reduceMotionEnabled) && (
                             <TouchableOpacity
                                 activeOpacity={0.85}
                                 onPress={() => setHeroVideoWantsPlay(true)}
@@ -602,6 +672,30 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                 <Text style={styles.videoLoadingText}>Loading video...</Text>
                             </View>
                         )}
+                    </View>
+                ) : heroType === 'video' && heroVideoUrl && heroVideoHasError ? (
+                    <View style={styles.heroVideoErrorWrap}>
+                        <Image
+                            source={{ uri: heroVideoThumb || heroImageUrl || undefined }}
+                            style={styles.coverImage}
+                            resizeMode="cover"
+                        />
+                        <View style={styles.videoErrorOverlay}>
+                            <Text style={styles.videoErrorTitle}>Video unavailable</Text>
+                            <Text style={styles.videoErrorSub} numberOfLines={2}>
+                                Tap to retry. If using Cloudflare Stream, set the hero URL to an HLS or MP4 playback URL (not watch/iframe).
+                            </Text>
+                            <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                    setHeroVideoHasError(false);
+                                    setHeroVideoWantsPlay(!reduceMotionEnabled);
+                                }}
+                                style={styles.videoRetryBtn}
+                            >
+                                <Text style={styles.videoRetryText}>Retry</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 ) : (
                     <Image
@@ -621,7 +715,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 <View style={styles.headerContent}>
                     <BackButton onPress={() => navigation.goBack()} />
 
-                    {/* Morphing Search: Icon â†’ Bar (RIGHT SIDE) */}
+                    {/* Morphing Search: Icon -> Bar (RIGHT SIDE) */}
                     <Animated.View style={[styles.glassSearchContainer, searchBarAnimatedStyle]}>
                         <Animated.View style={searchIconAnimatedStyle}>
                             <MagnifyingGlass size={18} color="#9E9E9E" weight="bold" />
@@ -641,7 +735,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                         </Animated.View>
                         {searchQuery !== '' && (
                             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Text style={styles.clearButton}>âœ•</Text>
+                                <Text style={styles.clearButton}>X</Text>
                             </TouchableOpacity>
                         )}
                     </Animated.View>
@@ -674,17 +768,86 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     <View style={styles.restaurantHeader}>
                         <Text style={styles.restaurantName}>{restaurant.name}</Text>
                         <View style={styles.ratingBadge}>
-                            <Text style={styles.ratingText}>{restaurant.rating} â˜…</Text>
+                            <View style={styles.ratingContent}><Text style={styles.ratingText}>{ratingOverall.toFixed(1)}</Text><Star size={14} color="#FFFFFF" weight="fill" /></View>
                         </View>
                     </View>
+                    {!!aboutTagline && (
+                        <Text style={styles.taglineText} numberOfLines={1}>{aboutTagline}</Text>
+                    )}
                     <Text style={styles.cuisineText}>
-                        {restaurant.cuisines?.join(' â€¢ ')} â€¢ {restaurant.priceLevel}
+                        {restaurant.cuisines?.join('  ')}  {restaurant.priceLevel}
                     </Text>
                     <View style={styles.metaRow}>
-                        <Text style={styles.metaText}>ðŸ“ 2.5 km away</Text>
-                        <Text style={styles.metaText}>ðŸ• {restaurant.deliveryTime}</Text>
+                        <Text style={styles.metaText}>2.5 km away</Text>
+                        <Text style={styles.metaText}>{restaurant.deliveryTime}</Text>
+                        <View style={[styles.openPill, openStatus.isOpen ? styles.openPillOpen : styles.openPillClosed]}>
+                            <Text style={styles.openPillText}>{openStatus.label}</Text>
+                        </View>
                     </View>
+                    {priceForTwo > 0 && (
+                        <Text style={styles.priceForTwoText}>{Math.round(priceForTwo)} for two</Text>
+                    )}
                 </View>
+
+                {/* About (Public Profile fields from Branch config) */}
+                {(!!aboutDescription || certifications.length > 0 || !!openStatus.hoursText || priceForTwo > 0) && (
+                    <View style={styles.aboutContainer}>
+                        <View style={styles.aboutHeaderRow}>
+                            <Text style={styles.aboutTitle}>About</Text>
+                            <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => setAboutExpanded((v) => !v)}
+                                style={styles.aboutToggleBtn}
+                            >
+                                <Text style={styles.aboutToggleText}>{aboutExpanded ? 'Less' : 'More'}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {!!aboutDescription && (
+                            <Text style={styles.aboutDescription} numberOfLines={aboutExpanded ? 12 : 3}>
+                                {aboutDescription}
+                            </Text>
+                        )}
+
+                        {!!openStatus.hoursText && (
+                            <Text style={styles.aboutMeta}>
+                                Hours today: {openStatus.hoursText}
+                            </Text>
+                        )}
+
+                        {aboutExpanded && operationalHours && (
+                            <View style={styles.hoursGrid}>
+                                {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map((k) => {
+                                    const h = operationalHours?.[k] || {};
+                                    const isEnabled = h?.isOpen !== false;
+                                    const t = (h?.open && h?.close) ? `${h.open}-${h.close}` : (isEnabled ? 'Open' : 'Closed');
+                                    const label = k.charAt(0).toUpperCase() + k.slice(1,3);
+                                    return (
+                                        <View key={k} style={styles.hourRow}>
+                                            <Text style={styles.hourDay}>{label}</Text>
+                                            <Text style={styles.hourTime} numberOfLines={1}>{t}</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        )}
+
+                        {certifications.length > 0 && (
+                            <View style={styles.certRow}>
+                                {certifications.slice(0, 6).map((c: any, idx: number) => {
+                                    const type = String(c?.type || 'cert').toUpperCase();
+                                    const num = String(c?.number || '').trim();
+                                    const chip = num ? `${type}: ${num}` : type;
+                                    return (
+                                        <View key={`${type}_${idx}`} style={styles.certChip}>
+                                            <Text style={styles.certText} numberOfLines={1}>{chip}</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 {/* Gallery (Phase 2): thumbnails below hero */}
                 {normalizedGallery.length > 0 && (
@@ -764,7 +927,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                     ]}
                                 >
                                     <View style={styles.offerRow}>
-                                        <Text style={styles.offerIcon}>🏷️</Text>
+                                        <Text style={styles.offerIcon}>???</Text>
                                         <View style={styles.offerTextWrap}>
                                             <Text style={[styles.offerText, { color: item.textColor }]} numberOfLines={1}>
                                                 {item.text}
@@ -846,7 +1009,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                             {r.customer?.name || 'Customer'}
                                         </Text>
                                         <View style={styles.reviewRatingPill}>
-                                            <Text style={styles.reviewRatingText}>{Number(r.rating).toFixed(1)} ★</Text>
+                                            <View style={styles.reviewRatingContent}><Text style={styles.reviewRatingText}>{Number(r.rating).toFixed(1)}</Text><Star size={10} color="#FFFFFF" weight="fill" /></View>
                                         </View>
                                     </View>
                                     {!!r.comment && (
@@ -930,7 +1093,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 {/* Menu Empty State */}
                 {!menuQuery.isLoading && menuItems.length === 0 && !apiFailed && (
                     <View style={styles.menuEmptyContainer}>
-                        <Text style={styles.menuEmptyIcon}>ðŸ½ï¸</Text>
+                        <Text style={styles.menuEmptyIcon}></Text>
                         <Text style={styles.menuEmptyTitle}>No Menu Available</Text>
                         <Text style={styles.menuEmptyText}>
                             This restaurant hasn't added any items yet.
@@ -942,7 +1105,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 {!menuQuery.isLoading && apiFailed && __DEV__ && (
                     <View style={styles.devNoticeContainer}>
                         <Text style={styles.devNoticeText}>
-                            âš ï¸ API failed - showing mock data for development
+                            [DEV] API failed - showing mock data for development
                         </Text>
                     </View>
                 )}
@@ -954,7 +1117,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                             <View style={styles.menuItemInfo}>
                                 {item.isBestseller && (
                                     <View style={styles.bestsellerBadge}>
-                                        <Text style={styles.bestsellerText}>â˜… Bestseller</Text>
+                                        <View style={styles.bestsellerRow}><Star size={12} color="#FFB300" weight="fill" /><Text style={styles.bestsellerText}>Bestseller</Text></View>
                                     </View>
                                 )}
                                 {(() => {
@@ -970,10 +1133,10 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                     );
                                 })()}
                                 <View style={styles.priceRow}>
-                                    <Text style={styles.itemPrice}>â‚¹{item.price.toFixed(2)}</Text>
+                                    <Text style={styles.itemPrice}>Rs.{item.price.toFixed(2)}</Text>
                                     {item.originalPrice && (
                                         <Text style={styles.originalPrice}>
-                                            â‚¹{item.originalPrice.toFixed(2)}
+                                            Rs.{item.originalPrice.toFixed(2)}
                                         </Text>
                                     )}
                                 </View>
@@ -992,7 +1155,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                         <TouchableOpacity
                                             style={styles.quantityButton}
                                             onPress={() => removeFromCart(item)}>
-                                            <Text style={styles.quantityButtonText}>âˆ’</Text>
+                                            <Text style={styles.quantityButtonText}>-</Text>
                                         </TouchableOpacity>
                                         <Text style={styles.quantityText}>{getCartCount(getItemKey(item))}</Text>
                                         <TouchableOpacity
@@ -1122,11 +1285,11 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 >
                     <View style={styles.cartInfo}>
                         <Text style={styles.cartItems}>{totalItems} ITEMS</Text>
-                        <Text style={styles.cartTotal}>â‚¹{totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.cartTotal}>Rs.{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.cartAction}>
                         <Text style={styles.cartActionText}>View Cart</Text>
-                        <Text style={styles.cartArrow}>â†’</Text>
+                        <CaretRight size={20} color="#000000" weight="bold" />
                     </View>
                 </TouchableOpacity>
             )}
@@ -1246,6 +1409,46 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
+    heroVideoErrorWrap: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#000000',
+    },
+    videoErrorOverlay: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: 18,
+        padding: 12,
+        borderRadius: 14,
+        backgroundColor: 'rgba(0,0,0,0.62)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.14)',
+    },
+    videoErrorTitle: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '800',
+    },
+    videoErrorSub: {
+        marginTop: 6,
+        color: '#CFCFCF',
+        fontSize: 12,
+        lineHeight: 16,
+    },
+    videoRetryBtn: {
+        marginTop: 10,
+        alignSelf: 'flex-start',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#00E5FF',
+    },
+    videoRetryText: {
+        color: '#000000',
+        fontSize: 12,
+        fontWeight: '900',
+    },
     // Sticky Glassmorphism Header
     stickyHeader: {
         position: 'absolute',
@@ -1326,6 +1529,20 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFFFFF',
     },
+    ratingContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    taglineText: {
+        marginTop: -2,
+        marginBottom: 6,
+        fontSize: 13,
+        fontWeight: '700',
+        letterSpacing: 0.4,
+        color: '#00E5FF',
+        textTransform: 'uppercase',
+    },
     cuisineText: {
         fontSize: 14,
         color: '#9E9E9E',
@@ -1333,11 +1550,127 @@ const styles = StyleSheet.create({
     },
     metaRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         gap: 16,
     },
     metaText: {
         fontSize: 14,
         color: '#9E9E9E',
+    },
+    openPill: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        borderWidth: 1,
+    },
+    openPillOpen: {
+        backgroundColor: '#00C85322',
+        borderColor: '#00C85355',
+    },
+    openPillClosed: {
+        backgroundColor: '#FF525222',
+        borderColor: '#FF525255',
+    },
+    openPillText: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: '#FFFFFF',
+    },
+    priceForTwoText: {
+        marginTop: 10,
+        fontSize: 12,
+        color: '#9E9E9E',
+        fontWeight: '600',
+    },
+    aboutContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+        backgroundColor: '#000000',
+    },
+    aboutHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    aboutTitle: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    aboutToggleBtn: {
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#1A1A1A',
+        borderWidth: 1,
+        borderColor: '#00E5FF22',
+    },
+    aboutToggleText: {
+        color: '#00E5FF',
+        fontSize: 12,
+        fontWeight: '900',
+    },
+    aboutDescription: {
+        color: '#CFCFCF',
+        fontSize: 12,
+        lineHeight: 16,
+    },
+    aboutMeta: {
+        marginTop: 10,
+        color: '#9E9E9E',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    hoursGrid: {
+        marginTop: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#00E5FF18',
+        backgroundColor: '#111111',
+        padding: 12,
+        gap: 8,
+    },
+    hourRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    hourDay: {
+        width: 44,
+        color: '#9E9E9E',
+        fontSize: 12,
+        fontWeight: '800',
+    },
+    hourTime: {
+        flex: 1,
+        textAlign: 'right',
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    certRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 12,
+    },
+    certChip: {
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+        borderRadius: 999,
+        backgroundColor: '#1A1A1A',
+        borderWidth: 1,
+        borderColor: '#00E5FF22',
+        maxWidth: '100%',
+    },
+    certText: {
+        color: '#FFFFFF',
+        fontSize: 11,
+        fontWeight: '800',
     },
     galleryContainer: {
         paddingHorizontal: 16,
@@ -1628,6 +1961,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '800',
     },
+    reviewRatingContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 2,
+    },
     reviewComment: {
         color: '#CFCFCF',
         fontSize: 12,
@@ -1756,6 +2094,11 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         color: '#000000',
+        marginLeft: 4,
+    },
+    bestsellerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     itemName: {
         fontSize: 16,

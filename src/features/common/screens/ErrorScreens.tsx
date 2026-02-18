@@ -22,13 +22,13 @@ export const PaymentFailedScreen: React.FC<Props> = ({ navigation, onRetry }) =>
             <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => navigation.goBack()}>
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeIcon}></Text>
             </TouchableOpacity>
 
             {/* Error Illustration */}
             <View style={styles.illustrationContainer}>
                 <View style={styles.errorCircle}>
-                    <Text style={styles.errorIcon}>✕</Text>
+                    <Text style={styles.errorIcon}></Text>
                 </View>
             </View>
 
@@ -46,11 +46,11 @@ export const PaymentFailedScreen: React.FC<Props> = ({ navigation, onRetry }) =>
                 </View>
                 <View style={styles.errorRow}>
                     <Text style={styles.errorLabel}>Amount</Text>
-                    <Text style={styles.errorValue}>₹42.50</Text>
+                    <Text style={styles.errorValue}>42.50</Text>
                 </View>
                 <View style={styles.errorRow}>
                     <Text style={styles.errorLabel}>Payment Method</Text>
-                    <Text style={styles.errorValue}>•••• 4242</Text>
+                    <Text style={styles.errorValue}> 4242</Text>
                 </View>
             </View>
 
@@ -81,13 +81,13 @@ export const GenericErrorScreen: React.FC<Props> = ({ navigation, onRetry }) => 
             <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => navigation.goBack()}>
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeIcon}></Text>
             </TouchableOpacity>
 
             {/* Error Illustration */}
             <View style={styles.illustrationContainer}>
                 <View style={styles.oopsCircle}>
-                    <Text style={styles.oopsEmoji}>😕</Text>
+                    <Text style={styles.oopsEmoji}></Text>
                 </View>
             </View>
 
@@ -121,13 +121,13 @@ export const LocationUnserviceableScreen: React.FC<Props> = ({ navigation }) => 
             <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => navigation.goBack()}>
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeIcon}></Text>
             </TouchableOpacity>
 
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
                 <View style={styles.locationCircle}>
-                    <Text style={styles.locationEmoji}>📍</Text>
+                    <Text style={styles.locationEmoji}></Text>
                 </View>
             </View>
 
@@ -139,7 +139,7 @@ export const LocationUnserviceableScreen: React.FC<Props> = ({ navigation }) => 
 
             {/* Map Placeholder */}
             <View style={styles.mapPlaceholder}>
-                <Text style={styles.mapIcon}>🗺️</Text>
+                <Text style={styles.mapIcon}></Text>
                 <Text style={styles.mapText}>You are outside our delivery zone</Text>
             </View>
 
@@ -169,13 +169,13 @@ export const RestaurantClosedScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => navigation.goBack()}>
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeIcon}></Text>
             </TouchableOpacity>
 
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
                 <View style={styles.closedCircle}>
-                    <Text style={styles.closedEmoji}>🌙</Text>
+                    <Text style={styles.closedEmoji}></Text>
                 </View>
             </View>
 
@@ -187,7 +187,7 @@ export const RestaurantClosedScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Schedule Info */}
             <View style={styles.scheduleCard}>
-                <Text style={styles.scheduleIcon}>⏰</Text>
+                <Text style={styles.scheduleIcon}></Text>
                 <View style={styles.scheduleInfo}>
                     <Text style={styles.scheduleTitle}>Opens at {openTime}</Text>
                     <Text style={styles.scheduleSubtitle}>Tomorrow</Text>
@@ -197,7 +197,7 @@ export const RestaurantClosedScreen: React.FC<Props> = ({ navigation }) => {
             {/* Actions */}
             <View style={styles.actionsContainer}>
                 <TouchableOpacity style={styles.preorderButton}>
-                    <Text style={styles.preorderText}>🗓️ SCHEDULE PRE-ORDER</Text>
+                    <Text style={styles.preorderText}> SCHEDULE PRE-ORDER</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.browseButton}

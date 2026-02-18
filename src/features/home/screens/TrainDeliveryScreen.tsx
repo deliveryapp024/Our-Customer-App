@@ -41,7 +41,7 @@ export const TrainDeliveryScreen: React.FC<Props> = ({ navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.heroCard}>
-                    <Text style={styles.heroEmoji}>🚂</Text>
+                    <Text style={styles.heroEmoji}></Text>
                     <Text style={styles.heroTitle}>Order Food to Your Seat</Text>
                     <Text style={styles.heroSubtitle}>Enter your PNR to get food delivered on your train</Text>
                 </View>
@@ -72,17 +72,17 @@ export const TrainDeliveryScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                         <View style={styles.trainDetails}>
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailIcon}>📍</Text>
+                                <Text style={styles.detailIcon}></Text>
                                 <Text style={styles.detailLabel}>Next Station</Text>
                                 <Text style={styles.detailValue}>{trainInfo.station}</Text>
                             </View>
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailIcon}>⏰</Text>
+                                <Text style={styles.detailIcon}></Text>
                                 <Text style={styles.detailLabel}>Arrival</Text>
                                 <Text style={styles.detailValue}>{trainInfo.arrivalTime}</Text>
                             </View>
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailIcon}>🪑</Text>
+                                <Text style={styles.detailIcon}></Text>
                                 <Text style={styles.detailLabel}>Seat</Text>
                                 <Text style={styles.detailValue}>{trainInfo.coach}-{trainInfo.seat}</Text>
                             </View>

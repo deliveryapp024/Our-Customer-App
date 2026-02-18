@@ -15,4 +15,6 @@ export { default as customerApi } from './customerApi';
 export * from './customerApi';
 export { default as reviewsApi } from './reviewsApi';
 export * from './reviewsApi';
+export { default as flashDealsApi } from './flashDealsApi';
+export * from './flashDealsApi';
 export type { ApiResponse, ApiResult, ApiFailure, ApiError } from './client';

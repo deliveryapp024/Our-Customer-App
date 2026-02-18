@@ -10,7 +10,13 @@ import {
     Dimensions,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated, {
+  useAnimatedStyle,
+  useFrameCallback,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { BackButton } from '../../../components/ui/BackButton';
+import flashDealsApi, { FlashDealConfig } from '../../../api/flashDealsApi';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +36,8 @@ interface FlashDeal {
     total: number;
 }
 
-const flashDeals: FlashDeal[] = [
+// Default fallback data (used when API fails or returns empty)
+const defaultFlashDeals: FlashDeal[] = [
     {
         id: '1',
         restaurantName: 'The Gourmet Kitchen',
@@ -66,12 +73,167 @@ const flashDeals: FlashDeal[] = [
     },
 ];
 
+// Marquee Component
+const MeasureElement = ({ onLayout, children }: { onLayout: (width: number) => void; children: React.ReactNode }) => (
+  <Animated.ScrollView
+    horizontal
+    style={marqueeStyles.hidden}
+    pointerEvents="box-none">
+    <View onLayout={(ev) => onLayout(ev.nativeEvent.layout.width)}>
+      {children}
+    </View>
+  </Animated.ScrollView>
+);
+
+const TranslatedElement = ({ index, children, offset, childrenWidth }: { 
+  index: number; 
+  children: React.ReactNode; 
+  offset: any; 
+  childrenWidth: number;
+}) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      left: (index - 1) * childrenWidth,
+      transform: [
+        {
+          translateX: -offset.value,
+        },
+      ],
+    };
+  });
+  return (
+    <Animated.View style={[marqueeStyles.animatedStyle, animatedStyle]}>
+      {children}
+    </Animated.View>
+  );
+};
+
+const getIndicesArray = (length: number) => Array.from({ length }, (_, i) => i);
+
+const Cloner = ({ count, renderChild }: { count: number; renderChild: (index: number) => React.ReactNode }) => (
+  <>{getIndicesArray(count).map(renderChild)}</>
+);
+
+const ChildrenScroller = ({
+  duration,
+  childrenWidth,
+  parentWidth,
+  reverse,
+  children,
+}: {
+  duration: number;
+  childrenWidth: number;
+  parentWidth: number;
+  reverse: boolean;
+  children: React.ReactNode;
+}) => {
+  const offset = useSharedValue(0);
+  const coeff = useSharedValue(reverse ? 1 : -1);
+
+  React.useEffect(() => {
+    coeff.value = reverse ? 1 : -1;
+  }, [reverse]);
+
+  useFrameCallback((i) => {
+    offset.value += (coeff.value * ((i.timeSincePreviousFrame ?? 1) * childrenWidth)) / duration;
+    offset.value = offset.value % childrenWidth;
+  }, true);
+
+  const count = Math.round(parentWidth / childrenWidth) + 2;
+  const renderChild = (index: number) => (
+    <TranslatedElement
+      key={`clone-${index}`}
+      index={index}
+      offset={offset}
+      childrenWidth={childrenWidth}>
+      {children}
+    </TranslatedElement>
+  );
+
+  return <Cloner count={count} renderChild={renderChild} />;
+};
+
+const Marquee = ({ duration = 8000, reverse = false, children, style }: { 
+  duration?: number; 
+  reverse?: boolean; 
+  children: React.ReactNode; 
+  style?: any;
+}) => {
+  const [parentWidth, setParentWidth] = React.useState(0);
+  const [childrenWidth, setChildrenWidth] = React.useState(0);
+
+  return (
+    <View
+      style={style}
+      onLayout={(ev) => {
+        setParentWidth(ev.nativeEvent.layout.width);
+      }}
+      pointerEvents="box-none">
+      <View style={marqueeStyles.row} pointerEvents="box-none">
+        <MeasureElement onLayout={setChildrenWidth}>{children}</MeasureElement>
+
+        {childrenWidth > 0 && parentWidth > 0 && (
+          <ChildrenScroller
+            duration={duration}
+            parentWidth={parentWidth}
+            childrenWidth={childrenWidth}
+            reverse={reverse}>
+            {children}
+          </ChildrenScroller>
+        )}
+      </View>
+    </View>
+  );
+};
+
+const marqueeStyles = StyleSheet.create({
+  hidden: { opacity: 0, zIndex: -1 },
+  row: { flexDirection: 'row', overflow: 'hidden' },
+  animatedStyle: {
+    position: 'absolute',
+  },
+});
+
+// Live Banner Content Component
+const LiveBannerContent = () => (
+  <View style={styles.liveBannerContent}>
+    <View style={styles.liveIndicator}>
+      <View style={styles.liveDot} />
+      <Text style={styles.liveText}>LIVE</Text>
+    </View>
+    <Text style={styles.liveBannerText}>
+      Limited time deals  Grab before they're gone!
+    </Text>
+  </View>
+);
+
 export const FlashDealsScreen: React.FC<Props> = ({ navigation }) => {
     const [timeLeft, setTimeLeft] = useState<{ [key: string]: number }>({});
+    const [config, setConfig] = useState<FlashDealConfig | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [bannerText, setBannerText] = useState("Limited time deals  Grab before they're gone!");
+    const [marqueeSpeed, setMarqueeSpeed] = useState(8000);
+    const [marqueeReverse, setMarqueeReverse] = useState(true);
+
+    // Fetch flash deals from API
+    useEffect(() => {
+        const fetchFlashDeals = async () => {
+            const result = await flashDealsApi.getActiveFlashDeal();
+            if (result.success && result.data) {
+                setConfig(result.data);
+                setBannerText(result.data.bannerText);
+                setMarqueeSpeed(result.data.marqueeSpeed);
+                setMarqueeReverse(result.data.marqueeReverse);
+            }
+            setLoading(false);
+        };
+        fetchFlashDeals();
+    }, []);
 
     useEffect(() => {
+        const deals = config?.deals || defaultFlashDeals;
         const initial: { [key: string]: number } = {};
-        flashDeals.forEach((deal) => {
+        deals.forEach((deal) => {
             initial[deal.id] = deal.endsIn;
         });
         setTimeLeft(initial);
@@ -104,25 +266,21 @@ export const FlashDealsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.header}>
                 <BackButton onPress={() => navigation.goBack()} />
                 <View style={styles.headerCenter}>
-                    <Text style={styles.flashIcon}>⚡</Text>
+                    <Text style={styles.flashIcon}></Text>
                     <Text style={styles.headerTitle}>Flash Deals</Text>
                 </View>
                 <View style={styles.placeholder} />
             </View>
 
-            {/* Live Banner */}
+            {/* Live Banner with Marquee */}
             <View style={styles.liveBanner}>
-                <View style={styles.liveIndicator}>
-                    <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>LIVE</Text>
-                </View>
-                <Text style={styles.liveBannerText}>
-                    Limited time deals • Grab before they're gone!
-                </Text>
+                <Marquee duration={marqueeSpeed} reverse={marqueeReverse} style={styles.marqueeContainer}>
+                    <LiveBannerContent />
+                </Marquee>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-                {flashDeals.map((deal) => (
+                {(config?.deals || defaultFlashDeals).map((deal) => (
                     <View key={deal.id} style={styles.dealCard}>
                         <Image
                             source={{ uri: deal.image }}
@@ -135,8 +293,8 @@ export const FlashDealsScreen: React.FC<Props> = ({ navigation }) => {
                         <View style={styles.dealInfo}>
                             <Text style={styles.restaurantName}>{deal.restaurantName}</Text>
                             <View style={styles.priceRow}>
-                                <Text style={styles.dealPrice}>₹{deal.dealPrice.toFixed(2)}</Text>
-                                <Text style={styles.originalPrice}>₹{deal.originalPrice.toFixed(2)}</Text>
+                                <Text style={styles.dealPrice}>{deal.dealPrice.toFixed(2)}</Text>
+                                <Text style={styles.originalPrice}>{deal.originalPrice.toFixed(2)}</Text>
                             </View>
 
                             {/* Timer */}
@@ -187,8 +345,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
+        paddingTop: 12,
+        paddingBottom: 8,
+        minHeight: 56,
     },
     headerCenter: {
         flexDirection: 'row',
@@ -204,15 +363,21 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     placeholder: {
-        width: 40,
+        width: 32,
     },
     liveBanner: {
+        backgroundColor: '#FF5252',
+        marginBottom: 12,
+        height: 32,
+    },
+    marqueeContainer: {
+        flex: 1,
+    },
+    liveBannerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#FF5252',
-        paddingVertical: 10,
-        marginBottom: 16,
+        paddingHorizontal: 16,
+        height: 32,
     },
     liveIndicator: {
         flexDirection: 'row',
@@ -220,9 +385,9 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     liveDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
         backgroundColor: '#FFFFFF',
         marginRight: 6,
     },
@@ -236,15 +401,15 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     dealCard: {
-        marginHorizontal: 16,
-        marginBottom: 16,
+        marginHorizontal: 12,
+        marginBottom: 12,
         backgroundColor: '#1A1A1A',
-        borderRadius: 20,
+        borderRadius: 16,
         overflow: 'hidden',
     },
     dealImage: {
         width: '100%',
-        height: 160,
+        height: 140,
     },
     discountBadge: {
         position: 'absolute',
@@ -261,7 +426,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     dealInfo: {
-        padding: 16,
+        padding: 12,
     },
     restaurantName: {
         fontSize: 18,

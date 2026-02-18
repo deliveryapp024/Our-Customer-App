@@ -27,9 +27,9 @@ interface GroupMember {
 }
 
 const members: GroupMember[] = [
-    { id: '1', name: 'You', avatar: '👤', isHost: true, itemCount: 2, total: 18.50 },
-    { id: '2', name: 'Priya', avatar: '👩', isHost: false, itemCount: 1, total: 12.00 },
-    { id: '3', name: 'Rahul', avatar: '👨', isHost: false, itemCount: 0, total: 0 },
+    { id: '1', name: 'You', avatar: 'Profile', isHost: true, itemCount: 2, total: 18.50 },
+    { id: '2', name: 'Priya', avatar: '', isHost: false, itemCount: 1, total: 12.00 },
+    { id: '3', name: 'Rahul', avatar: '', isHost: false, itemCount: 0, total: 0 },
 ];
 
 export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
@@ -58,7 +58,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Group Order</Text>
                 <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                    <Text style={styles.shareIcon}>📤</Text>
+                    <Text style={styles.shareIcon}></Text>
                 </TouchableOpacity>
             </View>
 
@@ -69,11 +69,11 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                     <View style={styles.codeBox}>
                         <Text style={styles.codeText}>{groupCode}</Text>
                         <TouchableOpacity style={styles.copyButton}>
-                            <Text style={styles.copyIcon}>📋</Text>
+                            <Text style={styles.copyIcon}></Text>
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity style={styles.inviteButton} onPress={handleShare}>
-                        <Text style={styles.inviteIcon}>✉️</Text>
+                        <Text style={styles.inviteIcon}></Text>
                         <Text style={styles.inviteText}>Invite Friends</Text>
                     </TouchableOpacity>
                 </View>
@@ -118,13 +118,13 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                                 </View>
                                 <Text style={styles.memberStatus}>
                                     {member.itemCount > 0
-                                        ? `${member.itemCount} items • ₹{member.total.toFixed(2)}`
+                                        ? `${member.itemCount} items  {member.total.toFixed(2)}`
                                         : 'Browsing menu...'}
                                 </Text>
                             </View>
                             {member.itemCount > 0 && (
                                 <View style={styles.checkIcon}>
-                                    <Text style={styles.checkText}>✓</Text>
+                                    <Text style={styles.checkText}></Text>
                                 </View>
                             )}
                         </View>
@@ -133,7 +133,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Add to Your Order */}
                 <TouchableOpacity style={styles.addItemsButton}>
-                    <Text style={styles.addItemsIcon}>➕</Text>
+                    <Text style={styles.addItemsIcon}></Text>
                     <Text style={styles.addItemsText}>Add Items to Your Order</Text>
                 </TouchableOpacity>
 
@@ -141,7 +141,7 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.totalCard}>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>Group Total</Text>
-                        <Text style={styles.totalValue}>₹{totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.totalValue}>{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalSubLabel}>Total Items</Text>
@@ -157,11 +157,11 @@ export const GroupOrderScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity style={styles.checkoutButton}>
                     <View style={styles.checkoutInfo}>
                         <Text style={styles.checkoutItems}>{totalItems} ITEMS</Text>
-                        <Text style={styles.checkoutTotal}>₹{totalAmount.toFixed(2)}</Text>
+                        <Text style={styles.checkoutTotal}>{totalAmount.toFixed(2)}</Text>
                     </View>
                     <View style={styles.checkoutAction}>
                         <Text style={styles.checkoutText}>Place Group Order</Text>
-                        <Text style={styles.checkoutArrow}>→</Text>
+                        <Text style={styles.checkoutArrow}></Text>
                     </View>
                 </TouchableOpacity>
             </View>

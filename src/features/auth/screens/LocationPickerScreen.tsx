@@ -58,8 +58,8 @@ interface SavedAddress {
 }
 
 const savedAddresses: SavedAddress[] = [
-    { id: '1', label: 'Home', address: 'Add your home address', icon: '🏠' },
-    { id: '2', label: 'Work', address: 'Add your work address', icon: '💼' },
+    { id: '1', label: 'Home', address: 'Add your home address', icon: 'Home' },
+    { id: '2', label: 'Work', address: 'Add your work address', icon: '' },
 ];
 
 export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
@@ -361,7 +361,7 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-                <Text style={styles.searchIcon}>🔍</Text>
+                <Text style={styles.searchIcon}>Search</Text>
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search for area, street name..."
@@ -425,7 +425,7 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
                     {/* Selected Location Info */}
                     {selectedLocation && (
                         <View style={styles.selectedLocationCard}>
-                            <Text style={styles.locationLabel}>📍 Selected Location</Text>
+                            <Text style={styles.locationLabel}> Selected Location</Text>
                             <Text style={styles.locationAddress} numberOfLines={2}>
                                 {addressText || `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`}
                             </Text>
@@ -443,15 +443,15 @@ export const LocationPickerScreen: React.FC<Props> = ({ navigation }) => {
                         ) : (
                             <>
                                 <View style={styles.locationIconContainer}>
-                                    <Text style={styles.locationIcon}>📍</Text>
+                                    <Text style={styles.locationIcon}></Text>
                                 </View>
                                 <View style={styles.locationTextContainer}>
                                     <Text style={styles.currentLocationText}>Use current location</Text>
                                     <Text style={styles.currentLocationSubtext}>
-                                        Fast GPS定位 (cached + fresh)
+                                        Fast GPS (cached + fresh)
                                     </Text>
                                 </View>
-                                <Text style={styles.arrowIcon}>→</Text>
+                                <Text style={styles.arrowIcon}></Text>
                             </>
                         )}
                     </TouchableOpacity>

@@ -76,7 +76,7 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.header}>
                 <BackButton onPress={() => navigation.goBack()} />
                 <View style={styles.headerCenter}>
-                    <Text style={styles.aiIcon}>🤖</Text>
+                    <Text style={styles.aiIcon}></Text>
                     <Text style={styles.headerTitle}>AI Smart Combos</Text>
                 </View>
                 <View style={styles.placeholder} />
@@ -84,7 +84,7 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* AI Banner */}
             <View style={styles.aiBanner}>
-                <Text style={styles.bannerIcon}>✨</Text>
+                <Text style={styles.bannerIcon}></Text>
                 <Text style={styles.bannerText}>
                     Personalized combos crafted by AI based on your taste
                 </Text>
@@ -97,25 +97,25 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
                     <View style={styles.stepsRow}>
                         <View style={styles.step}>
                             <View style={styles.stepIcon}>
-                                <Text style={styles.stepEmoji}>📊</Text>
+                                <Text style={styles.stepEmoji}></Text>
                             </View>
                             <Text style={styles.stepText}>We analyze{'\n'}your orders</Text>
                         </View>
                         <View style={styles.stepArrow}>
-                            <Text style={styles.arrowText}>→</Text>
+                            <Text style={styles.arrowText}></Text>
                         </View>
                         <View style={styles.step}>
                             <View style={styles.stepIcon}>
-                                <Text style={styles.stepEmoji}>🧠</Text>
+                                <Text style={styles.stepEmoji}></Text>
                             </View>
                             <Text style={styles.stepText}>AI finds{'\n'}best combos</Text>
                         </View>
                         <View style={styles.stepArrow}>
-                            <Text style={styles.arrowText}>→</Text>
+                            <Text style={styles.arrowText}></Text>
                         </View>
                         <View style={styles.step}>
                             <View style={styles.stepIcon}>
-                                <Text style={styles.stepEmoji}>💰</Text>
+                                <Text style={styles.stepEmoji}></Text>
                             </View>
                             <Text style={styles.stepText}>You save{'\n'}money!</Text>
                         </View>
@@ -143,7 +143,7 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
                             <View style={styles.itemsList}>
                                 {combo.items.map((item, index) => (
                                     <View key={index} style={styles.itemRow}>
-                                        <Text style={styles.itemBullet}>•</Text>
+                                        <Text style={styles.itemBullet}></Text>
                                         <Text style={styles.itemName}>{item}</Text>
                                     </View>
                                 ))}
@@ -152,11 +152,11 @@ export const AIComboScreen: React.FC<Props> = ({ navigation }) => {
                             {/* Price Row */}
                             <View style={styles.priceRow}>
                                 <View style={styles.priceInfo}>
-                                    <Text style={styles.comboPrice}>₹{combo.comboPrice.toFixed(2)}</Text>
-                                    <Text style={styles.originalPrice}>₹{combo.originalPrice.toFixed(2)}</Text>
+                                    <Text style={styles.comboPrice}>{combo.comboPrice.toFixed(2)}</Text>
+                                    <Text style={styles.originalPrice}>{combo.originalPrice.toFixed(2)}</Text>
                                 </View>
                                 <View style={styles.savingsBadge}>
-                                    <Text style={styles.savingsText}>Save ₹{combo.savings.toFixed(2)}</Text>
+                                    <Text style={styles.savingsText}>Save {combo.savings.toFixed(2)}</Text>
                                 </View>
                             </View>
 

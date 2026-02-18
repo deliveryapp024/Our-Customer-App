@@ -43,7 +43,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '1.2 km',
         discount: '20% OFF',
         tableFor: '2-6',
-        priceRange: '₹₹₹₹',
+        priceRange: '',
     },
     {
         id: '2',
@@ -55,7 +55,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '2.5 km',
         discount: '15% OFF',
         tableFor: '2-8',
-        priceRange: '₹₹₹',
+        priceRange: '',
     },
     {
         id: '3',
@@ -67,7 +67,7 @@ const dineInRestaurants: Restaurant[] = [
         distance: '3.0 km',
         discount: '10% OFF',
         tableFor: '2-4',
-        priceRange: '₹₹₹₹',
+        priceRange: '',
     },
 ];
 
@@ -81,13 +81,13 @@ export const DineInScreen: React.FC<Props> = ({ navigation }) => {
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Dine-Out</Text>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterIcon}>⚙️</Text>
+                    <Text style={styles.filterIcon}></Text>
                 </TouchableOpacity>
             </View>
 
             {/* Search Bar */}
             <TouchableOpacity style={styles.searchBar}>
-                <Text style={styles.searchIcon}>🔍</Text>
+                <Text style={styles.searchIcon}>Search</Text>
                 <Text style={styles.searchPlaceholder}>Search restaurants for dining</Text>
             </TouchableOpacity>
 
@@ -117,7 +117,7 @@ export const DineInScreen: React.FC<Props> = ({ navigation }) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Featured Banner */}
                 <View style={styles.featuredBanner}>
-                    <Text style={styles.featuredEmoji}>🍽️</Text>
+                    <Text style={styles.featuredEmoji}></Text>
                     <View style={styles.featuredContent}>
                         <Text style={styles.featuredTitle}>Reserve & Save</Text>
                         <Text style={styles.featuredSubtitle}>
@@ -143,17 +143,17 @@ export const DineInScreen: React.FC<Props> = ({ navigation }) => {
                             <View style={styles.restaurantHeader}>
                                 <Text style={styles.restaurantName}>{restaurant.name}</Text>
                                 <View style={styles.ratingBadge}>
-                                    <Text style={styles.ratingText}>{restaurant.rating} ★</Text>
+                                    <Text style={styles.ratingText}>{restaurant.rating} </Text>
                                 </View>
                             </View>
                             <Text style={styles.cuisineText}>{restaurant.cuisine}</Text>
                             <View style={styles.metaRow}>
-                                <Text style={styles.metaText}>📍 {restaurant.location}</Text>
-                                <Text style={styles.metaText}>• {restaurant.distance}</Text>
-                                <Text style={styles.metaText}>• {restaurant.priceRange}</Text>
+                                <Text style={styles.metaText}> {restaurant.location}</Text>
+                                <Text style={styles.metaText}> {restaurant.distance}</Text>
+                                <Text style={styles.metaText}> {restaurant.priceRange}</Text>
                             </View>
                             <View style={styles.tableRow}>
-                                <Text style={styles.tableIcon}>🪑</Text>
+                                <Text style={styles.tableIcon}></Text>
                                 <Text style={styles.tableText}>
                                     Tables for {restaurant.tableFor} available
                                 </Text>

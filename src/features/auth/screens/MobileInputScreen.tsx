@@ -67,7 +67,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
             showModal({
                 title: 'Invalid Mobile Number',
                 message: 'Please enter a valid 10-digit mobile number',
-                icon: '⚠️',
+                icon: '[!]',
                 buttons: [{ text: 'Got it', style: 'default' }],
             });
             return;
@@ -90,7 +90,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                     showModal({
                         title: 'OTP Request Limited',
                         message: `${errorMessage}\n\nYou can still enter OTP if you already received one.`,
-                        icon: '⏱️',
+                        icon: '',
                         buttons: [
                             { text: 'Cancel', style: 'cancel' },
                             { text: 'Enter OTP', style: 'default', onPress: () => navigation.navigate(SCREENS.OTP_VERIFICATION, { phone }) },
@@ -100,7 +100,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                     showModal({
                         title: 'Error',
                         message: errorMessage,
-                        icon: '❌',
+                        icon: 'X',
                         buttons: [{ text: 'OK', style: 'default' }],
                     });
                 }
@@ -109,7 +109,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
             showModal({
                 title: 'Error',
                 message: 'Something went wrong. Please try again.',
-                icon: '❌',
+                icon: 'X',
                 buttons: [{ text: 'OK', style: 'default' }],
             });
         } finally {
@@ -140,7 +140,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                     <View style={styles.inputContainer}>
                         <TouchableOpacity style={styles.countryCode} disabled={isLoading}>
                             <Text style={styles.countryCodeText}>{countryCode}</Text>
-                            <Text style={styles.dropdownIcon}>▼</Text>
+                            <Text style={styles.dropdownIcon}></Text>
                         </TouchableOpacity>
 
                         <TextInput
@@ -174,7 +174,7 @@ export const MobileInputScreen: React.FC<Props> = ({ navigation }) => {
                         ) : (
                             <>
                                 <Text style={styles.continueButtonText}>Continue</Text>
-                                <Text style={styles.arrowIcon}>→</Text>
+                                <Text style={styles.arrowIcon}></Text>
                             </>
                         )}
                     </TouchableOpacity>

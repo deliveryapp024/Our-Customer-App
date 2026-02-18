@@ -20,9 +20,9 @@ export const NoResultsScreen: React.FC<Props> = ({ onClearSearch, suggestions = 
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
                 <View style={styles.iconCircle}>
-                    <Text style={styles.forkKnife}>🍴</Text>
+                    <Text style={styles.forkKnife}></Text>
                     <View style={styles.searchBadge}>
-                        <Text style={styles.searchIcon}>🔍</Text>
+                        <Text style={styles.searchIcon}>Search</Text>
                     </View>
                 </View>
             </View>

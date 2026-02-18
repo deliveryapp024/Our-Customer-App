@@ -37,7 +37,7 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
     const handleShare = async () => {
         try {
             await Share.share({
-                message: `Order Receipt ${orderId} - Total: ₹${total.toFixed(2)}`,
+                message: `Order Receipt ${orderId} - Total: ${total.toFixed(2)}`,
             });
         } catch (error) {
             console.error('Share error:', error);
@@ -57,7 +57,7 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Order Receipt</Text>
                 <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                    <Text style={styles.shareIcon}>📤</Text>
+                    <Text style={styles.shareIcon}></Text>
                 </TouchableOpacity>
             </View>
 
@@ -88,7 +88,7 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                                     <Text style={styles.itemCustomization}>{item.customization}</Text>
                                 </View>
                                 <Text style={styles.itemQuantity}>x{item.quantity}</Text>
-                                <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
+                                <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
                             </View>
                         ))}
                     </View>
@@ -101,23 +101,23 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                         <Text style={styles.sectionLabel}>BILL SUMMARY</Text>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Item Total</Text>
-                            <Text style={styles.billValue}>₹{subtotal.toFixed(2)}</Text>
+                            <Text style={styles.billValue}>{subtotal.toFixed(2)}</Text>
                         </View>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Delivery Fee</Text>
-                            <Text style={styles.billValue}>₹{deliveryFee.toFixed(2)}</Text>
+                            <Text style={styles.billValue}>{deliveryFee.toFixed(2)}</Text>
                         </View>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Taxes & Charges</Text>
-                            <Text style={styles.billValue}>₹{taxes.toFixed(2)}</Text>
+                            <Text style={styles.billValue}>{taxes.toFixed(2)}</Text>
                         </View>
                         <View style={styles.billRow}>
                             <Text style={styles.discountLabel}>Promo Discount</Text>
-                            <Text style={styles.discountValue}>-₹{discount.toFixed(2)}</Text>
+                            <Text style={styles.discountValue}>-{discount.toFixed(2)}</Text>
                         </View>
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>Total Paid</Text>
-                            <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
+                            <Text style={styles.totalValue}>{total.toFixed(2)}</Text>
                         </View>
                     </View>
 
@@ -125,8 +125,8 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.paymentSection}>
                         <Text style={styles.sectionLabel}>PAYMENT</Text>
                         <View style={styles.paymentRow}>
-                            <Text style={styles.paymentIcon}>💳</Text>
-                            <Text style={styles.paymentText}>Visa •••• 4242</Text>
+                            <Text style={styles.paymentIcon}>Card</Text>
+                            <Text style={styles.paymentText}>Visa  4242</Text>
                             <Text style={styles.paidBadge}>PAID</Text>
                         </View>
                     </View>
@@ -135,7 +135,7 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.deliverySection}>
                         <Text style={styles.sectionLabel}>DELIVERED TO</Text>
                         <View style={styles.addressRow}>
-                            <Text style={styles.addressIcon}>📍</Text>
+                            <Text style={styles.addressIcon}></Text>
                             <Text style={styles.addressText}>
                                 45-2/A Main Street, Camp Area, Belagavi
                             </Text>
@@ -146,11 +146,11 @@ export const OrderReceiptScreen: React.FC<Props> = ({ navigation, route }) => {
                 {/* Actions */}
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-                        <Text style={styles.downloadIcon}>📥</Text>
+                        <Text style={styles.downloadIcon}></Text>
                         <Text style={styles.downloadText}>Download PDF</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.reorderButton}>
-                        <Text style={styles.reorderText}>🔄 Reorder</Text>
+                        <Text style={styles.reorderText}>Reorder Reorder</Text>
                     </TouchableOpacity>
                 </View>
 

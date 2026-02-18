@@ -52,7 +52,7 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                 {/* Cancelled Status */}
                 <View style={styles.statusContainer}>
                     <View style={styles.cancelledIcon}>
-                        <Text style={styles.xIcon}>✕</Text>
+                        <Text style={styles.xIcon}></Text>
                     </View>
                     <Text style={styles.cancelledTitle}>Order Cancelled</Text>
                     <Text style={styles.cancelledSubtitle}>
@@ -63,18 +63,18 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                 {/* Refund Card */}
                 <View style={styles.refundCard}>
                     <View style={styles.refundHeader}>
-                        <Text style={styles.checkIcon}>✓</Text>
+                        <Text style={styles.checkIcon}></Text>
                         <Text style={styles.refundLabel}>REFUND STATUS</Text>
                     </View>
                     <View style={styles.refundContent}>
                         <View style={styles.refundInfo}>
                             <Text style={styles.refundTitle}>Refund Processed</Text>
                             <Text style={styles.refundText}>
-                                The total amount of ₹{refundAmount.toFixed(2)} has been credited back to your Apple Pay account.
+                                The total amount of {refundAmount.toFixed(2)} has been credited back to your Apple Pay account.
                             </Text>
                         </View>
                         <View style={styles.walletIcon}>
-                            <Text style={styles.walletEmoji}>💳</Text>
+                            <Text style={styles.walletEmoji}>Card</Text>
                         </View>
                     </View>
                 </View>
@@ -87,9 +87,9 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                             <Image source={{ uri: item.image }} style={styles.itemImage} />
                             <View style={styles.itemInfo}>
                                 <Text style={styles.itemName}>{item.name}</Text>
-                                <Text style={styles.itemExtra}>Qty: {item.quantity} • {item.extra}</Text>
+                                <Text style={styles.itemExtra}>Qty: {item.quantity}  {item.extra}</Text>
                             </View>
-                            <Text style={styles.itemPrice}>₹{item.price.toFixed(2)}</Text>
+                            <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
                         </View>
                     ))}
                 </View>
@@ -98,22 +98,22 @@ export const OrderCancelledScreen: React.FC<Props> = ({ navigation, route }) => 
                 <View style={styles.section}>
                     <View style={styles.billRow}>
                         <Text style={styles.billLabel}>Subtotal</Text>
-                        <Text style={styles.billValue}>₹38.50</Text>
+                        <Text style={styles.billValue}>38.50</Text>
                     </View>
                     <View style={styles.billRow}>
                         <Text style={styles.billLabel}>Delivery Fee</Text>
-                        <Text style={styles.billValue}>₹4.00</Text>
+                        <Text style={styles.billValue}>4.00</Text>
                     </View>
                     <View style={[styles.billRow, styles.totalRow]}>
                         <Text style={styles.totalLabel}>Total Refunded</Text>
-                        <Text style={styles.totalValue}>₹{refundAmount.toFixed(2)}</Text>
+                        <Text style={styles.totalValue}>{refundAmount.toFixed(2)}</Text>
                     </View>
                 </View>
 
                 {/* Actions */}
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity style={styles.reorderButton} onPress={handleReorder}>
-                        <Text style={styles.reorderIcon}>🔄</Text>
+                        <Text style={styles.reorderIcon}>Reorder</Text>
                         <Text style={styles.reorderText}>REORDER NOW</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.supportButton} onPress={handleContactSupport}>

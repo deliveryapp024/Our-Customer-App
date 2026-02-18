@@ -99,18 +99,18 @@ export const FavoritesScreen: React.FC<Props> = ({ navigation }) => {
                                 <TouchableOpacity
                                     style={styles.heartButton}
                                     onPress={() => handleRemoveFavorite(restaurant.id)}>
-                                    <Text style={styles.heartIcon}>❤️</Text>
+                                    <Text style={styles.heartIcon}></Text>
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.ratingRow}>
                                 <View style={styles.ratingBadge}>
-                                    <Text style={styles.ratingText}>{restaurant.rating} ★</Text>
+                                    <Text style={styles.ratingText}>{restaurant.rating} </Text>
                                 </View>
                                 <Text style={styles.cuisineText}>
-                                    {restaurant.cuisines.join(' • ')}
+                                    {restaurant.cuisines.join('  ')}
                                 </Text>
                             </View>
-                            <Text style={styles.deliveryText}>🕐 {restaurant.deliveryTime}</Text>
+                            <Text style={styles.deliveryText}> {restaurant.deliveryTime}</Text>
                         </View>
                     </TouchableOpacity>
                 ))}
@@ -118,7 +118,7 @@ export const FavoritesScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Empty State */}
                 {favoriteRestaurants.length === 0 && (
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyEmoji}>❤️</Text>
+                        <Text style={styles.emptyEmoji}></Text>
                         <Text style={styles.emptyTitle}>No favorites yet</Text>
                         <Text style={styles.emptySubtitle}>
                             Start adding restaurants and dishes to your favorites

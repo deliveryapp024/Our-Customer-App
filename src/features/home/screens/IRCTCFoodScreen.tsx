@@ -115,7 +115,7 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
     const renderPNRInput = () => (
         <View style={styles.pnrSection}>
             <View style={styles.trainIcon}>
-                <Text style={styles.trainEmoji}>🚂</Text>
+                <Text style={styles.trainEmoji}></Text>
             </View>
             <Text style={styles.pnrTitle}>Food on Train</Text>
             <Text style={styles.pnrSubtitle}>
@@ -138,7 +138,7 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </View>
 
             <View style={styles.infoBox}>
-                <Text style={styles.infoIcon}>ℹ️</Text>
+                <Text style={styles.infoIcon}></Text>
                 <Text style={styles.infoText}>
                     You can find your PNR on your ticket or SMS confirmation
                 </Text>
@@ -161,7 +161,7 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                     <Text style={styles.trainName}>Rajdhani Express</Text>
                 </View>
                 <View style={styles.routeInfo}>
-                    <Text style={styles.routeText}>NDLS → HWH</Text>
+                    <Text style={styles.routeText}>NDLS  HWH</Text>
                     <Text style={styles.dateText}>Feb 5, 2026</Text>
                 </View>
             </View>
@@ -216,12 +216,12 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 <Text style={styles.restaurantName}>{item.restaurant}</Text>
 
                 <View style={styles.foodMeta}>
-                    <Text style={styles.ratingText}>★ {item.rating}</Text>
-                    <Text style={styles.prepTime}>⏱️ {item.prepTime}</Text>
+                    <Text style={styles.ratingText}> {item.rating}</Text>
+                    <Text style={styles.prepTime}> {item.prepTime}</Text>
                 </View>
 
                 <View style={styles.priceRow}>
-                    <Text style={styles.price}>₹{item.price}</Text>
+                    <Text style={styles.price}>{item.price}</Text>
                     <View
                         style={[
                             styles.selectButton,
@@ -234,7 +234,7 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                                 selectedItems.includes(item.id) && styles.selectButtonTextActive,
                             ]}
                         >
-                            {selectedItems.includes(item.id) ? '✓ Added' : '+ Add'}
+                            {selectedItems.includes(item.id) ? ' Added' : '+ Add'}
                         </Text>
                     </View>
                 </View>
@@ -281,10 +281,10 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                                     <Text style={styles.filterChipTextActive}>All</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.filterChip}>
-                                    <Text style={styles.filterChipText}>🟢 Veg</Text>
+                                    <Text style={styles.filterChipText}> Veg</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.filterChip}>
-                                    <Text style={styles.filterChipText}>🔴 Non-Veg</Text>
+                                    <Text style={styles.filterChipText}> Non-Veg</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -301,13 +301,13 @@ export const IRCTCFoodScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 <View style={styles.cartBar}>
                     <View style={styles.cartInfo}>
                         <Text style={styles.cartCount}>{selectedItems.length} items</Text>
-                        <Text style={styles.cartTotal}>₹{getSelectedTotal()}</Text>
+                        <Text style={styles.cartTotal}>{getSelectedTotal()}</Text>
                     </View>
                     <TouchableOpacity
                         style={styles.checkoutButton}
                         onPress={() => navigation.navigate('Checkout')}
                     >
-                        <Text style={styles.checkoutText}>Place Order →</Text>
+                        <Text style={styles.checkoutText}>Place Order </Text>
                     </TouchableOpacity>
                 </View>
             )}

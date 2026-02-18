@@ -34,35 +34,35 @@ const settingsGroups: { title: string; items: SettingItemType[] }[] = [
     {
         title: 'Notifications',
         items: [
-            { id: '1', icon: '🔔', label: 'Push Notifications', type: 'toggle', enabled: true },
-            { id: '2', icon: '📧', label: 'Email Updates', type: 'toggle', enabled: false },
-            { id: '3', icon: '💬', label: 'SMS Alerts', type: 'toggle', enabled: true },
-            { id: '4', icon: '🎁', label: 'Promotional Offers', type: 'toggle', enabled: true },
+            { id: '1', icon: '', label: 'Push Notifications', type: 'toggle', enabled: true },
+            { id: '2', icon: '', label: 'Email Updates', type: 'toggle', enabled: false },
+            { id: '3', icon: '', label: 'SMS Alerts', type: 'toggle', enabled: true },
+            { id: '4', icon: 'Deals', label: 'Promotional Offers', type: 'toggle', enabled: true },
         ],
     },
     {
         title: 'Account',
         items: [
-            { id: '5', icon: '📱', label: 'Change Phone Number', type: 'link' },
-            { id: '6', icon: '📧', label: 'Update Email', type: 'link' },
-            { id: '7', icon: '🔒', label: 'Privacy Settings', type: 'link' },
-            { id: '8', icon: '🌐', label: 'Language', type: 'value', value: 'English' },
+            { id: '5', icon: '', label: 'Change Phone Number', type: 'link' },
+            { id: '6', icon: '', label: 'Update Email', type: 'link' },
+            { id: '7', icon: '', label: 'Privacy Settings', type: 'link' },
+            { id: '8', icon: '', label: 'Language', type: 'value', value: 'English' },
         ],
     },
     {
         title: 'App Preferences',
         items: [
-            { id: '9', icon: '🌙', label: 'Dark Mode', type: 'toggle', enabled: true },
-            { id: '10', icon: '📍', label: 'Location Services', type: 'toggle', enabled: true },
-            { id: '11', icon: '💾', label: 'Clear Cache', type: 'link' },
+            { id: '9', icon: '', label: 'Dark Mode', type: 'toggle', enabled: true },
+            { id: '10', icon: '', label: 'Location Services', type: 'toggle', enabled: true },
+            { id: '11', icon: '', label: 'Clear Cache', type: 'link' },
         ],
     },
     {
         title: 'Legal',
         items: [
-            { id: '12', icon: '📄', label: 'Terms of Service', type: 'link' },
-            { id: '13', icon: '🔐', label: 'Privacy Policy', type: 'link' },
-            { id: '14', icon: '📜', label: 'Licenses', type: 'link' },
+            { id: '12', icon: '', label: 'Terms of Service', type: 'link' },
+            { id: '13', icon: '', label: 'Privacy Policy', type: 'link' },
+            { id: '14', icon: '', label: 'Licenses', type: 'link' },
         ],
     },
 ];
@@ -121,7 +121,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                                     <Text style={styles.settingValue}>{item.value}</Text>
                                 )}
                                 {item.type === 'link' && (
-                                    <Text style={styles.settingArrow}>→</Text>
+                                    <Text style={styles.settingArrow}></Text>
                                 )}
                             </View>
                         ))}
@@ -131,13 +131,13 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Danger Zone */}
                 <View style={styles.dangerZone}>
                     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Text style={styles.logoutIcon}>🚪</Text>
+                        <Text style={styles.logoutIcon}></Text>
                         <Text style={styles.logoutText}>Logout</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={handleDeleteAccount}>
-                        <Text style={styles.deleteIcon}>🗑️</Text>
+                        <Text style={styles.deleteIcon}></Text>
                         <Text style={styles.deleteText}>Delete Account</Text>
                     </TouchableOpacity>
                 </View>
@@ -146,7 +146,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.appInfo}>
                     <Text style={styles.appName}>CustomerApp</Text>
                     <Text style={styles.appVersion}>Version 1.0.0 (Build 100)</Text>
-                    <Text style={styles.appCopyright}>© 2026 Your Company</Text>
+                    <Text style={styles.appCopyright}> 2026 Your Company</Text>
                 </View>
 
                 <View style={styles.bottomSpacing} />

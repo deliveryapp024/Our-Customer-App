@@ -25,25 +25,25 @@ interface HelpCategory {
 const helpCategories: HelpCategory[] = [
     {
         id: '1',
-        icon: '📦',
+        icon: '',
         title: 'Order Issues',
         items: ['Missing items', 'Wrong order', 'Late delivery', 'Food quality'],
     },
     {
         id: '2',
-        icon: '💳',
+        icon: 'Card',
         title: 'Payment & Refunds',
         items: ['Payment failed', 'Request refund', 'Double charged', 'Promo not applied'],
     },
     {
         id: '3',
-        icon: '👤',
+        icon: 'Profile',
         title: 'Account & Profile',
         items: ['Update profile', 'Change number', 'Delete account', 'Login issues'],
     },
     {
         id: '4',
-        icon: '🚗',
+        icon: '',
         title: 'Delivery Partner',
         items: ['Rude behavior', 'Wrong delivery', 'Safety concern', 'Tip issue'],
     },
@@ -74,7 +74,7 @@ export const HelpSupportScreen: React.FC<Props> = ({ navigation }) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Search */}
                 <View style={styles.searchContainer}>
-                    <Text style={styles.searchIcon}>🔍</Text>
+                    <Text style={styles.searchIcon}>Search</Text>
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search for help..."
@@ -87,11 +87,11 @@ export const HelpSupportScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Quick Actions */}
                 <View style={styles.quickActions}>
                     <TouchableOpacity style={styles.quickAction}>
-                        <Text style={styles.quickActionIcon}>💬</Text>
+                        <Text style={styles.quickActionIcon}></Text>
                         <Text style={styles.quickActionText}>Chat with us</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.quickAction}>
-                        <Text style={styles.quickActionIcon}>📞</Text>
+                        <Text style={styles.quickActionIcon}></Text>
                         <Text style={styles.quickActionText}>Call support</Text>
                     </TouchableOpacity>
                 </View>
@@ -110,7 +110,7 @@ export const HelpSupportScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.categoryIcon}>{category.icon}</Text>
                             <Text style={styles.categoryTitle}>{category.title}</Text>
                             <Text style={styles.expandIcon}>
-                                {expandedCategory === category.id ? '−' : '+'}
+                                {expandedCategory === category.id ? '' : '+'}
                             </Text>
                         </TouchableOpacity>
                         {expandedCategory === category.id && (
@@ -118,7 +118,7 @@ export const HelpSupportScreen: React.FC<Props> = ({ navigation }) => {
                                 {category.items.map((item, index) => (
                                     <TouchableOpacity key={index} style={styles.categoryItem}>
                                         <Text style={styles.categoryItemText}>{item}</Text>
-                                        <Text style={styles.itemArrow}>→</Text>
+                                        <Text style={styles.itemArrow}></Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -137,7 +137,7 @@ export const HelpSupportScreen: React.FC<Props> = ({ navigation }) => {
                             }>
                             <Text style={styles.faqQuestion}>{faq.question}</Text>
                             <Text style={styles.expandIcon}>
-                                {expandedFaq === faq.id ? '−' : '+'}
+                                {expandedFaq === faq.id ? '' : '+'}
                             </Text>
                         </TouchableOpacity>
                         {expandedFaq === faq.id && (

@@ -6,17 +6,17 @@ import { BackButton } from '../../../components/ui/BackButton';
 type Props = { navigation: NativeStackNavigationProp<any> };
 
 const perks = [
-    { id: '1', icon: '🎁', title: '10% Off All Orders', description: 'Exclusive member discount' },
-    { id: '2', icon: '🚚', title: 'Free Delivery', description: 'No delivery fee ever' },
-    { id: '3', icon: '⭐', title: 'Priority Support', description: 'Skip the queue' },
-    { id: '4', icon: '🎂', title: 'Birthday Treat', description: 'Free dessert on your birthday' },
+    { id: '1', icon: 'Deals', title: '10% Off All Orders', description: 'Exclusive member discount' },
+    { id: '2', icon: '', title: 'Free Delivery', description: 'No delivery fee ever' },
+    { id: '3', icon: '*', title: 'Priority Support', description: 'Skip the queue' },
+    { id: '4', icon: '', title: 'Birthday Treat', description: 'Free dessert on your birthday' },
 ];
 
 const tiers = [
-    { name: 'Bronze', orders: 10, icon: '🥉', current: true },
-    { name: 'Silver', orders: 25, icon: '🥈', current: false },
-    { name: 'Gold', orders: 50, icon: '🥇', current: false },
-    { name: 'Platinum', orders: 100, icon: '💎', current: false },
+    { name: 'Bronze', orders: 10, icon: '', current: true },
+    { name: 'Silver', orders: 25, icon: '', current: false },
+    { name: 'Gold', orders: 50, icon: '', current: false },
+    { name: 'Platinum', orders: 100, icon: '', current: false },
 ];
 
 export const FanClubScreen: React.FC<Props> = ({ navigation }) => {
@@ -37,7 +37,7 @@ export const FanClubScreen: React.FC<Props> = ({ navigation }) => {
                     // Image from restaurant_fan_club_loyalty design
                     <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4DSeZGWbVfWaQoBSz8Po_e1FFHAbCJ0JhqkgFkPwawDxyTSAis4sMfbDvnLeuf-MBjWpE_suGdsAtx2KubTjwitJ8LMQcWXpWMcXKzIID8xf_y-E5XDl-W3fdwg47nz7AwXB7LZzt24YcM5vcrHpW1ymKAJv2NYU2QpfCvM8GoC71kqoRyaiSqj6yycxt8ABQIO689Sgg2fbTxzqZ2Jx5_aD8ORgSHAb_DvR_U-I57I-x0pJinAJAUJWMwP6uWO4pHQQPIgW4lqVh' }} style={styles.restaurantImage} />
                     <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
-                    <View style={styles.tierBadge}><Text style={styles.tierIcon}>🥉</Text><Text style={styles.tierText}>Bronze Member</Text></View>
+                    <View style={styles.tierBadge}><Text style={styles.tierIcon}></Text><Text style={styles.tierText}>Bronze Member</Text></View>
                     <View style={styles.progressSection}>
                         <Text style={styles.progressLabel}>{currentOrders} / {nextTierOrders} orders to Silver</Text>
                         <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${(currentOrders / nextTierOrders) * 100}%` }]} /></View>
@@ -50,7 +50,7 @@ export const FanClubScreen: React.FC<Props> = ({ navigation }) => {
                         <View key={perk.id} style={styles.perkCard}>
                             <Text style={styles.perkIcon}>{perk.icon}</Text>
                             <View style={styles.perkInfo}><Text style={styles.perkTitle}>{perk.title}</Text><Text style={styles.perkDescription}>{perk.description}</Text></View>
-                            <Text style={styles.perkCheck}>✓</Text>
+                            <Text style={styles.perkCheck}></Text>
                         </View>
                     ))}
                 </View>

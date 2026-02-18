@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
+import { House, ForkKnife, ArrowCounterClockwise, Gift, User } from 'phosphor-react-native';
 import { SCREENS } from '../constants';
 import { HomeScreen, FlashDealsScreen, QuickReorderScreen } from '../features/home';
 import { ProfileScreen } from '../features/profile';
@@ -11,7 +12,7 @@ const Tab = createBottomTabNavigator();
 // Food Tab Screen - Restaurant Discovery
 const FoodScreen = () => (
     <View style={styles.placeholder}>
-        <Text style={styles.placeholderEmoji}>🍔</Text>
+        <ForkKnife size={48} color="#00E5FF" weight="fill" />
         <Text style={styles.placeholderText}>Food</Text>
         <Text style={styles.placeholderSubtext}>Discover restaurants and cuisines</Text>
     </View>
@@ -19,13 +20,17 @@ const FoodScreen = () => (
 
 interface TabIconProps {
     focused: boolean;
-    icon: string;
+    IconComponent: React.ComponentType<any>;
     label: string;
 }
 
-const TabIcon: React.FC<TabIconProps> = ({ focused, icon, label }) => (
+const TabIcon: React.FC<TabIconProps> = ({ focused, IconComponent, label }) => (
     <View style={styles.tabIconContainer}>
-        <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+        <IconComponent 
+            size={22} 
+            color={focused ? '#00E5FF' : '#6B6B6B'} 
+            weight={focused ? 'fill' : 'regular'}
+        />
         <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
     </View>
 );
@@ -43,7 +48,7 @@ export const MainTabNavigator = () => {
                 component={HomeScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="🏠" label="Home" />
+                        <TabIcon focused={focused} IconComponent={House} label="Home" />
                     ),
                 }}
             />
@@ -52,7 +57,7 @@ export const MainTabNavigator = () => {
                 component={FoodScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="🍔" label="Food" />
+                        <TabIcon focused={focused} IconComponent={ForkKnife} label="Food" />
                     ),
                 }}
             />
@@ -61,7 +66,7 @@ export const MainTabNavigator = () => {
                 component={QuickReorderScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="🔄" label="Reorder" />
+                        <TabIcon focused={focused} IconComponent={ArrowCounterClockwise} label="Reorder" />
                     ),
                 }}
             />
@@ -70,7 +75,7 @@ export const MainTabNavigator = () => {
                 component={FlashDealsScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="🎁" label="Deals" />
+                        <TabIcon focused={focused} IconComponent={Gift} label="Deals" />
                     ),
                 }}
             />
@@ -79,7 +84,7 @@ export const MainTabNavigator = () => {
                 component={ProfileScreen}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon="👤" label="Profile" />
+                        <TabIcon focused={focused} IconComponent={User} label="Profile" />
                     ),
                 }}
             />
@@ -99,16 +104,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    tabIcon: {
-        fontSize: 22,
-        marginBottom: 4,
-    },
-    tabIconActive: {
-        transform: [{ scale: 1.1 }],
-    },
     tabLabel: {
         fontSize: 11,
         color: '#6B6B6B',
+        marginTop: 4,
     },
     tabLabelActive: {
         color: '#00E5FF',
@@ -120,14 +119,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    placeholderEmoji: {
-        fontSize: 48,
-        marginBottom: 16,
-    },
     placeholderText: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#FFFFFF',
+        marginTop: 16,
         marginBottom: 8,
     },
     placeholderSubtext: {

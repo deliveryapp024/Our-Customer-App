@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Star } from 'phosphor-react-native';
 import { BackButton } from '../../../components/ui/BackButton';
 import { reviewsApi, BranchReview } from '../../../api';
 
@@ -78,7 +79,7 @@ export const BranchReviewsScreen: React.FC<Props> = ({ navigation, route }) => {
                 <View style={styles.topRow}>
                     <Text style={styles.name} numberOfLines={1}>{item.customer?.name || 'Customer'}</Text>
                     <View style={styles.ratingPill}>
-                        <Text style={styles.ratingText}>{Number(item.rating).toFixed(1)} ★</Text>
+                        <View style={styles.ratingContent}><Text style={styles.ratingText}>{Number(item.rating).toFixed(1)}</Text><Star size={10} color="#FFFFFF" weight="fill" /></View>
                     </View>
                 </View>
 
@@ -176,6 +177,7 @@ const styles = StyleSheet.create({
     name: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', flex: 1, marginRight: 10 },
     ratingPill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: '#00C853' },
     ratingText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+    ratingContent: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     comment: { color: '#CFCFCF', fontSize: 12, lineHeight: 16 },
     imagesRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
     thumb: { width: 52, height: 52, borderRadius: 12, backgroundColor: '#1A1A1A' },

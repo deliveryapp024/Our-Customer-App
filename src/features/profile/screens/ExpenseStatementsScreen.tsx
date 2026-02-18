@@ -14,10 +14,10 @@ const expenses = [
     { id: '3', month: 'December 2025', total: 198.75, orders: 9, avgOrder: 22.08 },
 ];
 const categories = [
-    { id: '1', name: 'Food Orders', amount: 180.50, percentage: 74, icon: '🍔' },
-    { id: '2', name: 'Delivery Fees', amount: 35.00, percentage: 14, icon: '🚗' },
-    { id: '3', name: 'Tips', amount: 20.00, percentage: 8, icon: '💵' },
-    { id: '4', name: 'Taxes', amount: 10.00, percentage: 4, icon: '📋' },
+    { id: '1', name: 'Food Orders', amount: 180.50, percentage: 74, icon: 'Food' },
+    { id: '2', name: 'Delivery Fees', amount: 35.00, percentage: 14, icon: '' },
+    { id: '3', name: 'Tips', amount: 20.00, percentage: 8, icon: '' },
+    { id: '4', name: 'Taxes', amount: 10.00, percentage: 4, icon: '' },
 ];
 
 export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
@@ -35,8 +35,8 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.totalCard}>
                     <Text style={styles.totalLabel}>This Month</Text>
-                    <Text style={styles.totalValue}>₹245.50</Text>
-                    <Text style={styles.totalMeta}>12 orders • Avg ₹20.46/order</Text>
+                    <Text style={styles.totalValue}>245.50</Text>
+                    <Text style={styles.totalMeta}>12 orders  Avg 20.46/order</Text>
                 </View>
 
                 <View style={styles.chartContainer}>
@@ -57,7 +57,7 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.categoryIcon}>{cat.icon}</Text>
                             <Text style={styles.categoryName}>{cat.name}</Text>
                             <View style={styles.categoryProgress}><View style={[styles.progressFill, { width: `${cat.percentage}%` }]} /></View>
-                            <Text style={styles.categoryAmount}>₹{cat.amount.toFixed(2)}</Text>
+                            <Text style={styles.categoryAmount}>{cat.amount.toFixed(2)}</Text>
                         </View>
                     ))}
                 </View>
@@ -67,12 +67,12 @@ export const ExpenseStatementsScreen: React.FC<Props> = ({ navigation }) => {
                     {expenses.map((exp) => (
                         <TouchableOpacity key={exp.id} style={styles.monthCard}>
                             <Text style={styles.monthName}>{exp.month}</Text>
-                            <View style={styles.monthMeta}><Text style={styles.monthOrders}>{exp.orders} orders</Text><Text style={styles.monthTotal}>₹{exp.total.toFixed(2)}</Text></View>
+                            <View style={styles.monthMeta}><Text style={styles.monthOrders}>{exp.orders} orders</Text><Text style={styles.monthTotal}>{exp.total.toFixed(2)}</Text></View>
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.downloadButton}><Text style={styles.downloadText}>📥 Download Statement</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.downloadButton}><Text style={styles.downloadText}> Download Statement</Text></TouchableOpacity>
                 <View style={{ height: 40 }} />
             </ScrollView>
         </View>

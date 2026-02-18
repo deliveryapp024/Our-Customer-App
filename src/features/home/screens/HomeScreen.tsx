@@ -75,7 +75,7 @@ const restaurants = [
         rating: 4.8,
         cuisines: ['Continental', 'Italian'],
         deliveryTime: '20-30 mins',
-        priceLevel: '₹₹',
+        priceLevel: '',
         hasOffer: true,
         offerText: 'FREE DELIVERY',
     },
@@ -86,7 +86,7 @@ const restaurants = [
         rating: 4.5,
         cuisines: ['Fast Food', 'American'],
         deliveryTime: '15-25 mins',
-        priceLevel: '₹',
+        priceLevel: '',
         hasOffer: false,
     },
     {
@@ -96,7 +96,7 @@ const restaurants = [
         rating: 4.6,
         cuisines: ['Thai', 'Asian'],
         deliveryTime: '25-35 mins',
-        priceLevel: '₹₹',
+        priceLevel: '',
         hasOffer: true,
         offerText: '20% OFF',
     },
@@ -107,7 +107,7 @@ const restaurants = [
         rating: 4.9,
         cuisines: ['Indian', 'Mughal'],
         deliveryTime: '30-40 mins',
-        priceLevel: '₹₹₹',
+        priceLevel: '',
         hasOffer: false,
     },
 ];
@@ -176,7 +176,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map((tile: any) => ({
         id: String(tile?.id || tile?.categoryId || tile?.name),
         name: tile?.name || tile?.label || 'Category',
-        icon: tile?.icon || '🍽️',
+        icon: tile?.icon || '',
     })) || categories;
 
     // Get banner items from API or empty
@@ -252,9 +252,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     onPress={() => navigation.navigate(SCREENS.LOCATION_PICKER)}>
                     <View>
                         <Text style={styles.locationLabel}>{location}</Text>
-                        <Text style={styles.locationAddress}>Home • 45-2/A Main Street</Text>
+                        <Text style={styles.locationAddress}>Home  45-2/A Main Street</Text>
                     </View>
-                    <Text style={styles.dropdownIcon}>▼</Text>
+                    <Text style={styles.dropdownIcon}></Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={styles.profileButton}

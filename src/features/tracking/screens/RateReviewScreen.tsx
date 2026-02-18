@@ -13,6 +13,15 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import {
+    Star,
+    ThumbsUp,
+    Lightning,
+    ThermometerHot,
+    Package,
+    Camera,
+    Warning,
+} from 'phosphor-react-native';
 import { BackButton } from '../../../components/ui/BackButton';
 import { reviewsApi } from '../../../api';
 import { CustomModal } from '../../../components/ui/CustomModal';
@@ -22,17 +31,18 @@ type Props = {
     route: RouteProp<any>;
 };
 
+const tips = [
+    { id: '1', Icon: ThumbsUp, label: 'Good' },
+    { id: '2', Icon: Lightning, label: 'Fast' },
+    { id: '3', Icon: ThermometerHot, label: 'Hot' },
+    { id: '4', Icon: Package, label: 'Packed Well' },
+];
+
 export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
     const orderId = route.params?.orderId || '#8821';
     const branchId = route.params?.branchId || null;
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
-    const [tips] = useState([
-        { id: '1', emoji: '??', label: 'Good' },
-        { id: '2', emoji: '?', label: 'Fast' },
-        { id: '3', emoji: '??', label: 'Hot' },
-        { id: '4', emoji: '??', label: 'Packed Well' },
-    ]);
     const [selectedTips, setSelectedTips] = useState<string[]>([]);
     const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -114,7 +124,6 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
             };
 
             if (uploadedMediaUrl) payload.images = [uploadedMediaUrl];
-            // Optional: pass concrete order ObjectId if provided by caller.
             if (route.params?.orderMongoId) payload.orderId = String(route.params.orderMongoId);
 
             const res = await reviewsApi.createBranchReview(String(branchId), payload);
@@ -153,7 +162,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                     <View style={styles.orderInfo}>
                         <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
-                        <Text style={styles.orderDetails}>Order {orderId} • 3 items</Text>
+                        <Text style={styles.orderDetails}>Order {orderId}  3 items</Text>
                     </View>
                 </View>
 
@@ -165,7 +174,11 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                                 key={star}
                                 onPress={() => setRating(star)}
                                 activeOpacity={0.7}>
-                                <Text style={[styles.star, star <= rating && styles.starActive]}>?</Text>
+                                <Star
+                                    size={44}
+                                    color={star <= rating ? '#FFB300' : '#2A2A2A'}
+                                    weight={star <= rating ? 'fill' : 'regular'}
+                                />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -182,24 +195,32 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                 <View style={styles.tipsContainer}>
                     <Text style={styles.tipsTitle}>Quick tips</Text>
                     <View style={styles.tipsGrid}>
-                        {tips.map((tip) => (
-                            <TouchableOpacity
-                                key={tip.id}
-                                style={[
-                                    styles.tipButton,
-                                    selectedTips.includes(tip.id) && styles.tipButtonSelected,
-                                ]}
-                                onPress={() => toggleTip(tip.id)}>
-                                <Text style={styles.tipEmoji}>{tip.emoji}</Text>
-                                <Text
+                        {tips.map((tip) => {
+                            const IconComponent = tip.Icon;
+                            return (
+                                <TouchableOpacity
+                                    key={tip.id}
                                     style={[
-                                        styles.tipLabel,
-                                        selectedTips.includes(tip.id) && styles.tipLabelSelected,
-                                    ]}>
-                                    {tip.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                                        styles.tipButton,
+                                        selectedTips.includes(tip.id) && styles.tipButtonSelected,
+                                    ]}
+                                    onPress={() => toggleTip(tip.id)}>
+                                    <IconComponent
+                                        size={16}
+                                        color={selectedTips.includes(tip.id) ? '#00E5FF' : '#FFFFFF'}
+                                        weight="regular"
+                                        style={styles.tipIcon}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.tipLabel,
+                                            selectedTips.includes(tip.id) && styles.tipLabelSelected,
+                                        ]}>
+                                        {tip.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -225,7 +246,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                         </>
                     ) : (
                         <>
-                            <Text style={styles.addPhotoIcon}>??</Text>
+                            <Camera size={20} color="#9E9E9E" weight="regular" />
                             <Text style={styles.addPhotoText}>{uploadedMediaUrl ? 'Replace Photo' : 'Add Photo'}</Text>
                         </>
                     )}
@@ -255,7 +276,7 @@ export const RateReviewScreen: React.FC<Props> = ({ navigation, route }) => {
                 visible={errorModalVisible}
                 title="Upload Error"
                 message={errorMessage}
-                icon="?"
+                icon="warning"
                 buttons={[{ text: 'OK', style: 'default' }]}
                 onClose={() => setErrorModalVisible(false)}
             />
@@ -331,13 +352,6 @@ const styles = StyleSheet.create({
         gap: 12,
         marginBottom: 12,
     },
-    star: {
-        fontSize: 44,
-        color: '#2A2A2A',
-    },
-    starActive: {
-        color: '#FFB300',
-    },
     ratingLabel: {
         fontSize: 16,
         color: '#9E9E9E',
@@ -370,8 +384,7 @@ const styles = StyleSheet.create({
         borderColor: '#00E5FF',
         backgroundColor: '#0A2A2A',
     },
-    tipEmoji: {
-        fontSize: 16,
+    tipIcon: {
         marginRight: 6,
     },
     tipLabel: {
@@ -409,10 +422,7 @@ const styles = StyleSheet.create({
         borderColor: '#2A2A2A',
         borderStyle: 'dashed',
         marginBottom: 24,
-    },
-    addPhotoIcon: {
-        fontSize: 20,
-        marginRight: 8,
+        gap: 8,
     },
     addPhotoText: {
         fontSize: 14,
@@ -461,4 +471,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default RateReviewScreen;
+export default RateReviewScreen;

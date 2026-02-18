@@ -43,7 +43,7 @@ export interface Restaurant {
     cuisines: string[];
     deliveryTime: string;
     distance: string;
-    priceLevel: '₹' | '₹₹' | '₹₹₹';
+    priceLevel: '' | '' | '';
     isOpen: boolean;
     offers?: Offer[];
 }

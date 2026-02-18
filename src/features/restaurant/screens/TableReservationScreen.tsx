@@ -30,8 +30,8 @@ export const TableReservationScreen: React.FC<Props> = ({ navigation }) => {
                     <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAi22JSUpIZp9S12iuATknD-tmEEZIPnsutkYxZfCkG0JZX4i5eEtNl4VWpCaDEMS7BnPRGnodl8Wn2CXdqyNGps51vv9fyynNBwQ0nc8KlCDw4s2HpfMINwIh8YFr_isEiQdhewzgMR6GpeG3SF0ZEcdImW2aMPs4p2zsJkwM-UhNhY5UJlT-UzJ4X8nh946SR_nI4RUfaLRfGpH4zaPVgwJnelKNbLsVg1BH3CdW-ckWxOoPwgYbL70Uclx-Fr5Y3eBb-ErV5bFwQ' }} style={styles.restaurantImage} />
                     <View style={styles.restaurantInfo}>
                         <Text style={styles.restaurantName}>The Gourmet Kitchen</Text>
-                        <Text style={styles.restaurantMeta}>Continental, Italian • Camp Area</Text>
-                        <View style={styles.ratingRow}><Text style={styles.ratingStar}>★</Text><Text style={styles.ratingText}>4.8 (2.4K reviews)</Text></View>
+                        <Text style={styles.restaurantMeta}>Continental, Italian  Camp Area</Text>
+                        <View style={styles.ratingRow}><Text style={styles.ratingStar}></Text><Text style={styles.ratingText}>4.8 (2.4K reviews)</Text></View>
                     </View>
                 </View>
 
@@ -70,9 +70,9 @@ export const TableReservationScreen: React.FC<Props> = ({ navigation }) => {
 
                 <View style={styles.summaryCard}>
                     <Text style={styles.summaryTitle}>Reservation Summary</Text>
-                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}>📅 Date</Text><Text style={styles.summaryValue}>{selectedDate}</Text></View>
-                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}>⏰ Time</Text><Text style={styles.summaryValue}>{selectedTime}</Text></View>
-                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}>👥 Guests</Text><Text style={styles.summaryValue}>{selectedGuests} people</Text></View>
+                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}> Date</Text><Text style={styles.summaryValue}>{selectedDate}</Text></View>
+                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}> Time</Text><Text style={styles.summaryValue}>{selectedTime}</Text></View>
+                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}> Guests</Text><Text style={styles.summaryValue}>{selectedGuests} people</Text></View>
                 </View>
 
                 <TouchableOpacity style={styles.confirmButton}><Text style={styles.confirmButtonText}>CONFIRM RESERVATION</Text></TouchableOpacity>

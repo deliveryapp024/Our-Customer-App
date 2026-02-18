@@ -25,16 +25,16 @@ const ecoStats = {
 };
 
 const achievements = [
-    { id: '1', icon: '🌱', title: 'Eco Starter', description: 'Made 5 eco-friendly orders', earned: true },
-    { id: '2', icon: '🌿', title: 'Green Guardian', description: '10 plastic-free orders', earned: true },
-    { id: '3', icon: '🌳', title: 'Forest Friend', description: 'Saved 5kg CO2', earned: false },
-    { id: '4', icon: '🌍', title: 'Planet Protector', description: '50 eco orders', earned: false },
+    { id: '1', icon: '', title: 'Eco Starter', description: 'Made 5 eco-friendly orders', earned: true },
+    { id: '2', icon: '', title: 'Green Guardian', description: '10 plastic-free orders', earned: true },
+    { id: '3', icon: '', title: 'Forest Friend', description: 'Saved 5kg CO2', earned: false },
+    { id: '4', icon: '', title: 'Planet Protector', description: '50 eco orders', earned: false },
 ];
 
 const ecoTips = [
-    { id: '1', icon: '🥤', title: 'Skip the straw', description: 'Say no to plastic straws' },
-    { id: '2', icon: '🍽️', title: 'No cutlery', description: 'Use your own utensils' },
-    { id: '3', icon: '📦', title: 'Eco packaging', description: 'Choose sustainable packing' },
+    { id: '1', icon: '', title: 'Skip the straw', description: 'Say no to plastic straws' },
+    { id: '2', icon: '', title: 'No cutlery', description: 'Use your own utensils' },
+    { id: '3', icon: '', title: 'Eco packaging', description: 'Choose sustainable packing' },
 ];
 
 export const EcoDashboardScreen: React.FC<Props> = ({ navigation }) => {
@@ -52,7 +52,7 @@ export const EcoDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Hero Card */}
                 <View style={styles.heroCard}>
-                    <Text style={styles.heroEmoji}>🌍</Text>
+                    <Text style={styles.heroEmoji}></Text>
                     <Text style={styles.heroTitle}>Your Eco Impact</Text>
                     <Text style={styles.heroSubtitle}>
                         Thank you for making sustainable choices!
@@ -63,23 +63,23 @@ export const EcoDashboardScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.statsGrid}>
                     <View style={styles.statCard}>
                         <Text style={styles.statValue}>{ecoStats.co2Saved}kg</Text>
-                        <Text style={styles.statLabel}>CO₂ Saved</Text>
-                        <Text style={styles.statIcon}>💨</Text>
+                        <Text style={styles.statLabel}>CO Saved</Text>
+                        <Text style={styles.statIcon}></Text>
                     </View>
                     <View style={styles.statCard}>
                         <Text style={styles.statValue}>{ecoStats.plasticAvoided}</Text>
                         <Text style={styles.statLabel}>Plastics Avoided</Text>
-                        <Text style={styles.statIcon}>🚫</Text>
+                        <Text style={styles.statIcon}>No</Text>
                     </View>
                     <View style={styles.statCard}>
                         <Text style={styles.statValue}>{ecoStats.treesEquivalent}</Text>
                         <Text style={styles.statLabel}>Trees Equivalent</Text>
-                        <Text style={styles.statIcon}>🌳</Text>
+                        <Text style={styles.statIcon}></Text>
                     </View>
                     <View style={styles.statCard}>
                         <Text style={styles.statValue}>{ecoStats.ordersEcoFriendly}</Text>
                         <Text style={styles.statLabel}>Eco Orders</Text>
-                        <Text style={styles.statIcon}>♻️</Text>
+                        <Text style={styles.statIcon}></Text>
                     </View>
                 </View>
 
@@ -95,7 +95,7 @@ export const EcoDashboardScreen: React.FC<Props> = ({ navigation }) => {
                                     !achievement.earned && styles.achievementCardLocked,
                                 ]}>
                                 <Text style={styles.achievementIcon}>
-                                    {achievement.earned ? achievement.icon : '🔒'}
+                                    {achievement.earned ? achievement.icon : ''}
                                 </Text>
                                 <Text style={styles.achievementTitle}>{achievement.title}</Text>
                                 <Text style={styles.achievementDescription}>
@@ -127,14 +127,14 @@ export const EcoDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Share Card */}
                 <TouchableOpacity style={styles.shareCard}>
-                    <Text style={styles.shareEmoji}>📱</Text>
+                    <Text style={styles.shareEmoji}></Text>
                     <View style={styles.shareInfo}>
                         <Text style={styles.shareTitle}>Share Your Impact</Text>
                         <Text style={styles.shareSubtitle}>
                             Inspire others to make eco-friendly choices
                         </Text>
                     </View>
-                    <Text style={styles.shareArrow}>→</Text>
+                    <Text style={styles.shareArrow}></Text>
                 </TouchableOpacity>
 
                 <View style={styles.bottomSpacing} />

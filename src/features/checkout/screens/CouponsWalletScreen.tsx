@@ -33,7 +33,7 @@ const coupons: Coupon[] = [
         code: 'WELCOME50',
         title: '50% OFF',
         description: 'Get 50% off on your first order',
-        discount: 'up to ₹15',
+        discount: 'up to 15',
         minOrder: 20,
         expiresIn: '2 days',
         isApplicable: true,
@@ -42,8 +42,8 @@ const coupons: Coupon[] = [
         id: '2',
         code: 'FREEDEL',
         title: 'Free Delivery',
-        description: 'Free delivery on orders above ₹25',
-        discount: 'Save ₹4.99',
+        description: 'Free delivery on orders above 25',
+        discount: 'Save 4.99',
         minOrder: 25,
         expiresIn: '5 days',
         isApplicable: true,
@@ -53,7 +53,7 @@ const coupons: Coupon[] = [
         code: 'PARTY30',
         title: '30% OFF',
         description: 'Weekend special on all orders',
-        discount: 'up to ₹20',
+        discount: 'up to 20',
         minOrder: 50,
         expiresIn: '1 day',
         isApplicable: false,
@@ -61,9 +61,9 @@ const coupons: Coupon[] = [
     {
         id: '4',
         code: 'SWIGGY100',
-        title: 'Flat ₹10 OFF',
+        title: 'Flat 10 OFF',
         description: 'Flat discount on selected restaurants',
-        discount: '₹10',
+        discount: '10',
         minOrder: 30,
         expiresIn: '7 days',
         isApplicable: true,
@@ -132,7 +132,7 @@ export const CouponsWalletScreen: React.FC<Props> = ({ navigation, onApplyCoupon
                             <Text style={styles.couponDescription}>{coupon.description}</Text>
                             <View style={styles.couponFooter}>
                                 <Text style={styles.minOrderText}>
-                                    Min. order: ₹{coupon.minOrder} • {coupon.discount}
+                                    Min. order: {coupon.minOrder}  {coupon.discount}
                                 </Text>
                                 <TouchableOpacity
                                     style={[
@@ -158,10 +158,10 @@ export const CouponsWalletScreen: React.FC<Props> = ({ navigation, onApplyCoupon
                 <View style={styles.termsContainer}>
                     <Text style={styles.termsTitle}>Terms & Conditions</Text>
                     <Text style={styles.termsText}>
-                        • Coupons are valid for limited time only{'\n'}
-                        • Cannot be combined with other offers{'\n'}
-                        • Valid on selected restaurants only{'\n'}
-                        • Maximum discount limits apply
+                         Coupons are valid for limited time only{'\n'}
+                         Cannot be combined with other offers{'\n'}
+                         Valid on selected restaurants only{'\n'}
+                         Maximum discount limits apply
                     </Text>
                 </View>
 

@@ -24,10 +24,10 @@ type Props = {
 };
 
 const paymentMethods = [
-    { id: 'cod', name: 'Cash on Delivery', icon: '💵', description: 'Pay when you receive' },
-    { id: 'wallet', name: 'App Wallet', icon: '💼', balance: '₹24.50', disabled: true },
-    { id: 'gpay', name: 'Google Pay', icon: '🔵', description: 'UPI (Coming Soon)', disabled: true },
-    { id: 'card', name: '•••• 4242', icon: '💳', description: 'Visa (Coming Soon)', disabled: true },
+    { id: 'cod', name: 'Cash on Delivery', icon: '', description: 'Pay when you receive' },
+    { id: 'wallet', name: 'App Wallet', icon: '', balance: '24.50', disabled: true },
+    { id: 'gpay', name: 'Google Pay', icon: '', description: 'UPI (Coming Soon)', disabled: true },
+    { id: 'card', name: ' 4242', icon: 'Card', description: 'Visa (Coming Soon)', disabled: true },
 ];
 
 export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -173,7 +173,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.addressCard}>
-                        <Text style={styles.addressIcon}>🏠</Text>
+                        <Text style={styles.addressIcon}>Home</Text>
                         <View style={styles.addressInfo}>
                             <Text style={styles.addressLabel}>Home</Text>
                             <Text style={styles.addressText}>
@@ -200,7 +200,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                                     <Text style={styles.itemQuantity}>x{item.quantity}</Text>
                                 </View>
                                 <Text style={styles.itemPrice}>
-                                    ₹{(item.menuItem.price * item.quantity).toFixed(2)}
+                                    {(item.menuItem.price * item.quantity).toFixed(2)}
                                 </Text>
                             </View>
                         ))}
@@ -213,19 +213,19 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.billCard}>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Item Total</Text>
-                            <Text style={styles.billValue}>₹{subtotal.toFixed(2)}</Text>
+                            <Text style={styles.billValue}>{subtotal.toFixed(2)}</Text>
                         </View>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Delivery Fee</Text>
-                            <Text style={styles.billValue}>₹{deliveryFee.toFixed(2)}</Text>
+                            <Text style={styles.billValue}>{deliveryFee.toFixed(2)}</Text>
                         </View>
                         <View style={styles.billRow}>
                             <Text style={styles.discountLabel}>Promo Applied</Text>
-                            <Text style={styles.discountValue}>-₹{discount.toFixed(2)}</Text>
+                            <Text style={styles.discountValue}>-{discount.toFixed(2)}</Text>
                         </View>
                         <View style={[styles.billRow, styles.totalRow]}>
                             <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
+                            <Text style={styles.totalValue}>{total.toFixed(2)}</Text>
                         </View>
                     </View>
                 </View>
@@ -270,7 +270,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Place Order Button */}
             <View style={styles.footer}>
                 <View style={styles.secureText}>
-                    <Text style={styles.lockIcon}>🔒</Text>
+                    <Text style={styles.lockIcon}></Text>
                     <Text style={styles.secureLabel}>SECURE CHECKOUT</Text>
                 </View>
                 <TouchableOpacity
@@ -279,9 +279,9 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                     disabled={isProcessing}
                     activeOpacity={0.8}>
                     <Text style={styles.placeOrderText}>
-                        {isProcessing ? 'Processing...' : `PAY ₹${total.toFixed(2)}`}
+                        {isProcessing ? 'Processing...' : `PAY ${total.toFixed(2)}`}
                     </Text>
-                    {!isProcessing && <Text style={styles.arrowIcon}>→</Text>}
+                    {!isProcessing && <Text style={styles.arrowIcon}></Text>}
                 </TouchableOpacity>
             </View>
         </View>

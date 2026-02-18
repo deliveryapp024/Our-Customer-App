@@ -44,7 +44,7 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
             {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={handleGoHome}>
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeIcon}></Text>
             </TouchableOpacity>
 
             {/* Success Animation */}
@@ -76,10 +76,10 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.orderInfo}>
                         <Text style={styles.restaurantName}>{restaurantName}</Text>
                         <Text style={styles.orderDetails}>
-                            Order #{orderId} • ₹{total}
+                            Order #{orderId}  {total}
                         </Text>
                         <View style={styles.addressRow}>
-                            <Text style={styles.locationIcon}>📍</Text>
+                            <Text style={styles.locationIcon}></Text>
                             <Text style={styles.addressText}>Home, Camp Area</Text>
                         </View>
                     </View>
@@ -99,7 +99,7 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Map Preview */}
             <View style={styles.mapContainer}>
                 <View style={styles.mapPlaceholder}>
-                    <Text style={styles.mapIcon}>🗺️</Text>
+                    <Text style={styles.mapIcon}></Text>
                     <View style={styles.preparingBadge}>
                         <View style={styles.preparingDot} />
                         <Text style={styles.preparingText}>PREPARING YOUR MEAL</Text>
@@ -109,7 +109,7 @@ export const OrderSuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
             {/* Track Order Button */}
             <TouchableOpacity style={styles.trackButton} onPress={handleTrackOrder}>
-                <Text style={styles.trackIcon}>🔄</Text>
+                <Text style={styles.trackIcon}>Reorder</Text>
                 <Text style={styles.trackText}>TRACK MY ORDER</Text>
             </TouchableOpacity>
 

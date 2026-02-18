@@ -295,7 +295,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                 {Platform.OS === 'android' && smsStatus === 'listening' && (
                     <View style={styles.smsHint}>
                         <Text style={styles.smsHintText}>
-                            📱 Waiting for OTP SMS...
+                             Waiting for OTP SMS...
                         </Text>
                         <Text style={styles.smsHintSubtext}>
                             You'll see a system popup when SMS arrives
@@ -304,7 +304,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                 )}
                 {smsStatus === 'denied' && (
                     <View style={[styles.smsHint, styles.smsHintWarning]}>
-                        <Text style={styles.smsHintText}>⚠️ SMS access denied</Text>
+                        <Text style={styles.smsHintText}>[!] SMS access denied</Text>
                         <Text style={styles.smsHintSubtext}>
                             Please enter OTP manually
                         </Text>
@@ -312,12 +312,12 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) =>
                 )}
                 {smsStatus === 'received' && (
                     <View style={[styles.smsHint, styles.smsHintSuccess]}>
-                        <Text style={styles.smsHintText}>✅ OTP auto-filled!</Text>
+                        <Text style={styles.smsHintText}>OK OTP auto-filled!</Text>
                     </View>
                 )}
                 {smsStatus === 'error' && smsError && (
                     <View style={[styles.smsHint, styles.smsHintError]}>
-                        <Text style={styles.smsHintText}>❌ {smsError}</Text>
+                        <Text style={styles.smsHintText}>X {smsError}</Text>
                     </View>
                 )}
 

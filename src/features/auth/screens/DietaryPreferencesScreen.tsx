@@ -24,10 +24,10 @@ interface PreferenceOption {
 }
 
 const preferences: PreferenceOption[] = [
-    { id: 'veg', label: 'Vegetarian', icon: '🥗', color: '#00C853' },
-    { id: 'non-veg', label: 'Non-Vegetarian', icon: '🍖', color: '#FF5252' },
-    { id: 'vegan', label: 'Vegan', icon: '🌱', color: '#00E5FF' },
-    { id: 'eggetarian', label: 'Eggetarian', icon: '🥚', color: '#FFB300' },
+    { id: 'veg', label: 'Vegetarian', icon: '', color: '#00C853' },
+    { id: 'non-veg', label: 'Non-Vegetarian', icon: '', color: '#FF5252' },
+    { id: 'vegan', label: 'Vegan', icon: '', color: '#00E5FF' },
+    { id: 'eggetarian', label: 'Eggetarian', icon: '', color: '#FFB300' },
 ];
 
 export const DietaryPreferencesScreen: React.FC<Props> = ({ navigation }) => {
@@ -93,7 +93,7 @@ export const DietaryPreferencesScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.optionLabel}>{pref.label}</Text>
                             {selected.includes(pref.id) && (
                                 <View style={[styles.checkmark, { backgroundColor: pref.color }]}>
-                                    <Text style={styles.checkmarkIcon}>✓</Text>
+                                    <Text style={styles.checkmarkIcon}></Text>
                                 </View>
                             )}
                         </TouchableOpacity>

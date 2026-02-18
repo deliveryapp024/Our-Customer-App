@@ -50,7 +50,7 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
                     <Text style={styles.headerTitle}>99 Store</Text>
                 </View>
                 <TouchableOpacity style={styles.cartButton}>
-                    <Text style={styles.cartIcon}>🛒</Text>
+                    <Text style={styles.cartIcon}></Text>
                     <View style={styles.cartBadge}>
                         <Text style={styles.cartBadgeText}>3</Text>
                     </View>
@@ -59,9 +59,9 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Value Banner */}
             <View style={styles.valueBanner}>
-                <Text style={styles.bannerEmoji}>💰</Text>
+                <Text style={styles.bannerEmoji}></Text>
                 <Text style={styles.bannerText}>
-                    Everything at just <Text style={styles.bannerPrice}>₹0.99</Text> or less!
+                    Everything at just <Text style={styles.bannerPrice}>0.99</Text> or less!
                 </Text>
             </View>
 
@@ -92,7 +92,7 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
                     {products.map((product) => (
                         <View key={product.id} style={styles.productCard}>
                             <View style={styles.priceBadge}>
-                                <Text style={styles.priceBadgeText}>₹0.99</Text>
+                                <Text style={styles.priceBadgeText}>0.99</Text>
                             </View>
                             <Image
                                 source={{ uri: product.image }}
@@ -112,7 +112,7 @@ export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Savings Banner */}
                 <View style={styles.savingsBanner}>
-                    <Text style={styles.savingsIcon}>🎉</Text>
+                    <Text style={styles.savingsIcon}></Text>
                     <View style={styles.savingsContent}>
                         <Text style={styles.savingsTitle}>You're saving big!</Text>
                         <Text style={styles.savingsText}>

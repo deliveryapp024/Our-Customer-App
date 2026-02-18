@@ -9,6 +9,20 @@ import {
     Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+    ShoppingBag,
+    Heart,
+    MapPin,
+    CreditCard,
+    Gift,
+    Gear,
+    Question,
+    PencilSimple,
+    CaretRight,
+    SignOut,
+    CurrencyInr,
+    Receipt,
+} from 'phosphor-react-native';
 import { useAuthStore } from '../../../store/authStore';
 import { SCREENS } from '../../../constants';
 import { getAvatarOptionById } from '../../../constants/avatars';
@@ -18,13 +32,13 @@ type Props = {
 };
 
 const menuItems = [
-    { id: '1', icon: '??', label: 'Your Orders', screen: SCREENS.ORDER_HISTORY },
-    { id: '2', icon: '??', label: 'Favorites', screen: SCREENS.FAVORITES },
-    { id: '3', icon: '??', label: 'Saved Addresses', screen: SCREENS.SAVED_ADDRESSES },
-    { id: '4', icon: '??', label: 'Payments', screen: SCREENS.PAYMENTS_HUB },
-    { id: '5', icon: '??', label: 'Refer & Earn', screen: null },
-    { id: '6', icon: '??', label: 'Settings', screen: SCREENS.SETTINGS },
-    { id: '7', icon: '?', label: 'Help & Support', screen: SCREENS.HELP_SUPPORT },
+    { id: '1', Icon: Receipt, label: 'Your Orders', screen: SCREENS.ORDER_HISTORY },
+    { id: '2', Icon: Heart, label: 'Favorites', screen: SCREENS.FAVORITES },
+    { id: '3', Icon: MapPin, label: 'Saved Addresses', screen: SCREENS.SAVED_ADDRESSES },
+    { id: '4', Icon: CreditCard, label: 'Payments', screen: SCREENS.PAYMENTS_HUB },
+    { id: '5', Icon: Gift, label: 'Refer & Earn', screen: null },
+    { id: '6', Icon: Gear, label: 'Settings', screen: SCREENS.SETTINGS },
+    { id: '7', Icon: Question, label: 'Help & Support', screen: SCREENS.HELP_SUPPORT },
 ];
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
@@ -56,7 +70,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         return (
             <Text style={styles.avatarText}>
-                {user?.name?.charAt(0)?.toUpperCase() || '??'}
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </Text>
         );
     };
@@ -68,7 +82,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Profile</Text>
                 <TouchableOpacity style={styles.editButton}>
-                    <Text style={styles.editIcon}>??</Text>
+                    <PencilSimple size={18} color="#FFFFFF" weight="bold" />
                 </TouchableOpacity>
             </View>
 
@@ -88,7 +102,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                         <Text style={styles.membershipTitle}>Swiggy One Member</Text>
                         <Text style={styles.membershipSubtitle}>Free delivery on all orders</Text>
                     </View>
-                    <Text style={styles.membershipArrow}>?</Text>
+                    <CaretRight size={20} color="#FFB300" weight="bold" />
                 </TouchableOpacity>
 
                 <View style={styles.statsContainer}>
@@ -98,7 +112,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>?240</Text>
+                        <View style={styles.statValueRow}>
+                            <CurrencyInr size={20} color="#00E5FF" weight="bold" />
+                            <Text style={styles.statValue}>240</Text>
+                        </View>
                         <Text style={styles.statLabel}>Saved</Text>
                     </View>
                     <View style={styles.statDivider} />
@@ -109,20 +126,23 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 <View style={styles.menuContainer}>
-                    {menuItems.map((item) => (
-                        <TouchableOpacity
-                            key={item.id}
-                            style={styles.menuItem}
-                            onPress={() => handleMenuPress(item.screen)}>
-                            <Text style={styles.menuIcon}>{item.icon}</Text>
-                            <Text style={styles.menuLabel}>{item.label}</Text>
-                            <Text style={styles.menuArrow}>?</Text>
-                        </TouchableOpacity>
-                    ))}
+                    {menuItems.map((item) => {
+                        const IconComponent = item.Icon;
+                        return (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.menuItem}
+                                onPress={() => handleMenuPress(item.screen)}>
+                                <IconComponent size={20} color="#00E5FF" weight="regular" style={styles.menuIcon} />
+                                <Text style={styles.menuLabel}>{item.label}</Text>
+                                <CaretRight size={16} color="#9E9E9E" weight="bold" />
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutIcon}>??</Text>
+                    <SignOut size={18} color="#FF5252" weight="bold" />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
@@ -159,9 +179,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#2A2A2A',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    editIcon: {
-        fontSize: 16,
     },
     profileCard: {
         flexDirection: 'row',
@@ -250,10 +267,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#9E9E9E',
     },
-    membershipArrow: {
-        fontSize: 20,
-        color: '#FFB300',
-    },
     statsContainer: {
         flexDirection: 'row',
         backgroundColor: '#1A1A1A',
@@ -270,6 +283,11 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#00E5FF',
+        marginBottom: 4,
+    },
+    statValueRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 4,
     },
     statLabel: {
@@ -292,17 +310,12 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     menuIcon: {
-        fontSize: 20,
         marginRight: 12,
     },
     menuLabel: {
         flex: 1,
         fontSize: 16,
         color: '#FFFFFF',
-    },
-    menuArrow: {
-        fontSize: 16,
-        color: '#9E9E9E',
     },
     logoutButton: {
         flexDirection: 'row',
@@ -315,14 +328,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#FF525233',
     },
-    logoutIcon: {
-        fontSize: 18,
-        marginRight: 8,
-    },
     logoutText: {
         fontSize: 16,
         color: '#FF5252',
         fontWeight: '500',
+        marginLeft: 8,
     },
     versionText: {
         fontSize: 12,

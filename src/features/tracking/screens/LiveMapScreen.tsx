@@ -64,13 +64,13 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             <View style={styles.mapContainer}>
                 <View style={styles.mapPlaceholder}>
                     <View style={[styles.marker, { top: 40, left: 60, backgroundColor: '#FF5722' }]}>
-                        <Text>🍕</Text>
+                        <Text></Text>
                     </View>
                     <View style={[styles.marker, { top: 100, left: 140, backgroundColor: '#00E5FF' }]}>
-                        <Text>🛵</Text>
+                        <Text></Text>
                     </View>
                     <View style={[styles.marker, { top: 160, right: 60, backgroundColor: '#00C853' }]}>
-                        <Text>🏠</Text>
+                        <Text>Home</Text>
                     </View>
                 </View>
                 <View style={styles.etaOverlay}>
@@ -83,10 +83,10 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 <Image source={{ uri: MOCK_PARTNER.image }} style={styles.partnerImage} />
                 <View style={styles.partnerDetails}>
                     <Text style={styles.partnerName}>{MOCK_PARTNER.name}</Text>
-                    <Text style={styles.vehicleText}>★ {MOCK_PARTNER.rating} • {MOCK_PARTNER.vehicleNumber}</Text>
+                    <Text style={styles.vehicleText}> {MOCK_PARTNER.rating}  {MOCK_PARTNER.vehicleNumber}</Text>
                 </View>
                 <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL(`tel:${MOCK_PARTNER.phone}`)}>
-                    <Text>📞</Text>
+                    <Text></Text>
                 </TouchableOpacity>
             </View>
 
@@ -101,7 +101,7 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             </View>
 
             <TouchableOpacity style={styles.detailsButton} onPress={() => navigation.navigate('OrderDetails')}>
-                <Text style={styles.detailsText}>View Order Details →</Text>
+                <Text style={styles.detailsText}>View Order Details </Text>
             </TouchableOpacity>
         </SafeAreaView>
     );

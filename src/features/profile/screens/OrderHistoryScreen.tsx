@@ -11,9 +11,12 @@ import {
     RefreshControl,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ShoppingBag, ArrowClockwise, SignIn } from 'phosphor-react-native';
 import { SCREENS } from '../../../constants';
 import { BackButton } from '../../../components/ui/BackButton';
-import { ordersApi, Order as ApiOrder } from '../../../api';
+import { ordersApi, Order as ApiOrder, setAuthToken } from '../../../api';
+import { useAuthStore } from '../../../store/authStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -35,11 +38,14 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isAuthError, setIsAuthError] = useState(false);
+    const { logout } = useAuthStore();
 
     // Fetch orders from API
     const fetchOrders = async (isRefresh = false) => {
         if (!isRefresh) setLoading(true);
         setError(null);
+        setIsAuthError(false);
 
         const result = await ordersApi.getOrders();
         
@@ -51,18 +57,35 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                 restaurantName: 'Restaurant', // TODO: Get from seller data
                 restaurantImage: '', // TODO: Get from seller data
                 items: `${order.items.length} items`,
-                total: `₹${order.totalPrice.toFixed(2)}`,
+                total: `Rs.${order.totalPrice.toFixed(2)}`,
                 date: new Date(order.createdAt).toLocaleDateString(),
                 status: mapOrderStatus(order.status),
             }));
             setOrders(apiOrders);
         } else {
+            // Check if it's an auth error
+            const errorMsg = result.error || '';
+            const isAuth = 
+                errorMsg.toLowerCase().includes('token') || 
+                errorMsg.toLowerCase().includes('unauthorized') ||
+                errorMsg.toLowerCase().includes('auth');
+            
+            setIsAuthError(isAuth);
             setError(result.error || 'Failed to load orders');
             setOrders([]); // Empty state on error
         }
 
         setLoading(false);
         setRefreshing(false);
+    };
+
+    const handleLogin = async () => {
+        // Clear auth and redirect to login
+        await logout();
+        navigation.reset({
+            index: 0,
+            routes: [{ name: SCREENS.WELCOME }],
+        });
     };
 
     // Map API status to display status
@@ -167,17 +190,34 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 )}
 
-                {/* Error State */}
-                {error && __DEV__ && (
+                {/* Error State - User Friendly */}
+                {error && !isAuthError && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>Debug: {error}</Text>
+                        <Text style={styles.errorTitle}>Unable to load orders</Text>
+                        <Text style={styles.errorSubtitle}>Please check your connection and try again</Text>
+                        <TouchableOpacity style={styles.retryButton} onPress={() => fetchOrders(true)}>
+                            <ArrowClockwise size={18} color="#000000" weight="bold" />
+                            <Text style={styles.retryButtonText}>Retry</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Auth Error State - Redirect to Login */}
+                {isAuthError && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorTitle}>Session Expired</Text>
+                        <Text style={styles.errorSubtitle}>Please sign in again to view your orders</Text>
+                        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                            <SignIn size={18} color="#000000" weight="bold" />
+                            <Text style={styles.loginButtonText}>Sign In</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
 
                 {/* Empty State */}
-                {!loading && orders.length === 0 && (
+                {!loading && !error && !isAuthError && orders.length === 0 && (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyIcon}>📦</Text>
+                        <ShoppingBag size={64} color="#00E5FF" weight="thin" />
                         <Text style={styles.emptyTitle}>No Orders Yet</Text>
                         <Text style={styles.emptyText}>
                             You haven't placed any orders yet.{'\n'}
@@ -222,7 +262,6 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                             <TouchableOpacity
                                 style={styles.reorderButton}
                                 onPress={() => handleReorder(order)}>
-                                <Text style={styles.reorderIcon}>🔄</Text>
                                 <Text style={styles.reorderText}>Reorder</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.detailsButton}>
@@ -345,10 +384,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 25,
     },
-    reorderIcon: {
-        fontSize: 14,
-        marginRight: 6,
-    },
     reorderText: {
         fontSize: 14,
         fontWeight: '600',
@@ -374,12 +409,50 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     errorContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+        paddingHorizontal: 32,
     },
-    errorText: {
-        fontSize: 12,
-        color: '#FF5252',
+    errorTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 8,
+    },
+    errorSubtitle: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    retryButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#00E5FF',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 24,
+        gap: 8,
+    },
+    retryButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#000000',
+    },
+    loginButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#00E5FF',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 24,
+        gap: 8,
+    },
+    loginButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#000000',
     },
     emptyContainer: {
         alignItems: 'center',
@@ -387,14 +460,11 @@ const styles = StyleSheet.create({
         paddingVertical: 60,
         paddingHorizontal: 32,
     },
-    emptyIcon: {
-        fontSize: 64,
-        marginBottom: 16,
-    },
     emptyTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#FFFFFF',
+        marginTop: 16,
         marginBottom: 8,
     },
     emptyText: {

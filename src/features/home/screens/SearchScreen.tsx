@@ -104,13 +104,13 @@ export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
                 <BackButton onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Search & Trends</Text>
                 <TouchableOpacity style={styles.cartButton}>
-                    <Text style={styles.cartIcon}>🛒</Text>
+                    <Text style={styles.cartIcon}></Text>
                 </TouchableOpacity>
             </View>
 
             {/* Search Input */}
             <View style={styles.searchContainer}>
-                <Text style={styles.searchIcon}>🔍</Text>
+                <Text style={styles.searchIcon}>Search</Text>
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search biryani, pizza, or dessert"
@@ -120,7 +120,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
                     autoFocus
                 />
                 <TouchableOpacity style={styles.voiceButton}>
-                    <Text style={styles.voiceIcon}>🎤</Text>
+                    <Text style={styles.voiceIcon}></Text>
                 </TouchableOpacity>
             </View>
 
@@ -150,7 +150,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
                                             });
                                         }}
                                     >
-                                        <Text style={styles.suggestionIcon}>🍽️</Text>
+                                        <Text style={styles.suggestionIcon}></Text>
                                         <View style={{ flex: 1 }}>
                                             <Text style={styles.suggestionText}>{item.name}</Text>
                                             {!!item.price && (
@@ -186,7 +186,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
                                             // TODO: Navigate to search results
                                         }}>
                                         <Text style={styles.suggestionIcon}>
-                                            {item.type === 'product' ? '🍽️' : item.type === 'category' ? '📂' : '🏪'}
+                                            {item.type === 'product' ? '' : item.type === 'category' ? '' : ''}
                                         </Text>
                                         <Text style={styles.suggestionText}>{item.name}</Text>
                                         <Text style={styles.suggestionType}>{item.type}</Text>
@@ -216,7 +216,7 @@ export const SearchScreen: React.FC<Props> = ({ navigation, route }) => {
                                 <TouchableOpacity key={item} style={styles.tag}>
                                     <Text style={styles.tagText}>{item}</Text>
                                     <TouchableOpacity onPress={() => removeSearch(item)}>
-                                        <Text style={styles.tagClose}>×</Text>
+                                        <Text style={styles.tagClose}></Text>
                                     </TouchableOpacity>
                                 </TouchableOpacity>
                             ))}

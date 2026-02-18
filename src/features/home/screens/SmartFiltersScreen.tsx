@@ -86,7 +86,7 @@ export const SmartFiltersScreen: React.FC<Props> = ({ navigation, onApplyFilters
                 <TouchableOpacity
                     style={styles.closeButton}
                     onPress={() => navigation.goBack()}>
-                    <Text style={styles.closeIcon}>✕</Text>
+                    <Text style={styles.closeIcon}></Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Filters</Text>
                 <TouchableOpacity onPress={handleClear}>
@@ -124,7 +124,7 @@ export const SmartFiltersScreen: React.FC<Props> = ({ navigation, onApplyFilters
                     <Text style={styles.sectionTitle}>Quick Filters</Text>
                     <View style={styles.switchRow}>
                         <View style={styles.switchInfo}>
-                            <Text style={styles.switchLabel}>🥬 Pure Veg</Text>
+                            <Text style={styles.switchLabel}> Pure Veg</Text>
                             <Text style={styles.switchDescription}>Show only vegetarian</Text>
                         </View>
                         <Switch
@@ -136,7 +136,7 @@ export const SmartFiltersScreen: React.FC<Props> = ({ navigation, onApplyFilters
                     </View>
                     <View style={styles.switchRow}>
                         <View style={styles.switchInfo}>
-                            <Text style={styles.switchLabel}>🚚 Free Delivery</Text>
+                            <Text style={styles.switchLabel}> Free Delivery</Text>
                             <Text style={styles.switchDescription}>No delivery charges</Text>
                         </View>
                         <Switch
@@ -184,7 +184,7 @@ export const SmartFiltersScreen: React.FC<Props> = ({ navigation, onApplyFilters
                                     selectedRating === rating && styles.ratingChipSelected,
                                 ]}
                                 onPress={() => setSelectedRating(rating)}>
-                                <Text style={styles.starIcon}>★</Text>
+                                <Text style={styles.starIcon}></Text>
                                 <Text
                                     style={[
                                         styles.ratingText,
