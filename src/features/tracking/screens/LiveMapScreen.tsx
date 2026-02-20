@@ -25,6 +25,16 @@ const MOCK_PARTNER = {
 };
 
 export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    const [eta, setEta] = useState(8);
+    const currentStep = 2;
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setEta((prev) => (prev > 1 ? prev - 1 : prev));
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     if (!FEATURE_FLAGS.ENABLE_LIVE_MAP) {
         return (
             <ComingSoonScreen
@@ -33,16 +43,6 @@ export const LiveMapScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             />
         );
     }
-
-    const [eta, setEta] = useState(8);
-    const currentStep = 2;
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (eta > 1) setEta((prev) => prev - 1);
-        }, 60000);
-        return () => clearInterval(interval);
-    }, [eta]);
 
     const trackingSteps = [
         { id: 1, title: 'Order Confirmed', time: '12:30 PM', completed: true },

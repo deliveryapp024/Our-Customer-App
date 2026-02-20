@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -38,6 +38,13 @@ const getInitialSteps = (): TrackingStep[] => [
     { id: '5', title: 'Delivered', subtitle: 'Enjoy your meal!', time: '', isCompleted: false, isActive: false },
 ];
 
+const POLLING_CONFIG = {
+    initialInterval: 5000,
+    maxInterval: 30000,
+    backoffMultiplier: 1.5,
+    terminalStates: ['delivered', 'cancelled', 'seller_rejected'],
+};
+
 export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
     const orderId = route.params?.orderId;
     const [steps, setSteps] = useState<TrackingStep[]>(getInitialSteps());
@@ -54,16 +61,41 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
         longitudeDelta: 0.06,
     };
 
-    // Polling configuration
-    const POLLING_CONFIG = {
-        initialInterval: 5000,    // 5 seconds
-        maxInterval: 30000,       // 30 seconds max
-        backoffMultiplier: 1.5,   // Increase by 50% each time
-        terminalStates: ['delivered', 'cancelled', 'seller_rejected'],
-    };
+    const getStepStatus = useCallback((title: string): string => {
+        switch (title) {
+            case 'Order Placed':
+                return 'pending_seller_approval';
+            case 'Order Confirmed':
+                return 'confirmed';
+            case 'Being Prepared':
+                return 'confirmed';
+            case 'Out for Delivery':
+                return 'arriving';
+            case 'Delivered':
+                return 'delivered';
+            default:
+                return '';
+        }
+    }, []);
+
+    const updateTrackingSteps = useCallback((status: string) => {
+        const updatedSteps = getInitialSteps().map((step) => {
+            const stepStatus = getStepStatus(step.title);
+            const statusOrder = ['pending_seller_approval', 'available', 'confirmed', 'arriving', 'delivered'];
+            const currentIndex = statusOrder.indexOf(status);
+            const stepIndex = statusOrder.indexOf(stepStatus);
+
+            return {
+                ...step,
+                isCompleted: stepIndex <= currentIndex && stepIndex !== -1,
+                isActive: stepStatus === status,
+            };
+        });
+        setSteps(updatedSteps);
+    }, [getStepStatus]);
 
     // Fetch order details
-    const fetchOrderDetails = async (isBackgroundPoll = false) => {
+    const fetchOrderDetails = useCallback(async (isBackgroundPoll = false) => {
         if (!orderId) return;
         
         // Extract order ID from orderNumber format (#XXXX)
@@ -92,16 +124,21 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
         }
         
         return result.success ? result.data : null;
-    };
+    }, [orderId, updateTrackingSteps]);
 
     // Initial fetch
     useEffect(() => {
         fetchOrderDetails();
-    }, [orderId]);
+    }, [fetchOrderDetails]);
 
     // Polling with backoff
     useEffect(() => {
-        if (!orderId || !order) return;
+        const currentStatus = order?.status;
+        if (!orderId || !currentStatus) return;
+        if (POLLING_CONFIG.terminalStates.includes(currentStatus)) {
+            setIsPolling(false);
+            return;
+        }
 
         let pollInterval = POLLING_CONFIG.initialInterval;
         let pollTimer: NodeJS.Timeout | null = null;
@@ -111,8 +148,8 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
             if (!isActive) return;
 
             // Stop polling if order reached terminal state
-            if (order && POLLING_CONFIG.terminalStates.includes(order.status)) {
-                console.log('[OrderTracking] Polling stopped - terminal state:', order.status);
+            if (POLLING_CONFIG.terminalStates.includes(currentStatus)) {
+                console.log('[OrderTracking] Polling stopped - terminal state:', currentStatus);
                 setIsPolling(false);
                 return;
             }
@@ -122,8 +159,8 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
 
             if (updatedOrder && isActive) {
                 // Check if status changed
-                if (updatedOrder.status !== order.status) {
-                    console.log('[OrderTracking] Status changed:', order.status, '->', updatedOrder.status);
+                if (updatedOrder.status !== currentStatus) {
+                    console.log('[OrderTracking] Status changed:', currentStatus, '->', updatedOrder.status);
                     // Reset interval on status change for quicker updates
                     pollInterval = POLLING_CONFIG.initialInterval;
                 } else {
@@ -147,8 +184,9 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
             if (pollTimer) {
                 clearTimeout(pollTimer);
             }
+            setIsPolling(false);
         };
-    }, [orderId, order?.status]);
+    }, [orderId, order?.status, fetchOrderDetails]);
 
     // Handle app background/foreground (simplified - full implementation needs AppState)
     useEffect(() => {
@@ -157,41 +195,6 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
         console.log('[OrderTracking] Polling active:', isPolling);
     }, [isPolling]);
 
-    // Update tracking steps based on order status
-    const updateTrackingSteps = (status: string) => {
-        const updatedSteps = getInitialSteps().map((step, index) => {
-            const stepStatus = getStepStatus(step.title);
-            const statusOrder = ['pending_seller_approval', 'available', 'confirmed', 'arriving', 'delivered'];
-            const currentIndex = statusOrder.indexOf(status);
-            const stepIndex = statusOrder.indexOf(stepStatus);
-
-            return {
-                ...step,
-                isCompleted: stepIndex <= currentIndex && stepIndex !== -1,
-                isActive: stepStatus === status,
-            };
-        });
-        setSteps(updatedSteps);
-    };
-
-    // Map step title to API status
-    const getStepStatus = (title: string): string => {
-        switch (title) {
-            case 'Order Placed':
-                return 'pending_seller_approval';
-            case 'Order Confirmed':
-                return 'confirmed';
-            case 'Being Prepared':
-                return 'confirmed';
-            case 'Out for Delivery':
-                return 'arriving';
-            case 'Delivered':
-                return 'delivered';
-            default:
-                return '';
-        }
-    };
-
     useEffect(() => {
         // Simulate countdown
         const interval = setInterval(() => {
@@ -199,10 +202,6 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
         }, 60000); // Every minute
         return () => clearInterval(interval);
     }, []);
-
-    const handleRateOrder = () => {
-        navigation.navigate(SCREENS.RATE_REVIEW, { orderId });
-    };
 
     // Show loading state
     if (loading) {
