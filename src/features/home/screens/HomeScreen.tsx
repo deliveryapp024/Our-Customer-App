@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
     ScrollView,
     TouchableOpacity,
-    TextInput,
     Image,
     StatusBar,
     StyleSheet,
     Dimensions,
     FlatList,
-    ActivityIndicator,
     Linking,
     RefreshControl,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MagnifyingGlass, Lightning, Storefront, Tag, Hamburger, Pizza, IceCream, Coffee, BowlFood, CookingPot, Clock, Star } from 'phosphor-react-native';
+import { MagnifyingGlass, Lightning, Storefront, Tag, Hamburger, Pizza, IceCream, Coffee, BowlFood, CookingPot, CaretDown, Microphone } from 'phosphor-react-native';
 import { SCREENS, FEATURE_FLAGS } from '../../../constants';
-import { homeApi, HomeResponse, Restaurant } from '../../../api';
+import { homeApi, HomeResponse, Restaurant, rescueApi } from '../../../api';
 import type { MainCard } from '../../../api/homeApi';
 import { AnimatedButton } from '../../../components/ui/AnimatedButton';
 import { AnimatedCard } from '../../../components/ui/AnimatedCard';
@@ -25,6 +23,7 @@ import { GlassmorphismCard } from '../../../components/ui/GlassmorphismCard';
 import { HomeSkeleton } from '../../../components/ui/Skeleton';
 import { AnimatedRestaurantCard } from '../../../components/ui/AnimatedRestaurantCard';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useAuthStore } from '../../../store/authStore';
 
 const { width } = Dimensions.get('window');
 
@@ -42,16 +41,6 @@ const categoryIcons: Record<string, React.FC<{ size?: number; color?: string; we
     '6': CookingPot,
 };
 
-// Mock data
-const categories = [
-    { id: '1', name: 'Burgers', icon: 'hamburger' },
-    { id: '2', name: 'Pizza', icon: 'pizza' },
-    { id: '3', name: 'Desserts', icon: 'dessert' },
-    { id: '4', name: 'Drinks', icon: 'drinks' },
-    { id: '5', name: 'Biryani', icon: 'biryani' },
-    { id: '6', name: 'Chinese', icon: 'chinese' },
-];
-
 // Quick actions with Phosphor icons
 const quickActions = [
     { id: '1', name: 'Bolt', IconComponent: Lightning, color: '#00E5FF', enabled: FEATURE_FLAGS.ENABLE_BOLT_DELIVERY },
@@ -66,60 +55,15 @@ const clampNumber = (value: unknown, min: number, max: number): number | undefin
     return Math.max(min, Math.min(max, n));
 };
 
-// Mock restaurants (dev-only fallback). For pilot/release we prefer real API data.
-const restaurants = [
-    {
-        id: '1',
-        name: 'The Gourmet Kitchen',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCh2fIAp9oyd2iKcXdCrUMWQo-idGSY6th2lWcn9JIWULsmhc9WMTTqCmUdFV-PqxqxB9w5UEdfyYF0-jhhPpJz1GJhYuuyTp3snHteh1RUOXUvzOsfLXdiBsMXmrUHqwfmNDqOc6L2jBSJiNSrv844oTPWPbTQDs6snW2cs85oeWC0vTEegACwjG3td5PpsC8Pa07tJPbnHgLKopcnHh7Bcrrm4eLldCAfitrNBxdqO3xzNizP-0HxQEu4LbZBZprZfRFIO3blYvEi',
-        rating: 4.8,
-        cuisines: ['Continental', 'Italian'],
-        deliveryTime: '20-30 mins',
-        priceLevel: '',
-        hasOffer: true,
-        offerText: 'FREE DELIVERY',
-    },
-    {
-        id: '2',
-        name: 'Urban Bites',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBg1Hac2hi31tHaIUsrco1AUdt9EwRhBjTeJ3P0Wh5_6TYMKDCzlx8UHu4liDZJoxSLtlN9yUJMirrP59RBel6fq_yvagtQ2XsWO7CQuEnAgYLYtyYWl46XdXVo-pDxv1HDLsghJ-asBzkhLggH7_cKYmWOkbEeeuj1jHPnpBxb0EwkPM_gDt3d6abw5g5zkPkHHLjcwt4zcH12yKVWS9vGeZqAQes3BSZwlMiZJiq9rYZYvnMQFd_eUcWTbc2KvdcRF7B1Xu9gUcUq',
-        rating: 4.5,
-        cuisines: ['Fast Food', 'American'],
-        deliveryTime: '15-25 mins',
-        priceLevel: '',
-        hasOffer: false,
-    },
-    {
-        id: '3',
-        name: 'Cyan Spice',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI-c8QszP_pPOf7jrVL7irkdep3O0vXq7fcjUszzjAPHTYBS9_kjmyeo1C8rklt2ijyKoSf8NjFzyODh_PkBjP-EIA4m-EKe2vKa-dD-AxDu9CvyT99y_8pbR_FWCKEeMhU6PHhXMx3E7O2vsHKBYN34Dxps657IB_gJptLzaHnSar11u5njYhUEfV0NPB07XzvYB_P0JCEer0iC38mDX-ilCaGtX6Hjtge7WeB39DbZ2wsUSETZKRYjGETA9eiaPUmRLEIrb4FBUW',
-        rating: 4.6,
-        cuisines: ['Thai', 'Asian'],
-        deliveryTime: '25-35 mins',
-        priceLevel: '',
-        hasOffer: true,
-        offerText: '20% OFF',
-    },
-    {
-        id: '4',
-        name: 'Paradise Biryani',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDL_hv9NIrd8zZtdLBqQHd-5MAAQSZMqYtMgg9wmoQSUBWyydGORerIaxcxEZPObCaVmlJt7-T1Fpn_oeLFSW-qjcvK69sKfe-QJPFj7Vhnd_5OTsKvcRAHXmFdPVdJLkOcR_XyZ5oos10D-T81uS-b98KedNVLtQvAvnWv4cLponieo9yYw5ZrBAGjdoqn9wTaY4NZGOomdAkK8rVyVUtTT2RfZpdzE6UOhEe_2QhmCJRL_deG1zh8rt4CvLWMg_XI5yLBwogF944',
-        rating: 4.9,
-        cuisines: ['Indian', 'Mughal'],
-        deliveryTime: '30-40 mins',
-        priceLevel: '',
-        hasOffer: false,
-    },
-];
-
-
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const [location] = useState('Camp, Belagavi');
     const [homeData, setHomeData] = useState<HomeResponse | null>(null);
     const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
+    const [rescueItems, setRescueItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const user = useAuthStore((state) => state.user);
 
     // Scroll tracking for 3D tilt effect
     const scrollY = useSharedValue(0);
@@ -136,13 +80,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
         setError(null);
         
-        const [homeResult, nearbyResult] = await Promise.all([
+        const [homeResult, nearbyResult, rescueResponse] = await Promise.all([
             homeApi.fetchHome(),
             homeApi.fetchNearbyBranches({
                 latitude: 15.8497,
                 longitude: 74.4977,
                 radius: 15,
             }),
+            rescueApi.getActiveRescue(),
         ]);
 
         if (homeResult.success) {
@@ -151,9 +96,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         if (nearbyResult.success) {
             setNearbyRestaurants(Array.isArray(nearbyResult.data) ? nearbyResult.data : []);
         }
+        if (rescueResponse.success) {
+            const rescueData = rescueResponse.data;
+            setRescueItems(rescueData && Array.isArray((rescueData as any).items) ? (rescueData as any).items : []);
+        }
 
-        if (!homeResult.success && !nearbyResult.success) {
-            setError(homeResult.error || nearbyResult.error || 'Failed to load home data');
+        if (!homeResult.success && !nearbyResult.success && !rescueResponse.success) {
+            setError(homeResult.error || nearbyResult.error || rescueResponse.error || 'Failed to load home data');
         }
         
         if (!isRefresh) {
@@ -172,15 +121,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         setRefreshing(false);
     };
 
-    // Get categories from API or fallback to mock
+    // Get categories from API only
     const displayCategories = homeData?.sections?.find(s => s.type === 'category_grid')?.data?.tiles?.map((tile: any) => ({
         id: String(tile?.id || tile?.categoryId || tile?.name),
         name: tile?.name || tile?.label || 'Category',
         icon: tile?.icon || '',
-    })) || categories;
-
-    // Get banner items from API or empty
-    const bannerItems = homeData?.sections?.find(s => s.type === 'banner_carousel')?.data?.items || [];
+    })) || [];
 
     const mainCards =
         (homeData?.sections?.find((s) => s.type === 'main_cards')?.data?.cards as MainCard[] | undefined) ?? [];
@@ -223,13 +169,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const apiRestaurantsFromHome =
         homeData?.sections?.find(s => s.type === 'restaurant_list')?.data?.restaurants || [];
 
-    // Prefer dedicated seller endpoint, then /home sections, then dev-only fallback.
+    // Prefer dedicated seller endpoint, then /home sections.
     const displayRestaurants =
         (nearbyRestaurants.length > 0)
             ? nearbyRestaurants
-            : (apiRestaurantsFromHome.length > 0)
-                ? apiRestaurantsFromHome
-                : (error ? (__DEV__ ? restaurants : []) : []);
+            : apiRestaurantsFromHome;
 
     // New animated restaurant card with staggered entrance and 3D tilt
     const renderRestaurantCard = ({ item, index }: { item: any; index: number }) => (
@@ -254,13 +198,15 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         <Text style={styles.locationLabel}>{location}</Text>
                         <Text style={styles.locationAddress}>Home  45-2/A Main Street</Text>
                     </View>
-                    <Text style={styles.dropdownIcon}></Text>
+                    <CaretDown size={12} color="#9E9E9E" weight="bold" style={styles.dropdownIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={styles.profileButton}
                     onPress={() => navigation.navigate(SCREENS.PROFILE)}>
                     <View style={styles.profileAvatar}>
-                        <Text style={styles.profileInitial}>U</Text>
+                        <Text style={styles.profileInitial}>
+                            {String(user?.name || 'U').trim().charAt(0).toUpperCase() || 'U'}
+                        </Text>
                     </View>
                 </TouchableOpacity>
             </View>
@@ -277,33 +223,28 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         colors={['#00E5FF']}
                     />
                 }>
-                {/* Search Bar */}
-                <AnimatedButton
-                    style={styles.searchBar}
-                    onPress={() => navigation.navigate(SCREENS.SEARCH)}>
-                    <MagnifyingGlass size={20} color="#6B6B6B" weight="bold" style={styles.searchIcon} />
-                    <Text style={styles.searchPlaceholder}>
-                        Search for burgers, pizza or groceries
-                    </Text>
-                </AnimatedButton>
+                {/* Search + Voice row */}
+                <View style={styles.searchRow}>
+                    <AnimatedButton
+                        style={styles.searchBar}
+                        onPress={() => navigation.navigate(SCREENS.SEARCH)}>
+                        <MagnifyingGlass size={20} color="#6B6B6B" weight="bold" style={styles.searchIcon} />
+                        <Text style={styles.searchPlaceholder}>
+                            Search for burgers, pizza or groceries
+                        </Text>
+                    </AnimatedButton>
+                    <AnimatedButton
+                        style={styles.voiceButton}
+                        onPress={() => navigation.navigate(SCREENS.VOICE_ORDER)}>
+                        <Microphone size={20} color="#000000" weight="fill" />
+                    </AnimatedButton>
+                </View>
 
                 {/* Main Cards */}
                 {mainCards.length === 0 ? (
-                    <View style={styles.mainCardsContainer}>
-                        <AnimatedCard style={[styles.mainCard, styles.foodCard]}>
-                            <View style={styles.cardBadge}>
-                                <Text style={styles.cardBadgeText}>30% OFF</Text>
-                            </View>
-                            <Text style={styles.mainCardTitle}>Food{'\n'}Delivery</Text>
-                            <View style={styles.neonBox} />
-                        </AnimatedCard>
-                        <AnimatedCard style={[styles.mainCard, styles.groceryCard]}>
-                            <View style={[styles.cardBadge, styles.timeBadge]}>
-                                <Text style={styles.cardBadgeText}>10 MINS</Text>
-                            </View>
-                            <Text style={styles.mainCardTitle}>Instamart{'\n'}Groceries</Text>
-                            <View style={[styles.neonBox, styles.greenNeon]} />
-                        </AnimatedCard>
+                    <View style={styles.mainCardsEmpty}>
+                        <Text style={styles.mainCardsEmptyTitle}>Main cards not configured</Text>
+                        <Text style={styles.mainCardsEmptySub}>Configure Home main cards from AdminJS.</Text>
                     </View>
                 ) : (
                     <View style={styles.mainCardsContainer}>
@@ -397,6 +338,35 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     })}
                 </ScrollView>
 
+                {/* Food Rescue */}
+                {rescueItems.length > 0 && (
+                    <>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Food Rescue Deals</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate(SCREENS.NINETY_NINE_STORE)}>
+                                <Text style={styles.seeAllText}>See all</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.restaurantList}>
+                            {rescueItems.slice(0, 12).map((item) => (
+                                <TouchableOpacity
+                                    key={String(item.id)}
+                                    style={styles.rescueCard}
+                                    activeOpacity={0.85}
+                                    onPress={() => navigation.navigate(SCREENS.RESTAURANT_DETAIL, { restaurantId: item?.branch?.id })}>
+                                    <Image source={{ uri: item?.product?.image }} style={styles.rescueImage} />
+                                    <Text style={styles.rescueName} numberOfLines={2}>{item?.product?.name || 'Rescue Item'}</Text>
+                                    <Text style={styles.rescueBranch} numberOfLines={1}>{item?.branch?.name || ''}</Text>
+                                    <View style={styles.rescuePriceRow}>
+                                        <Text style={styles.rescuePrice}>Rs. {Number(item?.rescuePrice || 0).toFixed(0)}</Text>
+                                        <Text style={styles.rescueOriginal}>Rs. {Number(item?.originalPrice || 0).toFixed(0)}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </>
+                )}
+
                 {/* Top Recommendations */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Top Recommendations</Text>
@@ -454,10 +424,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 )}
 
-                {/* Error message if API fails */}
-                {error && __DEV__ && (
+                {/* Error message */}
+                {error && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>Debug: {error}</Text>
+                        <Text style={styles.errorText}>{error}</Text>
+                        <TouchableOpacity onPress={() => loadHomeData()} style={styles.retryBtn}>
+                            <Text style={styles.retryBtnText}>Retry</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
 
@@ -497,8 +470,6 @@ const styles = StyleSheet.create({
         color: '#9E9E9E',
     },
     dropdownIcon: {
-        fontSize: 10,
-        color: '#9E9E9E',
         marginLeft: 8,
     },
     profileButton: {
@@ -522,15 +493,29 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000000',
     },
+    searchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingHorizontal: 16,
+        marginBottom: 20,
+    },
     searchBar: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#1A1A1A',
-        marginHorizontal: 16,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
-        marginBottom: 20,
+    },
+    voiceButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#00E5FF',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     searchIcon: {
         marginRight: 12,
@@ -544,6 +529,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         gap: 12,
         marginBottom: 16,
+    },
+    mainCardsEmpty: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        backgroundColor: '#111111',
+        padding: 14,
+    },
+    mainCardsEmptyTitle: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    mainCardsEmptySub: {
+        color: '#9E9E9E',
+        marginTop: 4,
+        fontSize: 13,
     },
     mainCard: {
         flex: 1,
@@ -634,6 +638,49 @@ const styles = StyleSheet.create({
     },
     restaurantList: {
         paddingHorizontal: 16,
+    },
+    rescueCard: {
+        width: 170,
+        backgroundColor: '#141414',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        padding: 10,
+        marginRight: 10,
+    },
+    rescueImage: {
+        width: '100%',
+        height: 88,
+        borderRadius: 10,
+        backgroundColor: '#0F0F0F',
+        marginBottom: 8,
+    },
+    rescueName: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+        minHeight: 34,
+    },
+    rescueBranch: {
+        color: '#9E9E9E',
+        fontSize: 11,
+        marginTop: 2,
+        marginBottom: 6,
+    },
+    rescuePriceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    rescuePrice: {
+        color: '#00E5FF',
+        fontSize: 13,
+        fontWeight: '800',
+        marginRight: 8,
+    },
+    rescueOriginal: {
+        color: '#7A7A7A',
+        fontSize: 12,
+        textDecorationLine: 'line-through',
     },
     restaurantCard: {
         width: width * 0.65,
@@ -742,12 +789,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     errorContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        marginHorizontal: 16,
+        marginTop: 8,
+        marginBottom: 12,
+        padding: 10,
+        borderRadius: 8,
+        backgroundColor: '#2A1A1A',
+        borderWidth: 1,
+        borderColor: '#FF5252',
+        alignItems: 'flex-start',
     },
     errorText: {
+        color: '#FFB3B3',
         fontSize: 12,
-        color: '#FF5252',
+    },
+    retryBtn: {
+        marginTop: 8,
+        backgroundColor: '#00E5FF',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    retryBtnText: {
+        color: '#000000',
+        fontSize: 12,
+        fontWeight: '700',
     },
 });
 

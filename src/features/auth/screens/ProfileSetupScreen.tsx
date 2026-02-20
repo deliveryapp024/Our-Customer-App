@@ -10,13 +10,12 @@ import {
     ActivityIndicator,
     Image,
     ScrollView,
-    KeyboardAvoidingView,
-    Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Camera, Smiley } from 'phosphor-react-native';
 import { SCREENS, STORAGE_KEYS, AVATAR_OPTIONS, getAvatarOptionById } from '../../../constants';
 import { useAuthStore } from '../../../store/authStore';
 import { customerApi } from '../../../api';
@@ -205,12 +204,12 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         if (profileImageType === 'avatar' && selectedAvatar) {
             return (
                 <View style={[styles.avatarPreview, { backgroundColor: selectedAvatar.bgColor }]}>
-                    <Text style={styles.avatarPreviewEmoji}>{selectedAvatar.emoji}</Text>
+                    <Text style={styles.avatarPreviewEmoji}>{selectedAvatar.emoji || ''}</Text>
                 </View>
             );
         }
 
-        return <Text style={styles.cameraIcon}>??</Text>;
+        return <Camera size={42} color="#6B6B6B" weight="duotone" />;
     };
 
     return (
@@ -321,7 +320,7 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                                         profileAvatarId === avatar.id && styles.avatarOptionSelected,
                                     ]}
                                     onPress={() => handleSelectAvatar(avatar.id)}>
-                                    <Text style={styles.avatarOptionEmoji}>{avatar.emoji}</Text>
+                                    {avatar.emoji ? <Text style={styles.avatarOptionEmoji}>{avatar.emoji}</Text> : <Smiley size={26} color="#FFFFFF" weight="fill" />}
                                 </TouchableOpacity>
                             ))}
                         </View>
@@ -336,7 +335,7 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 visible={errorModalVisible}
                 title="Upload Error"
                 message={errorMessage}
-                icon="?"
+                icon="!"
                 buttons={[{ text: 'OK', style: 'default' }]}
                 onClose={() => setErrorModalVisible(false)}
             />

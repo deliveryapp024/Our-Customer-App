@@ -9,7 +9,7 @@ import { OrderTrackingScreen, RateReviewScreen } from '../features/tracking';
 import {
     BoltDeliveryScreen, NinetyNineStoreScreen, FlashDealsScreen, GroupOrderScreen,
     AIComboScreen, DineInScreen, SmartFiltersScreen, TrainDeliveryScreen,
-    QuickReorderScreen, FoodStoriesScreen,
+    QuickReorderScreen, FoodStoriesScreen, VoiceOrderScreen,
     SearchScreen,
 } from '../features/home';
 import {
@@ -43,6 +43,7 @@ export const RootNavigator = () => {
                     <Stack.Screen name={SCREENS.TABLE_RESERVATION} component={TableReservationScreen} options={{ animation: 'slide_from_bottom' }} />
                     {/* Home Features */}
                     <Stack.Screen name={SCREENS.SEARCH} component={SearchScreen} options={{ animation: 'slide_from_right' }} />
+                    <Stack.Screen name={SCREENS.VOICE_ORDER} component={VoiceOrderScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.BOLT_DELIVERY} component={BoltDeliveryScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.NINETY_NINE_STORE} component={NinetyNineStoreScreen} options={{ animation: 'slide_from_right' }} />
                     <Stack.Screen name={SCREENS.FLASH_DEALS} component={FlashDealsScreen} options={{ animation: 'slide_from_right' }} />

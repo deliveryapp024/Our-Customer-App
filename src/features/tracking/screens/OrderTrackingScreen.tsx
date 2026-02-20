@@ -7,7 +7,6 @@ import {
     Image,
     StatusBar,
     StyleSheet,
-    Dimensions,
     ActivityIndicator,
 } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
@@ -16,8 +15,6 @@ import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
 import { ordersApi, Order } from '../../../api';
 import { BackButton } from '../../../components/ui/BackButton';
-
-const { width } = Dimensions.get('window');
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -272,6 +269,23 @@ export const OrderTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
                 )}
             </View>
 
+            {(order?.fulfillmentType === 'scheduled' || (order?.paymentStatus && order.paymentStatus !== 'not_applicable')) && (
+                <View style={styles.metaRow}>
+                    {order?.fulfillmentType === 'scheduled' && (
+                        <View style={styles.metaPill}>
+                            <Text style={styles.metaPillText}>
+                                Scheduled {order?.scheduleAt ? new Date(order.scheduleAt).toLocaleString() : ''}
+                            </Text>
+                        </View>
+                    )}
+                    {order?.paymentStatus && order.paymentStatus !== 'not_applicable' && (
+                        <View style={styles.metaPill}>
+                            <Text style={styles.metaPillText}>Payment: {String(order.paymentStatus).toUpperCase()}</Text>
+                        </View>
+                    )}
+                </View>
+            )}
+
             {/* Live Map */}
             <View style={styles.mapContainer}>
                 <MapView
@@ -435,6 +449,25 @@ const styles = StyleSheet.create({
     lastUpdatedText: {
         fontSize: 11,
         color: '#6B6B6B',
+    },
+    metaRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#111111',
+    },
+    metaPill: {
+        borderRadius: 10,
+        backgroundColor: '#2A2A2A',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+    },
+    metaPillText: {
+        color: '#CFCFCF',
+        fontSize: 11,
+        fontWeight: '600',
     },
     emptyIcon: {
         fontSize: 64,

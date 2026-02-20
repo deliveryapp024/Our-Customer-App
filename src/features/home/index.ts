@@ -1,4 +1,5 @@
 export { HomeScreen } from './screens/HomeScreen';
+export { FoodScreen } from './screens/FoodScreen';
 export { SearchScreen } from './screens/SearchScreen';
 export { NoResultsScreen } from './screens/NoResultsScreen';
 export { BoltDeliveryScreen } from './screens/BoltDeliveryScreen';
@@ -11,3 +12,4 @@ export { SmartFiltersScreen } from './screens/SmartFiltersScreen';
 export { TrainDeliveryScreen } from './screens/TrainDeliveryScreen';
 export { QuickReorderScreen } from './screens/QuickReorderScreen';
 export { FoodStoriesScreen } from './screens/FoodStoriesScreen';
+export { VoiceOrderScreen } from './screens/VoiceOrderScreen';

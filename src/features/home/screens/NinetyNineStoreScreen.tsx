@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -8,121 +8,268 @@ import {
     StatusBar,
     StyleSheet,
     Dimensions,
+    ActivityIndicator,
+    FlatList,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
 import { BackButton } from '../../../components/ui/BackButton';
-
-const { width } = Dimensions.get('window');
+import { CartSwitchModal } from '../../../components/ui/CartSwitchModal';
+import { ninetyNineStoreApi, NinetyNineStoreItem, NinetyNineCategory } from '../../../api';
+import { useCartStore } from '../../../store/cartStore';
+import { SCREENS } from '../../../constants';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
 };
 
-const categories = [
-    { id: '1', name: 'All', isActive: true },
-    { id: '2', name: 'Snacks', isActive: false },
-    { id: '3', name: 'Drinks', isActive: false },
-    { id: '4', name: 'Daily Essentials', isActive: false },
-];
-
-// Images from 99_store_budget_value design
-const products = [
-    { id: '1', name: 'Lay\'s Classic Chips', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDGDxqWBY532UcDPMiDsMEeglf0j4HNGooEZK180SYU1ZNFHiGkfHAHmRNJL5Ekg4tIxmHeq_mNo10rl3F_Zx7ZKMsEc931QZXJ2M4uJ7D7CFnq_CaFD3j6Me9ViRaV1HYqyGcX0dXNVjX6OkwLp-4EhnES3_4E6vJOVz5oAjrOPzgejl2YW0R8FNx9jqbw9VpmhSkgBihX0beVSz2Xs63SkOumXSQDQasD5OD4hWc7bxH4380Y6jSAyEuw3e2oHO_b2O1NLPZhEpj8', price: 0.99, quantity: '50g' },
-    { id: '2', name: 'Coca Cola', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVmqF-tem-WMGhgUi36RSOCDRYKaKqBBIGYSnMLNAdyLefcDYBFrUkFmGxLqsdELCXIaoTz2BdAQ0gJOTGMObWUuzCYCE4wSiPjqm-egrZe6wsxh4CZ372_flxlgu2loPXPeSCptnjFfLqOfmWhIKFrUU3PYBnIzDTBJrHWaK3CAucT4MU8_W08L1JUVEhcY1xRln-fL8TqbGt6g5cL7a-nFTIGMcLcwDupWE1XlENaz5CSCnymQzpqhqDx1v1Wqu7R5C1654utIWt', price: 0.99, quantity: '330ml' },
-    { id: '3', name: 'Oreo Cookies', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAftZzhEfn20YbCFJsvwkAdP1o_WaErMtpVvRqqaFYVWmTuvzVd5EvsfRlAOfmbLrgejB-IUwQPq0rV800ICniUZQC8PWiiBZVcm8Sp69Th5Wsi22O826aUrWaNbytaSI62bMn04hjCgCuxjX9M3mqYJUCnWo2H12FXZpqrnv6Vntu8xso3FOBmhSNQMfRBOQwIqOYrfzrJGOUBv-_7EI940OAoLOpyvJKvI5NhYS9NA9sr7YNqNffbBlniGJM4PRvRi2FCyCCIOok8', price: 0.99, quantity: '120g' },
-    { id: '4', name: 'Maggi Noodles', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvKr3W-rGYrsgB2kxKygnZwnIWBDiSmpeUXhEAkJO4yDexBjTPsVN8sZSveSFNopyChaOAGeqUhWZ2kVmbAp6bGBulUPS9Jt5VsG3wOrH3vyMdkm76SIc2JZRcKzmVJJ1rUiiu_qO5lY3rtUOGH4FhvTi3mjqE0C6RuOzNF1SZuqhDaE0NGWWMe9mm3BbQPlEGK3Fr_XPQEby7p4ZEYtLEJA6tDy3Vio7VEJDUKzl63Cjl-h86fr0ORFuJcskNx3VUFnpqe-qerJh2', price: 0.99, quantity: '70g' },
-    { id: '5', name: 'Parle-G Biscuits', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAB_tEln8mFX_nXsPEwv81T2calS9M4mubgLGux59LmaCU7_F5qq-87kfPiakeORvJJ5pcY-v85rIcPlxUCCEk9esDOqYRXOTiGLhLbAG8qOWikkm283dFkIJl3_mMNNgShAGfxir9J4wIJkUanGQ2yT_6WfP3ufw7pVaxDJLKLPa4eDe_p4Lm1PujMVaUAsmWHGA1CFkee-1G2Sskw4sVOBtOBm8TWdSC6xurYJagOw8ZMpIGuv5yoO8jA46F0zDdDFjKnuxM-hTTU', price: 0.99, quantity: '100g' },
-    { id: '6', name: 'Pepsi', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb2OC6_veVyOKzc3LP2lLTcCwibVH0lMQLAHlb5_eyWIjLsd241bRH0ulTCoXEPUA6Td5CbSrPWvsv5ILohGR-LcRuz68wwlrival7wFTMrgLFKsEmcTnlViwf5NlvPPYEjmEaHRTPW4lwwzhpHKCW7tQVUpG06bMSpxL9vB5-K8uYnLri7ogx5bLkwr-xypBx7FL5YR_T0ECZ3LZq9sJzX5JAMXb4ju0l04e_x-7YbA-G32JbZXNdOlKDBp7oQdcV7MimrmWN0VIe', price: 0.99, quantity: '330ml' },
-];
+const { width } = Dimensions.get('window');
+const PRODUCT_CARD_WIDTH = (width - 40) / 2;
 
 export const NinetyNineStoreScreen: React.FC<Props> = ({ navigation }) => {
+    const {
+        restaurantId: cartRestaurantId,
+        restaurantName: cartRestaurantName,
+        items: cartItems,
+        addItem,
+        clearCart,
+    } = useCartStore();
+
+    const [activeCategoryId, setActiveCategoryId] = useState('all');
+    const [switchModalVisible, setSwitchModalVisible] = useState(false);
+    const [pendingItem, setPendingItem] = useState<NinetyNineStoreItem | null>(null);
+
+    const campaignQuery = useQuery({
+        queryKey: ['ninetyNineStoreCampaign'],
+        queryFn: async () => {
+            const response = await ninetyNineStoreApi.getActiveNinetyNineStore();
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to load 99 Store');
+            }
+            return response.data;
+        },
+        staleTime: 60 * 1000,
+    });
+
+    const campaign = campaignQuery.data?.campaign || null;
+    const categories: NinetyNineCategory[] = campaignQuery.data?.categories || [];
+    const allItems: NinetyNineStoreItem[] = useMemo(
+        () => campaignQuery.data?.items || [],
+        [campaignQuery.data?.items],
+    );
+
+    const visibleItems = useMemo(() => {
+        if (activeCategoryId === 'all') return allItems;
+        return allItems.filter((item) => item.categoryId === activeCategoryId);
+    }, [allItems, activeCategoryId]);
+
+    const getCartQuantity = (item: NinetyNineStoreItem) => {
+        const existing = cartItems.find((cartItem) => cartItem.menuItem.id === item.productId);
+        return existing?.quantity || 0;
+    };
+
+    const addItemToCart = (item: NinetyNineStoreItem) => {
+        addItem(
+            item.branch.branchId,
+            item.branch.name,
+            {
+                id: item.productId,
+                name: item.name,
+                description: '',
+                price: item.effectivePrice,
+                originalPrice: item.originalPrice > item.effectivePrice ? item.originalPrice : undefined,
+                image: item.image,
+                category: item.categoryId || 'all',
+                isVeg: true,
+                isAvailable: true,
+            }
+        );
+    };
+
+    const onPressAdd = (item: NinetyNineStoreItem) => {
+        if (cartRestaurantId && cartRestaurantId !== item.branch.branchId) {
+            setPendingItem(item);
+            setSwitchModalVisible(true);
+            return;
+        }
+
+        addItemToCart(item);
+    };
+
+    const onConfirmSwitchAndAdd = () => {
+        if (!pendingItem) {
+            setSwitchModalVisible(false);
+            return;
+        }
+
+        clearCart();
+        addItemToCart(pendingItem);
+        setPendingItem(null);
+        setSwitchModalVisible(false);
+    };
+
+    const onCancelSwitch = () => {
+        setPendingItem(null);
+        setSwitchModalVisible(false);
+    };
+
+    const renderCategory = ({ item }: { item: NinetyNineCategory }) => {
+        const isActive = activeCategoryId === item.id;
+        return (
+            <TouchableOpacity
+                style={[styles.categoryTab, isActive && styles.categoryTabActive]}
+                onPress={() => setActiveCategoryId(item.id)}
+                activeOpacity={0.8}>
+                <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+                    {item.name} ({item.count})
+                </Text>
+            </TouchableOpacity>
+        );
+    };
+
+    const renderProductCard = (item: NinetyNineStoreItem) => {
+        const qty = getCartQuantity(item);
+        const showOriginal = item.originalPrice > item.effectivePrice;
+
+        return (
+            <View key={`${item.productId}_${item.branch.branchId}`} style={styles.productCard}>
+                <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate(SCREENS.RESTAURANT_DETAIL, { restaurantId: item.branch.branchId })}>
+                    <View style={styles.priceBadge}>
+                        <Text style={styles.priceBadgeText}>Rs.{item.effectivePrice.toFixed(0)}</Text>
+                    </View>
+                    <Image
+                        source={{ uri: item.image }}
+                        style={styles.productImage}
+                        resizeMode="cover"
+                    />
+                    <Text style={styles.productName} numberOfLines={2}>
+                        {item.name}
+                    </Text>
+                    {item.quantity ? (
+                        <Text style={styles.productQuantity}>{item.quantity}</Text>
+                    ) : null}
+                    <Text style={styles.branchName} numberOfLines={1}>
+                        {item.branch.name}
+                    </Text>
+                    {showOriginal ? (
+                        <Text style={styles.originalPrice}>Rs.{item.originalPrice.toFixed(0)}</Text>
+                    ) : (
+                        <View style={styles.originalPricePlaceholder} />
+                    )}
+                </TouchableOpacity>
+
+                {qty > 0 ? (
+                    <View style={styles.quantityControls}>
+                        <Text style={styles.quantityText}>{qty} in cart</Text>
+                        <TouchableOpacity
+                            style={styles.addMoreButton}
+                            onPress={() => onPressAdd(item)}
+                            activeOpacity={0.8}>
+                            <Text style={styles.addMoreButtonText}>ADD +</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => onPressAdd(item)}
+                        activeOpacity={0.8}>
+                        <Text style={styles.addButtonText}>ADD</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+    };
+
+    const renderContent = () => {
+        if (campaignQuery.isLoading) {
+            return (
+                <View style={styles.centerState}>
+                    <ActivityIndicator size="large" color="#00E5FF" />
+                    <Text style={styles.stateText}>Loading 99 Store...</Text>
+                </View>
+            );
+        }
+
+        if (campaignQuery.isError) {
+            return (
+                <View style={styles.centerState}>
+                    <Text style={styles.stateTitle}>Unable to load 99 Store</Text>
+                    <Text style={styles.stateText}>Please try again.</Text>
+                    <TouchableOpacity
+                        style={styles.retryButton}
+                        onPress={() => campaignQuery.refetch()}
+                        activeOpacity={0.8}>
+                        <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        if (!campaign || allItems.length === 0) {
+            return (
+                <View style={styles.centerState}>
+                    <Text style={styles.stateTitle}>99 Store is coming soon</Text>
+                    <Text style={styles.stateText}>Deals will appear here after campaign setup.</Text>
+                </View>
+            );
+        }
+
+        return (
+            <>
+                <View style={[styles.valueBanner, { backgroundColor: campaign.displayConfig.bannerColor || '#FFB300' }]}>
+                    <Text style={[styles.bannerText, { color: campaign.displayConfig.bannerTextColor || '#000000' }]}>
+                        {campaign.priceFilterType === 'below'
+                            ? `Everything under Rs.${campaign.maxPrice}`
+                            : `Everything at Rs.${campaign.maxPrice} or less`}
+                    </Text>
+                </View>
+
+                <FlatList
+                    horizontal
+                    data={categories.length > 0 ? categories : [{ id: 'all', name: 'All', count: allItems.length }]}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderCategory}
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoriesContainer}
+                    contentContainerStyle={styles.categoriesContent}
+                />
+
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <View style={styles.productsGrid}>
+                        {visibleItems.map(renderProductCard)}
+                    </View>
+                    <View style={styles.bottomSpacing} />
+                </ScrollView>
+            </>
+        );
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <BackButton onPress={() => navigation.goBack()} />
                 <View style={styles.headerCenter}>
                     <View style={styles.storeBadge}>
                         <Text style={styles.storeText}>99</Text>
                     </View>
-                    <Text style={styles.headerTitle}>99 Store</Text>
+                    <Text style={styles.headerTitle}>{campaign?.displayConfig?.headerTitle || '99 Store'}</Text>
                 </View>
-                <TouchableOpacity style={styles.cartButton}>
-                    <Text style={styles.cartIcon}></Text>
-                    <View style={styles.cartBadge}>
-                        <Text style={styles.cartBadgeText}>3</Text>
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.headerRightSpacer} />
             </View>
 
-            {/* Value Banner */}
-            <View style={styles.valueBanner}>
-                <Text style={styles.bannerEmoji}></Text>
-                <Text style={styles.bannerText}>
-                    Everything at just <Text style={styles.bannerPrice}>0.99</Text> or less!
-                </Text>
-            </View>
+            {renderContent()}
 
-            {/* Categories */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoriesContainer}
-                contentContainerStyle={styles.categoriesContent}>
-                {categories.map((cat) => (
-                    <TouchableOpacity
-                        key={cat.id}
-                        style={[styles.categoryTab, cat.isActive && styles.categoryTabActive]}>
-                        <Text
-                            style={[
-                                styles.categoryText,
-                                cat.isActive && styles.categoryTextActive,
-                            ]}>
-                            {cat.name}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Products Grid */}
-                <View style={styles.productsGrid}>
-                    {products.map((product) => (
-                        <View key={product.id} style={styles.productCard}>
-                            <View style={styles.priceBadge}>
-                                <Text style={styles.priceBadgeText}>0.99</Text>
-                            </View>
-                            <Image
-                                source={{ uri: product.image }}
-                                style={styles.productImage}
-                                resizeMode="cover"
-                            />
-                            <Text style={styles.productName} numberOfLines={2}>
-                                {product.name}
-                            </Text>
-                            <Text style={styles.productQuantity}>{product.quantity}</Text>
-                            <TouchableOpacity style={styles.addButton}>
-                                <Text style={styles.addButtonText}>ADD</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
-
-                {/* Savings Banner */}
-                <View style={styles.savingsBanner}>
-                    <Text style={styles.savingsIcon}></Text>
-                    <View style={styles.savingsContent}>
-                        <Text style={styles.savingsTitle}>You're saving big!</Text>
-                        <Text style={styles.savingsText}>
-                            Average savings of 40% compared to regular prices
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={styles.bottomSpacing} />
-            </ScrollView>
+            <CartSwitchModal
+                visible={switchModalVisible}
+                oldBranchName={cartRestaurantName}
+                newBranchName={pendingItem?.branch?.name}
+                onCancel={onCancelSwitch}
+                onConfirm={onConfirmSwitchAndAdd}
+            />
         </View>
     );
 };
@@ -137,12 +284,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     headerCenter: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     storeBadge: {
         width: 36,
@@ -163,62 +311,27 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFFFFF',
     },
-    cartButton: {
+    headerRightSpacer: {
         width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#2A2A2A',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-    },
-    cartIcon: {
-        fontSize: 18,
-    },
-    cartBadge: {
-        position: 'absolute',
-        top: -4,
-        right: -4,
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        backgroundColor: '#FF5252',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cartBadgeText: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
     },
     valueBanner: {
-        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFB300',
         paddingVertical: 10,
-        marginBottom: 16,
-    },
-    bannerEmoji: {
-        fontSize: 18,
-        marginRight: 8,
+        marginBottom: 12,
     },
     bannerText: {
         fontSize: 14,
-        color: '#000000',
-    },
-    bannerPrice: {
-        fontWeight: 'bold',
-        fontSize: 16,
+        fontWeight: '700',
     },
     categoriesContainer: {
-        marginBottom: 16,
+        marginBottom: 12,
     },
     categoriesContent: {
         paddingHorizontal: 16,
     },
     categoryTab: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 20,
         backgroundColor: '#2A2A2A',
@@ -228,12 +341,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFB300',
     },
     categoryText: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#FFFFFF',
+        fontWeight: '500',
     },
     categoryTextActive: {
         color: '#000000',
-        fontWeight: '600',
+        fontWeight: '700',
     },
     productsGrid: {
         flexDirection: 'row',
@@ -242,11 +356,12 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     productCard: {
-        width: (width - 40) / 2,
+        width: PRODUCT_CARD_WIDTH,
         backgroundColor: '#1A1A1A',
         borderRadius: 16,
         padding: 12,
         position: 'relative',
+        marginBottom: 8,
     },
     priceBadge: {
         position: 'absolute',
@@ -267,19 +382,34 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 100,
         borderRadius: 12,
-        marginBottom: 12,
+        marginBottom: 10,
+        backgroundColor: '#2A2A2A',
     },
     productName: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
         color: '#FFFFFF',
         marginBottom: 4,
-        height: 36,
+        minHeight: 34,
     },
     productQuantity: {
         fontSize: 12,
+        color: '#9E9E9E',
+        marginBottom: 4,
+    },
+    branchName: {
+        fontSize: 12,
+        color: '#00E5FF',
+        marginBottom: 4,
+    },
+    originalPrice: {
+        fontSize: 12,
         color: '#6B6B6B',
-        marginBottom: 12,
+        textDecorationLine: 'line-through',
+        marginBottom: 8,
+    },
+    originalPricePlaceholder: {
+        height: 20,
     },
     addButton: {
         backgroundColor: '#FFB300',
@@ -292,32 +422,58 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000000',
     },
-    savingsBanner: {
+    quantityControls: {
         flexDirection: 'row',
-        marginHorizontal: 16,
-        marginTop: 24,
-        padding: 16,
-        backgroundColor: '#2A1A0A',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#FFB30033',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
     },
-    savingsIcon: {
-        fontSize: 32,
-        marginRight: 12,
-    },
-    savingsContent: {
+    quantityText: {
+        fontSize: 12,
+        color: '#9E9E9E',
         flex: 1,
     },
-    savingsTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
-        marginBottom: 4,
+    addMoreButton: {
+        backgroundColor: '#FFB300',
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+        borderRadius: 16,
     },
-    savingsText: {
+    addMoreButtonText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#000000',
+    },
+    centerState: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    stateTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    stateText: {
         fontSize: 14,
         color: '#9E9E9E',
+        textAlign: 'center',
+        marginTop: 10,
+    },
+    retryButton: {
+        marginTop: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#00E5FF',
+        borderRadius: 14,
+    },
+    retryButtonText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#000000',
     },
     bottomSpacing: {
         height: 40,

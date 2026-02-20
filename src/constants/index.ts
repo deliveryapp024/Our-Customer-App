@@ -31,6 +31,7 @@ export const SCREENS = {
     CHECKOUT: 'Checkout', ORDER_SUCCESS: 'OrderSuccess', COUPONS_WALLET: 'CouponsWallet',
     // Home Features
     BOLT_DELIVERY: 'BoltDelivery', NINETY_NINE_STORE: 'NinetyNineStore', FLASH_DEALS: 'FlashDeals',
+    VOICE_ORDER: 'VoiceOrder',
     GROUP_ORDER: 'GroupOrder', AI_COMBO: 'AICombo', DINE_IN: 'DineIn', SMART_FILTERS: 'SmartFilters',
     TRAIN_DELIVERY: 'TrainDelivery', QUICK_REORDER: 'QuickReorder', FOOD_STORIES: 'FoodStories',
     // Restaurant
@@ -63,6 +64,7 @@ export const FEATURE_FLAGS = {
     ENABLE_BOLT_DELIVERY: true,
     ENABLE_NINETY_NINE_STORE: true,
     ENABLE_FLASH_DEALS: true,
+    ENABLE_QUICK_REORDER: true,
     ENABLE_GROUP_ORDER: true,
 };
 

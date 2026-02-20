@@ -23,6 +23,10 @@ export interface CreateOrderRequest {
     addressId?: string;
     idempotencyKey?: string; // Optional: prevents duplicate orders on retry
     couponCode?: string;
+    fulfillmentType?: 'asap' | 'scheduled';
+    scheduleAt?: string;
+    paymentMethod?: 'cod' | 'upi_phonepe';
+    paymentAttemptId?: string;
 }
 
 export interface Order {
@@ -38,6 +42,12 @@ export interface Order {
     deliveryPartner?: string;
     createdAt: string;
     updatedAt: string;
+    fulfillmentType?: 'asap' | 'scheduled';
+    scheduleAt?: string;
+    scheduleWindowLabel?: string;
+    paymentMethod?: 'cod' | 'upi_phonepe';
+    paymentStatus?: 'pending' | 'success' | 'failed' | 'refunded' | 'not_applicable';
+    paymentProvider?: string | null;
 }
 
 export interface QuoteRequest {
@@ -49,6 +59,8 @@ export interface QuoteRequest {
     couponCode?: string;
     // Optional: lets server validate coupon correctly without client needing category/seller ids.
     items?: OrderItem[];
+    fulfillmentType?: 'asap' | 'scheduled';
+    scheduleAt?: string;
 }
 
 export interface QuoteResponse {
@@ -78,6 +90,24 @@ export interface QuoteResponse {
     discountAmount?: number;
     finalSubtotal?: number;
     freeDeliveryApplied?: boolean;
+    fulfillmentType?: 'asap' | 'scheduled';
+    scheduleAt?: string | null;
+    scheduleWindowLabel?: string | null;
+}
+
+export interface ScheduleSlot {
+    startAt: string;
+    endAt: string;
+    label: string;
+    isAvailable: boolean;
+    remainingCapacity: number;
+    capacityPerSlot: number;
+}
+
+export interface ScheduleSlotsResponse {
+    slotSizeMinutes: number;
+    timezone: string;
+    slots: ScheduleSlot[];
 }
 
 // Create order
@@ -90,6 +120,11 @@ export const getOrderQuote = async (data: QuoteRequest) => {
     return api.post<QuoteResponse>('/order/quote', data);
 };
 
+// Get schedule slots for a branch/day
+export const getScheduleSlots = async (branchId: string, date: string) => {
+    return api.get<ScheduleSlotsResponse>(`/order/schedule/slots?branchId=${encodeURIComponent(branchId)}&date=${encodeURIComponent(date)}`);
+};
+
 // Get all orders
 export const getOrders = async () => {
     return api.get<Order[]>('/order');
@@ -98,6 +133,10 @@ export const getOrders = async () => {
 // Get order by ID
 export const getOrderById = async (orderId: string) => {
     return api.get<Order>(`/order/${orderId}`);
+};
+
+export const recoverOrderByIdempotency = async (idempotencyKey: string) => {
+    return api.get<Order>(`/order/recover/${encodeURIComponent(idempotencyKey)}`);
 };
 
 // Confirm order (for delivery partner)
@@ -113,8 +152,10 @@ export const updateOrderStatus = async (orderId: string, status: string, deliver
 export default {
     createOrder,
     getOrderQuote,
+    getScheduleSlots,
     getOrders,
     getOrderById,
+    recoverOrderByIdempotency,
     confirmOrder,
     updateOrderStatus,
 };

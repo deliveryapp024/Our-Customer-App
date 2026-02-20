@@ -28,11 +28,13 @@ import Animated, {
     Extrapolate,
 } from 'react-native-reanimated';
 import Video from 'react-native-video';
-import { restaurantsApi, reviewsApi, Restaurant, MenuItem } from '../../../api';
+import { restaurantsApi, reviewsApi, rescueApi, Restaurant, MenuItem } from '../../../api';
 import { useCartStore } from '../../../store/cartStore';
 import { SCREENS } from '../../../constants';
 import { BackButton } from '../../../components/ui/BackButton';
+import { CartSwitchModal } from '../../../components/ui/CartSwitchModal';
 import { useQuery } from '@tanstack/react-query';
+import { trackClientEvent } from '../../../utils/telemetry';
 
 const { width } = Dimensions.get('window');
 
@@ -40,56 +42,6 @@ type Props = {
     navigation: NativeStackNavigationProp<any>;
     route: RouteProp<any>;
 };
-
-// Mock menu items for fallback
-const mockMenuItems: MenuItem[] = [
-    {
-        _id: '1',
-        name: 'Truffle Mushroom Risotto',
-        description: 'Creamy arborio rice cooked with wild mushrooms, black truffle oil, and aged parmesan cheese.',
-        price: 24.00,
-        originalPrice: 30.00,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCph6QQr9sw-e2qtkW0Ujmnbhcgylk7axX8zUgxt6BfUUN_7OpXbYnTqOtF7j3QgEVtX-h0O9I5PbyquS3LHPuX3Fq2mqe4t8KBnGmGJIqfCy7dsJ1syoGjeHxSlf10NXv7qkVAM6eI244t8Juz62V6iH3r2Pbea8hKBLrafV9__qJFW4tSrRLzHgKzAurpAyF1RPhnZs0NGw7IPaZcB_-SoT86FOHRbXVZv0qJm8P3faAW_TCu8EDYBgSsHR9cD2-AYmMw0puxeKgf',
-        isVeg: true,
-        isBestseller: true,
-        category: 'Recommended',
-    },
-    {
-        _id: '2',
-        name: 'Spicy Tuna Tartare',
-        description: 'Fresh yellowfin tuna cubes marinated in soy, sesame oil, and chili, served with crispy wonton chips.',
-        price: 18.50,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaeJpHQ9VxZtom_8j6qUq3p1_o0JyU5Ob1bI4jLGAlY7LCq42Yc65yri4zdtm1MD2qXlDj0PfSL6_Ohau5ni3raOf-VrhSdTLmIDhCgS6YKLd53FQjNzzYoBvDrODljOCNNUnWD9zSiuOFCiQKuoofedw9xCASgRlBskoDA2EK-Rfg9zmvCsrtXZJj5Ra1inyxbfwAbYv58iJ5O44tGqFAa08k_Ix358z74Nt5PYze9JURo8GIN0ir9opNOVBNaBOqx2hom6lm745p',
-        isVeg: false,
-        isBestseller: false,
-        category: 'Recommended',
-    },
-    {
-        _id: '3',
-        name: 'Avocado & Quinoa Salad',
-        description: 'Organic quinoa, ripe avocado, cherry tomatoes, cucumber, and lemon vinaigrette.',
-        price: 16.00,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4pgP27mhURLdWTQ2DJvv0hs3aZQoxLtSe5t2UXk9GlzcFrfvdN4mZXjoBcznHOyRT0F3Pbg0AXE_6Hg9J6wVqYFZ0uNCBbxf17DSzjWlmozISIwijRGMfXfXBQcPAJbkfkNz6xRbh2ZEuHPKq8T293d72aztpE7PhwOyQQqyUBqStprg6RfHoKxCN8i9Ov-tI3o_0BgDZilmraz3awkxvZZgcZZZzdOZvS04hmPPprAGYj6_5bEFPBoLdrqmxL5EtSlQ-fMa14zgY',
-        isVeg: true,
-        isBestseller: false,
-        category: 'Starters',
-    },
-    {
-        _id: '4',
-        name: 'Sushi Platter Deluxe',
-        description: '24 pieces of assorted nigiri, sashimi, and maki rolls. Serves 2.',
-        price: 45.00,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIjQ1MczSUGCtPAcRActJ1jO1suMFfvrkLV2R6TrR6ikEwFO19nDOA7t7-uCbau8QsMkOwv5TAQPMGEMhDy-OhZQOjHJoVHhbGmSjTuayqHMfQ71szlq-qqu8E3NjzLwlAs0COLHLNMiCdnw8QwhDRhaLt1zLLeVl2SSxt5-CsVeUuPpq4GvXkXx_YueTwvavQmw-T7Ce5j1gKV6hhVLwDbkeBpkavWjN6mLb_bzZn6NwvwwnsX9x-wvqs95-bMZ2Uq6VLwwJz1S71',
-        isVeg: false,
-        isBestseller: true,
-        category: 'Combos',
-    },
-];
-
-const fallbackOffers = [
-    { id: '1', text: 'Flat 20% OFF above Rs.500', code: 'SAVE20' },
-    { id: '2', text: 'Free Delivery on first order', code: 'FREEDEL' },
-];
 
 export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     // Get restaurant from navigation params or use default
@@ -99,7 +51,6 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const [restaurant, setRestaurant] = useState<Partial<Restaurant>>(navRestaurant || {});
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
     const [menuCategories, setMenuCategories] = useState<string[]>([]);
-    const [apiFailed, setApiFailed] = useState(false);
 
     const [ttlSeconds, setTtlSeconds] = useState(300);
     const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
@@ -154,6 +105,18 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         refetchOnWindowFocus: true,
     });
 
+    const rescueQuery = useQuery({
+        queryKey: ['branchRescue', String(restaurantId || '')],
+        enabled: !!restaurantId,
+        queryFn: async () => {
+            const res = await rescueApi.getBranchRescue(String(restaurantId));
+            if (!res.success) throw new Error(res.error || 'Failed to load rescue deals');
+            return res.data;
+        },
+        staleTime: ttlSeconds * 1000,
+        refetchOnWindowFocus: true,
+    });
+
     useEffect(() => {
         const data = menuQuery.data;
         if (!data) return;
@@ -161,7 +124,6 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         setRestaurant((prev) => ({ ...prev, ...data.restaurant }));
         setMenuItems(data.items || []);
         setMenuCategories(data.categories || ['Recommended']);
-        setApiFailed(false);
 
         const serverTtl = Number(data.restaurant?.publicProfile?.cacheConfig?.ttlSeconds);
         if ([30, 60, 180, 300, 900].includes(serverTtl)) {
@@ -192,9 +154,8 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
 
     // If hero media changes, reset video state so we don't stick on a broken URL.
     useEffect(() => {
-        const hm = (restaurant as any)?.publicProfile?.heroMedia;
-        const type = String(hm?.type || '');
-        const url = String(hm?.url || '');
+        const type = String(heroMediaTypeDep || '');
+        const url = String(heroMediaUrlDep || '');
         if (type !== 'video' || !url) {
             setHeroVideoWantsPlay(false);
             setHeroVideoHasError(false);
@@ -209,17 +170,25 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
 
     useEffect(() => {
         if (!menuQuery.isError) return;
-        setApiFailed(true);
-        if (__DEV__) {
-            setMenuItems(mockMenuItems);
-            setMenuCategories(['Recommended', 'Combos', 'Main Course', 'Starters', 'Desserts']);
-        }
+        setMenuItems([]);
+        setMenuCategories([]);
     }, [menuQuery.isError]);
 
     const [selectedCategory, setSelectedCategory] = useState('Recommended');
     const [foodFilter, setFoodFilter] = useState<'all' | 'veg' | 'nonveg'>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const { items: storeItems, addItem: addCartItem, removeItem: removeCartItem, setCouponCode, couponCode: selectedCouponCode } = useCartStore();
+    const {
+        restaurantId: cartRestaurantId,
+        restaurantName: cartRestaurantName,
+        items: storeItems,
+        addItem: addCartItem,
+        removeItem: removeCartItem,
+        clearCart,
+        setCouponCode,
+        couponCode: selectedCouponCode,
+    } = useCartStore();
+    const [pendingCartSwitchDeal, setPendingCartSwitchDeal] = useState<any | null>(null);
+    const [visibleMenuCount, setVisibleMenuCount] = useState(28);
 
     // Scroll tracking for parallax and sticky header
     const scrollY = useSharedValue(0);
@@ -264,14 +233,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 }))
                 .filter((c: any) => c.code.length > 0);
         }
-        // Fallback for now (keeps UI stable if branch has no configured coupons).
-        return fallbackOffers.map((o) => ({
-            id: o.id,
-            code: o.code,
-            text: o.text,
-            backgroundColor: '#1A1A1A',
-            textColor: '#FFFFFF',
-        }));
+        return [];
     }, [restaurant]);
 
     const couponCardWidth = width - 64;
@@ -458,7 +420,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         };
     });
 
-    // API menu items use `_id`; mock fallback uses `id`. Normalize to a single key.
+    // API menu items use `_id`; normalize to a stable key.
     const getItemKey = (item: any) => String(item?._id || item?.id);
 
     const getCartCount = (itemKey: string) => {
@@ -490,6 +452,45 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
         removeCartItem(getItemKey(item));
     };
 
+    const addRescueDealToCart = (deal: any) => {
+        const branchId = String(restaurantId || '');
+        if (cartRestaurantId && cartRestaurantId !== branchId) {
+            setPendingCartSwitchDeal(deal);
+            return;
+        }
+
+        addCartItem(
+            branchId,
+            String(restaurant.name || 'Restaurant'),
+            {
+                id: String(deal?.product?.id || ''),
+                name: deal?.product?.name || 'Item',
+                description: 'Food rescue deal',
+                price: Number(deal?.rescuePrice || 0),
+                originalPrice: Number(deal?.originalPrice || 0) > Number(deal?.rescuePrice || 0)
+                    ? Number(deal?.originalPrice || 0)
+                    : undefined,
+                image: deal?.product?.image || '',
+                category: 'Rescue',
+                isVeg: true,
+                isAvailable: Number(deal?.quantityCap || 0) > 0,
+            }
+        );
+        trackClientEvent('rescue_item_added', {
+            branchId,
+            productId: String(deal?.product?.id || ''),
+            rescuePrice: Number(deal?.rescuePrice || 0),
+        });
+    };
+
+    const confirmSwitchAndAddRescue = () => {
+        if (!pendingCartSwitchDeal) return;
+        clearCart();
+        const deal = pendingCartSwitchDeal;
+        setPendingCartSwitchDeal(null);
+        addRescueDealToCart(deal);
+    };
+
     const heroMedia = (restaurant as any)?.publicProfile?.heroMedia;
     const heroType = String(heroMedia?.type || 'image');
     const heroVideoUrl = String(heroMedia?.url || '');
@@ -500,7 +501,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
     const profileUpdatedAtDep = String((restaurant as any)?.publicProfile?.profileUpdatedAt || '');
 
     const normalizedGallery = React.useMemo(() => {
-        const raw = (restaurant as any)?.publicProfile?.gallery;
+        const raw = galleryDep;
         if (!Array.isArray(raw)) return [];
         return raw
             .map((g: any) => {
@@ -598,6 +599,11 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
             (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesCategory && matchesFood && matchesSearch;
     });
+    const visibleFilteredItems = filteredItems.slice(0, visibleMenuCount);
+    useEffect(() => {
+        setVisibleMenuCount(28);
+    }, [selectedCategory, searchQuery, foodFilter, menuItems.length]);
+    const rescueDeals = rescueQuery.data?.items ?? [];
 
     // Show loading state while fetching
     if (menuQuery.isLoading && !navRestaurant) {
@@ -702,7 +708,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                         source={{
                             uri:
                                 heroImageUrl ||
-                                'https://lh3.googleusercontent.com/aida-public/AB6AXuDe1xuBri4Ex6KQBM0qQWWV0dkxfv7Xwp0fwXQ4u9f9-fVnzGNVWDRZtF_Kt7jW6PxtoD7_uZ2aQLPZuVWbehy0BD6d_h5jrivCLkvBNdc2d6YPfgK7q2kaU1AZeXwROYx9E1ih55VNuVEOAVpxbP-aUkbJhZwZlb_UgyH3am3w1OWTolOEHdxkqJWslSk9IH-N0jl1QxqanUBnDH4CvCqZRFnq2w-_zWF5BbPEUM-bVHKF8CWCI_CIVm2QNrOx1nsENAxqR-jThNu6',
+                                undefined,
                         }}
                         style={styles.coverImage}
                         resizeMode="cover"
@@ -761,7 +767,14 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     pauseCouponProgress();
                 }}
                 onScrollEndDrag={() => setIsVerticalScrolling(false)}
-                onMomentumScrollEnd={() => setIsVerticalScrolling(false)}
+                onMomentumScrollEnd={(e) => {
+                    setIsVerticalScrolling(false);
+                    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+                    const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 280;
+                    if (nearBottom && visibleMenuCount < filteredItems.length) {
+                        setVisibleMenuCount((prev) => prev + 24);
+                    }
+                }}
             >
                 {/* Restaurant Info */}
                 <View style={styles.restaurantInfo}>
@@ -888,7 +901,8 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     </View>
                 )}
                 {/* Coupons (Auto-rotating carousel) */}
-                <View style={styles.offersContainer}>
+                {couponCards.length > 0 && (
+                    <View style={styles.offersContainer}>
                     <FlatList
                         ref={(r) => { couponListRef.current = r; }}
                         data={couponCards}
@@ -927,7 +941,7 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                                     ]}
                                 >
                                     <View style={styles.offerRow}>
-                                        <Text style={styles.offerIcon}>???</Text>
+                                        <Text style={styles.offerIcon}>OFFER</Text>
                                         <View style={styles.offerTextWrap}>
                                             <Text style={[styles.offerText, { color: item.textColor }]} numberOfLines={1}>
                                                 {item.text}
@@ -949,7 +963,52 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                             );
                         }}
                     />
-                </View>
+                    </View>
+                )}
+
+                {/* Food Rescue deals */}
+                {rescueDeals.length > 0 && (
+                    <View style={styles.rescueContainer}>
+                        <View style={styles.reviewsHeaderRow}>
+                            <Text style={styles.reviewsTitle}>Food Rescue</Text>
+                            <Text style={styles.seeAllText}>Limited stock</Text>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rescueContent}>
+                            {rescueDeals.map((deal: any) => {
+                                const productId = String(deal?.product?.id || '');
+                                const qty = getCartCount(productId);
+                                return (
+                                    <View key={String(deal.id)} style={styles.rescueCard}>
+                                        <Image source={{ uri: deal?.product?.image }} style={styles.rescueImage} />
+                                        <Text style={styles.rescueName} numberOfLines={2}>{deal?.product?.name || 'Rescue item'}</Text>
+                                        <View style={styles.rescuePriceRow}>
+                                            <Text style={styles.rescuePrice}>Rs.{Number(deal?.rescuePrice || 0).toFixed(0)}</Text>
+                                            <Text style={styles.rescueOriginal}>Rs.{Number(deal?.originalPrice || 0).toFixed(0)}</Text>
+                                        </View>
+                                        {qty === 0 ? (
+                                            <TouchableOpacity
+                                                style={styles.rescueAddBtn}
+                                                onPress={() => addRescueDealToCart(deal)}
+                                            >
+                                                <Text style={styles.rescueAddText}>Add</Text>
+                                            </TouchableOpacity>
+                                        ) : (
+                                            <View style={styles.quantityControls}>
+                                                <TouchableOpacity style={styles.quantityButton} onPress={() => removeFromCart({ _id: productId, id: productId })}>
+                                                    <Text style={styles.quantityButtonText}>-</Text>
+                                                </TouchableOpacity>
+                                                <Text style={styles.quantityText}>{qty}</Text>
+                                                <TouchableOpacity style={styles.quantityButton} onPress={() => addRescueDealToCart(deal)}>
+                                                    <Text style={styles.quantityButtonText}>+</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </ScrollView>
+                    </View>
+                )}
 
                 {/* Ratings + Reviews (Phase 3) */}
                 <View style={styles.reviewsContainer}>
@@ -1091,28 +1150,26 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                 )}
 
                 {/* Menu Empty State */}
-                {!menuQuery.isLoading && menuItems.length === 0 && !apiFailed && (
+                {!menuQuery.isLoading && menuItems.length === 0 && !menuQuery.isError && (
                     <View style={styles.menuEmptyContainer}>
-                        <Text style={styles.menuEmptyIcon}></Text>
+                        <Text style={styles.menuEmptyIcon}>EMPTY</Text>
                         <Text style={styles.menuEmptyTitle}>No Menu Available</Text>
                         <Text style={styles.menuEmptyText}>
                             This restaurant hasn't added any items yet.
                         </Text>
                     </View>
                 )}
-
-                {/* Dev Mode Mock Data Notice */}
-                {!menuQuery.isLoading && apiFailed && __DEV__ && (
-                    <View style={styles.devNoticeContainer}>
-                        <Text style={styles.devNoticeText}>
-                            [DEV] API failed - showing mock data for development
-                        </Text>
+                {!menuQuery.isLoading && menuQuery.isError && (
+                    <View style={styles.menuEmptyContainer}>
+                        <Text style={styles.menuEmptyIcon}>ERROR</Text>
+                        <Text style={styles.menuEmptyTitle}>Unable to load menu</Text>
+                        <Text style={styles.menuEmptyText}>Please pull to refresh or try again in a moment.</Text>
                     </View>
                 )}
 
                 {/* Menu Items */}
                 <View style={styles.menuContainer}>
-                    {filteredItems.map((item) => (
+                    {visibleFilteredItems.map((item) => (
                         <View key={getItemKey(item)} style={styles.menuItem}>
                             <View style={styles.menuItemInfo}>
                                 {item.isBestseller && (
@@ -1174,6 +1231,14 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                             </View>
                         </View>
                     ))}
+                    {visibleMenuCount < filteredItems.length && (
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            style={styles.loadMoreMenuBtn}
+                            onPress={() => setVisibleMenuCount((prev) => prev + 24)}>
+                            <Text style={styles.loadMoreMenuText}>Load more items</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <View style={styles.bottomSpacing} />
@@ -1270,6 +1335,14 @@ export const RestaurantDetailScreen: React.FC<Props> = ({ navigation, route }) =
                     <Text style={styles.toastText}>Updated just now</Text>
                 </View>
             )}
+
+            <CartSwitchModal
+                visible={!!pendingCartSwitchDeal}
+                oldBranchName={cartRestaurantName}
+                newBranchName={String(restaurant?.name || 'This branch')}
+                onCancel={() => setPendingCartSwitchDeal(null)}
+                onConfirm={confirmSwitchAndAddRescue}
+            />
 
             {/* Cart Bar */}
             {totalItems > 0 && (
@@ -1819,6 +1892,66 @@ const styles = StyleSheet.create({
         backgroundColor: '#00E5FF',
         borderRadius: 3,
     },
+    rescueContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2A2A2A',
+    },
+    rescueContent: {
+        gap: 10,
+        paddingRight: 8,
+    },
+    rescueCard: {
+        width: 170,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        backgroundColor: '#111111',
+        padding: 10,
+    },
+    rescueImage: {
+        width: '100%',
+        height: 86,
+        borderRadius: 10,
+        backgroundColor: '#0A0A0A',
+        marginBottom: 8,
+    },
+    rescueName: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+        minHeight: 34,
+    },
+    rescuePriceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        marginBottom: 8,
+    },
+    rescuePrice: {
+        color: '#00E5FF',
+        fontSize: 13,
+        fontWeight: '800',
+        marginRight: 8,
+    },
+    rescueOriginal: {
+        color: '#7A7A7A',
+        fontSize: 12,
+        textDecorationLine: 'line-through',
+    },
+    rescueAddBtn: {
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#00E5FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    rescueAddText: {
+        color: '#000000',
+        fontSize: 13,
+        fontWeight: '800',
+    },
     reviewsContainer: {
         paddingHorizontal: 16,
         paddingVertical: 14,
@@ -2045,6 +2178,21 @@ const styles = StyleSheet.create({
     },
     menuContainer: {
         padding: 16,
+    },
+    loadMoreMenuBtn: {
+        marginTop: 8,
+        alignSelf: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#00E5FF33',
+        backgroundColor: '#111111',
+    },
+    loadMoreMenuText: {
+        color: '#00E5FF',
+        fontSize: 12,
+        fontWeight: '700',
     },
     menuItem: {
         flexDirection: 'row',

@@ -31,6 +31,9 @@ interface DisplayOrder {
     total: string;
     date: string;
     status: 'delivered' | 'cancelled' | 'in_progress';
+    fulfillmentType?: 'asap' | 'scheduled';
+    scheduleAt?: string;
+    paymentStatus?: string;
 }
 
 export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
@@ -60,6 +63,9 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                 total: `Rs.${order.totalPrice.toFixed(2)}`,
                 date: new Date(order.createdAt).toLocaleDateString(),
                 status: mapOrderStatus(order.status),
+                fulfillmentType: order.fulfillmentType,
+                scheduleAt: order.scheduleAt,
+                paymentStatus: order.paymentStatus,
             }));
             setOrders(apiOrders);
         } else {
@@ -114,9 +120,9 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
 
     const handleOrderPress = (order: DisplayOrder) => {
         if (order.status === 'cancelled') {
-            navigation.navigate(SCREENS.ORDER_CANCELLED, { orderId: order.orderNumber });
+            navigation.navigate(SCREENS.ORDER_CANCELLED, { orderId: order.id });
         } else {
-            navigation.navigate(SCREENS.TRACKING, { orderId: order.orderNumber });
+            navigation.navigate(SCREENS.TRACKING, { orderId: order.id });
         }
     };
 
@@ -256,6 +262,16 @@ export const OrderHistoryScreen: React.FC<Props> = ({ navigation }) => {
                                     ]}>
                                     {getStatusText(order.status)}
                                 </Text>
+                                {order.fulfillmentType === 'scheduled' && (
+                                    <Text style={styles.metaChip}>
+                                        Scheduled {order.scheduleAt ? new Date(order.scheduleAt).toLocaleString() : ''}
+                                    </Text>
+                                )}
+                                {!!order.paymentStatus && order.paymentStatus !== 'not_applicable' && (
+                                    <Text style={styles.metaChip}>
+                                        Payment: {String(order.paymentStatus).toUpperCase()}
+                                    </Text>
+                                )}
                             </View>
                         </View>
                         <View style={styles.orderActions}>
@@ -370,6 +386,16 @@ const styles = StyleSheet.create({
     orderStatus: {
         fontSize: 12,
         fontWeight: '500',
+    },
+    metaChip: {
+        marginTop: 4,
+        fontSize: 10,
+        color: '#BFBFBF',
+        backgroundColor: '#2A2A2A',
+        borderRadius: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        overflow: 'hidden',
     },
     orderActions: {
         flexDirection: 'row',

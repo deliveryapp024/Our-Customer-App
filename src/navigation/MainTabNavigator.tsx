@@ -2,21 +2,11 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { House, ForkKnife, ArrowCounterClockwise, Gift, User } from 'phosphor-react-native';
-import { SCREENS } from '../constants';
-import { HomeScreen, FlashDealsScreen, QuickReorderScreen } from '../features/home';
+import { FEATURE_FLAGS, SCREENS } from '../constants';
+import { HomeScreen, FlashDealsScreen, QuickReorderScreen, FoodScreen } from '../features/home';
 import { ProfileScreen } from '../features/profile';
-import { RestaurantDetailScreen } from '../features/restaurant';
 
 const Tab = createBottomTabNavigator();
-
-// Food Tab Screen - Restaurant Discovery
-const FoodScreen = () => (
-    <View style={styles.placeholder}>
-        <ForkKnife size={48} color="#00E5FF" weight="fill" />
-        <Text style={styles.placeholderText}>Food</Text>
-        <Text style={styles.placeholderSubtext}>Discover restaurants and cuisines</Text>
-    </View>
-);
 
 interface TabIconProps {
     focused: boolean;
@@ -61,24 +51,28 @@ export const MainTabNavigator = () => {
                     ),
                 }}
             />
-            <Tab.Screen
-                name={SCREENS.REORDER_TAB}
-                component={QuickReorderScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} IconComponent={ArrowCounterClockwise} label="Reorder" />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name={SCREENS.DEALS_TAB}
-                component={FlashDealsScreen}
-                options={{
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} IconComponent={Gift} label="Deals" />
-                    ),
-                }}
-            />
+            {FEATURE_FLAGS.ENABLE_QUICK_REORDER && (
+                <Tab.Screen
+                    name={SCREENS.REORDER_TAB}
+                    component={QuickReorderScreen}
+                    options={{
+                        tabBarIcon: ({ focused }) => (
+                            <TabIcon focused={focused} IconComponent={ArrowCounterClockwise} label="Reorder" />
+                        ),
+                    }}
+                />
+            )}
+            {FEATURE_FLAGS.ENABLE_FLASH_DEALS && (
+                <Tab.Screen
+                    name={SCREENS.DEALS_TAB}
+                    component={FlashDealsScreen}
+                    options={{
+                        tabBarIcon: ({ focused }) => (
+                            <TabIcon focused={focused} IconComponent={Gift} label="Deals" />
+                        ),
+                    }}
+                />
+            )}
             <Tab.Screen
                 name={SCREENS.PROFILE_TAB}
                 component={ProfileScreen}
@@ -112,23 +106,6 @@ const styles = StyleSheet.create({
     tabLabelActive: {
         color: '#00E5FF',
         fontWeight: '600',
-    },
-    placeholder: {
-        flex: 1,
-        backgroundColor: '#000000',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    placeholderText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    placeholderSubtext: {
-        fontSize: 14,
-        color: '#6B6B6B',
     },
 });
 

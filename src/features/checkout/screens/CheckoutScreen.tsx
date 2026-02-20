@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -9,14 +9,16 @@ import {
     StyleSheet,
     ActivityIndicator,
     Alert,
+    Linking,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SCREENS } from '../../../constants';
 import { useCartStore } from '../../../store/cartStore';
-import { ordersApi, Order } from '../../../api';
+import { ordersApi, paymentsApi } from '../../../api';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useQuery } from '@tanstack/react-query';
+import { trackClientError, trackClientEvent } from '../../../utils/telemetry';
 
 type Props = {
     navigation: NativeStackNavigationProp<any>;
@@ -24,23 +26,31 @@ type Props = {
 };
 
 const paymentMethods = [
-    { id: 'cod', name: 'Cash on Delivery', icon: '', description: 'Pay when you receive' },
-    { id: 'wallet', name: 'App Wallet', icon: '', balance: '24.50', disabled: true },
-    { id: 'gpay', name: 'Google Pay', icon: '', description: 'UPI (Coming Soon)', disabled: true },
-    { id: 'card', name: ' 4242', icon: 'Card', description: 'Visa (Coming Soon)', disabled: true },
+    { id: 'cod', name: 'Cash on Delivery', icon: 'COD', description: 'Pay when you receive' },
+    { id: 'upi_phonepe', name: 'UPI (PhonePe)', icon: 'UPI', description: 'Pay now via PhonePe' },
 ];
 
 export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
-    const { items, restaurantName, getTotal, getItemCount, clearCart, couponCode, setCouponCode } = useCartStore();
+    const { items, restaurantName, getTotal, clearCart, couponCode, setCouponCode } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState('cod'); // COD for Phase 0
+    const [fulfillmentType, setFulfillmentType] = useState<'asap' | 'scheduled'>('asap');
+    const [selectedScheduleDate, setSelectedScheduleDate] = useState(() => new Date().toISOString().slice(0, 10));
+    const [selectedSlot, setSelectedSlot] = useState<{ startAt: string; label: string } | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [orderError, setOrderError] = useState<string | null>(null);
+    const [processingStep, setProcessingStep] = useState<string>('');
 
     // Get branch info from navigation params (preferred) or cart fallback
     const branchId = route.params?.branchId || useCartStore.getState().restaurantId;
     const deliveryLocation = route.params?.deliveryLocation;
 
     const subtotal = getTotal();
+    const cartLineSavings = items.reduce((sum, item) => {
+        const original = Number(item?.menuItem?.originalPrice || 0);
+        const current = Number(item?.menuItem?.price || 0);
+        const qty = Number(item?.quantity || 0);
+        if (!Number.isFinite(original) || original <= current || qty <= 0) return sum;
+        return sum + (original - current) * qty;
+    }, 0);
 
     const orderItems = items.map(item => ({
         id: String(item.menuItem.id),
@@ -56,8 +66,19 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         Number.isFinite(Number(deliveryLocation?.longitude)) &&
         orderItems.length > 0;
 
+    const slotsQuery = useQuery({
+        queryKey: ['scheduleSlots', String(branchId || ''), selectedScheduleDate],
+        enabled: !!branchId && fulfillmentType === 'scheduled',
+        queryFn: async () => {
+            const res = await ordersApi.getScheduleSlots(String(branchId), selectedScheduleDate);
+            if (!res.success) throw new Error(res.error || 'Failed to load schedule slots');
+            return res.data;
+        },
+        staleTime: 30 * 1000,
+    });
+
     const quoteQuery = useQuery({
-        queryKey: ['orderQuote', String(branchId || ''), String(couponCode || ''), subtotal, deliveryLocation?.latitude, deliveryLocation?.longitude, orderItems.length],
+        queryKey: ['orderQuote', String(branchId || ''), String(couponCode || ''), subtotal, deliveryLocation?.latitude, deliveryLocation?.longitude, orderItems.length, fulfillmentType, selectedSlot?.startAt || ''],
         enabled: canQuote,
         queryFn: async () => {
             const res = await ordersApi.getOrderQuote({
@@ -67,6 +88,8 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                 vehicleType: 'Bike',
                 couponCode: couponCode || undefined,
                 items: orderItems,
+                fulfillmentType,
+                scheduleAt: fulfillmentType === 'scheduled' ? (selectedSlot?.startAt || undefined) : undefined,
             });
             if (!res.success) throw new Error(res.error || 'Failed to fetch quote');
             return res.data;
@@ -78,10 +101,62 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
     const deliveryFee = quoteQuery.data?.final_fee ?? 0;
     const discount = quoteQuery.data?.discountAmount ?? 0;
     const finalSubtotal = quoteQuery.data?.finalSubtotal ?? subtotal;
+    const totalSavings = Math.max(0, cartLineSavings + discount);
     const total = finalSubtotal + deliveryFee;
+    const today = new Date();
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const dayOptions = [
+        { label: 'Today', value: today.toISOString().slice(0, 10) },
+        { label: 'Tomorrow', value: tomorrow.toISOString().slice(0, 10) },
+    ];
 
     // Generate idempotency key for this checkout session
     const [idempotencyKey] = useState(() => `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+
+    const waitForPaymentSuccess = async (attemptId: string): Promise<{ success: boolean; error?: string }> => {
+        const maxAttempts = 20;
+        for (let i = 0; i < maxAttempts; i += 1) {
+            const statusRes = await paymentsApi.getPaymentAttemptStatus(attemptId);
+            if (!statusRes.success) {
+                return { success: false, error: statusRes.error || 'Failed to verify payment status' };
+            }
+            const state = statusRes.data?.status;
+            if (state === 'success') return { success: true };
+            if (state === 'failed' || state === 'expired' || state === 'cancelled') {
+                return { success: false, error: statusRes.data?.failureReason || 'Payment failed' };
+            }
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+        return { success: false, error: 'Payment verification timed out. Please try again.' };
+    };
+
+    const withRetry = async <T,>(
+        opName: string,
+        fn: () => Promise<T>,
+        attempts = 2,
+    ): Promise<T> => {
+        let lastError: any = null;
+        for (let i = 0; i < attempts; i += 1) {
+            try {
+                const value = await fn();
+                if (i > 0) {
+                    trackClientEvent('checkout_retry_success', { opName, attempt: i + 1 });
+                }
+                return value;
+            } catch (err) {
+                lastError = err;
+                trackClientError('checkout_retry_failed_attempt', {
+                    opName,
+                    attempt: i + 1,
+                    message: err instanceof Error ? err.message : String(err),
+                });
+                if (i < attempts - 1) {
+                    await new Promise((resolve) => setTimeout(resolve, 600 * (i + 1)));
+                }
+            }
+        }
+        throw lastError;
+    };
 
     const handlePlaceOrder = async () => {
         if (!branchId) {
@@ -91,6 +166,10 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
 
         if (items.length === 0) {
             Alert.alert('Error', 'Your cart is empty');
+            return;
+        }
+        if (fulfillmentType === 'scheduled' && !selectedSlot?.startAt) {
+            Alert.alert('Select Slot', 'Please select a schedule slot before placing order.');
             return;
         }
 
@@ -114,7 +193,66 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         }
 
         setIsProcessing(true);
-        setOrderError(null);
+        setProcessingStep('Preparing order');
+        trackClientEvent('checkout_place_order_start', {
+            branchId: String(branchId),
+            itemCount: items.length,
+            paymentMethod: selectedPayment,
+            fulfillmentType,
+        });
+
+        let verifiedPaymentAttemptId: string | undefined;
+        try {
+        if (selectedPayment === 'upi_phonepe') {
+            setProcessingStep('Starting payment');
+            const paymentAttempt = await withRetry(
+                'createPhonePePayment',
+                async () => {
+                    const response = await paymentsApi.createPhonePePayment({ amount: total });
+                    if (!response.success) {
+                        throw new Error(response.error || 'Unable to start PhonePe payment.');
+                    }
+                    return response;
+                },
+                2,
+            );
+
+            verifiedPaymentAttemptId = paymentAttempt.data.paymentAttemptId;
+            const isImmediateSuccess =
+                paymentAttempt.data.status === 'success' ||
+                paymentAttempt.data.mock === true;
+            if (paymentAttempt.data.disabled && !isImmediateSuccess) {
+                setIsProcessing(false);
+                Alert.alert('PhonePe Unavailable', 'UPI is currently disabled. Please choose Cash on Delivery for now.');
+                return;
+            }
+
+            const redirect = paymentAttempt.data.redirectUrl;
+            if (redirect) {
+                try {
+                    const canOpen = await Linking.canOpenURL(redirect);
+                    if (canOpen) await Linking.openURL(redirect);
+                } catch {
+                    // Continue polling regardless of deep-link open result.
+                }
+            }
+
+            if (!isImmediateSuccess) {
+                setProcessingStep('Verifying payment');
+                const paymentCheck = await waitForPaymentSuccess(verifiedPaymentAttemptId);
+                if (!paymentCheck.success) {
+                    setIsProcessing(false);
+                    setProcessingStep('');
+                    trackClientError('checkout_payment_failed', {
+                        branchId: String(branchId),
+                        paymentAttemptId: verifiedPaymentAttemptId,
+                        message: paymentCheck.error || 'Payment failed',
+                    });
+                    Alert.alert('Payment Failed', paymentCheck.error || 'Payment was not completed.');
+                    return;
+                }
+            }
+        }
 
         if (__DEV__) {
             console.log('[Checkout] createOrder payload', {
@@ -125,20 +263,41 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
         }
 
         // Create order with idempotency key (prevents duplicates on retry)
-        const result = await ordersApi.createOrder({
-            items: orderItems,
-            branch: String(branchId),
-            // Server recomputes totals; this field is kept for backwards compatibility.
-            totalPrice: finalSubtotal,
-            deliveryLocation,
-            idempotencyKey, // Same key on retry = same order result
-            couponCode: couponCode || undefined,
-        });
+        setProcessingStep('Placing order');
+
+        const result = await withRetry(
+            'createOrder',
+            async () => {
+                const response = await ordersApi.createOrder({
+                    items: orderItems,
+                    branch: String(branchId),
+                    // Server recomputes totals; this field is kept for backwards compatibility.
+                    totalPrice: finalSubtotal,
+                    deliveryLocation,
+                    idempotencyKey, // Same key on retry = same order result
+                    couponCode: couponCode || undefined,
+                    fulfillmentType,
+                    scheduleAt: fulfillmentType === 'scheduled' ? selectedSlot?.startAt : undefined,
+                    paymentMethod: selectedPayment === 'upi_phonepe' ? 'upi_phonepe' : 'cod',
+                    paymentAttemptId: verifiedPaymentAttemptId,
+                });
+                if (!response.success) {
+                    throw new Error(response.error || 'Failed to place order');
+                }
+                return response;
+            },
+            2,
+        );
 
         setIsProcessing(false);
+        setProcessingStep('');
 
-        if (result.success) {
             const order = result.data;
+            trackClientEvent('checkout_place_order_success', {
+                orderId: order._id,
+                paymentMethod: selectedPayment,
+                fulfillmentType,
+            });
             clearCart();
             setCouponCode(null);
             navigation.navigate(SCREENS.ORDER_SUCCESS, {
@@ -146,9 +305,28 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                 total: total.toFixed(2),
                 restaurantName,
             });
-        } else {
-            setOrderError(result.error || 'Failed to place order');
-            Alert.alert('Order Failed', result.error || 'Failed to place order. Please try again.');
+        } catch (error) {
+            setIsProcessing(false);
+            setProcessingStep('');
+            const message = error instanceof Error ? error.message : 'Failed to place order. Please try again.';
+            trackClientError('checkout_place_order_error', {
+                branchId: String(branchId),
+                paymentMethod: selectedPayment,
+                message,
+            });
+            // Recovery flow: if create succeeded on server but response got lost, recover by idempotency key.
+            const recovered = await ordersApi.recoverOrderByIdempotency(idempotencyKey);
+            if (recovered.success && recovered.data?._id) {
+                clearCart();
+                setCouponCode(null);
+                navigation.navigate(SCREENS.ORDER_SUCCESS, {
+                    orderId: recovered.data._id,
+                    total: total.toFixed(2),
+                    restaurantName,
+                });
+                return;
+            }
+            Alert.alert('Order Failed', message);
         }
     };
 
@@ -210,6 +388,11 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                 {/* Bill Details */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Bill Details</Text>
+                    {totalSavings > 0 && (
+                        <View style={styles.savingsChip}>
+                            <Text style={styles.savingsChipText}>You save Rs.{totalSavings.toFixed(2)} on this order</Text>
+                        </View>
+                    )}
                     <View style={styles.billCard}>
                         <View style={styles.billRow}>
                             <Text style={styles.billLabel}>Item Total</Text>
@@ -230,6 +413,66 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                     </View>
                 </View>
 
+                {/* Delivery Timing */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Delivery Timing</Text>
+                    <View style={styles.timingRow}>
+                        <TouchableOpacity
+                            style={[styles.timingChip, fulfillmentType === 'asap' && styles.timingChipActive]}
+                            onPress={() => {
+                                setFulfillmentType('asap');
+                                setSelectedSlot(null);
+                            }}>
+                            <Text style={[styles.timingChipText, fulfillmentType === 'asap' && styles.timingChipTextActive]}>ASAP</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.timingChip, fulfillmentType === 'scheduled' && styles.timingChipActive]}
+                            onPress={() => setFulfillmentType('scheduled')}>
+                            <Text style={[styles.timingChipText, fulfillmentType === 'scheduled' && styles.timingChipTextActive]}>Schedule</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {fulfillmentType === 'scheduled' && (
+                        <>
+                            <View style={styles.scheduleDayRow}>
+                                {dayOptions.map((day) => (
+                                    <TouchableOpacity
+                                        key={day.value}
+                                        style={[styles.dayChip, selectedScheduleDate === day.value && styles.dayChipActive]}
+                                        onPress={() => {
+                                            setSelectedScheduleDate(day.value);
+                                            setSelectedSlot(null);
+                                        }}>
+                                        <Text style={[styles.dayChipText, selectedScheduleDate === day.value && styles.dayChipTextActive]}>{day.label}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotRow}>
+                                {(slotsQuery.data?.slots || []).filter((slot) => slot.isAvailable).map((slot) => (
+                                    <TouchableOpacity
+                                        key={slot.startAt}
+                                        style={[
+                                            styles.slotChip,
+                                            selectedSlot?.startAt === slot.startAt && styles.slotChipActive,
+                                        ]}
+                                        onPress={() => setSelectedSlot({ startAt: slot.startAt, label: slot.label })}>
+                                        <Text style={[styles.slotChipText, selectedSlot?.startAt === slot.startAt && styles.slotChipTextActive]}>
+                                            {slot.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                                {slotsQuery.isLoading && (
+                                    <View style={styles.slotLoading}>
+                                        <ActivityIndicator color="#00E5FF" />
+                                    </View>
+                                )}
+                                {slotsQuery.isError && (
+                                    <Text style={styles.slotError}>Unable to load slots</Text>
+                                )}
+                            </ScrollView>
+                        </>
+                    )}
+                </View>
+
                 {/* Payment Method */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Payment Method</Text>
@@ -239,18 +482,13 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                             style={[
                                 styles.paymentOption,
                                 selectedPayment === method.id && styles.paymentOptionSelected,
-                                method.disabled && styles.paymentOptionDisabled,
                             ]}
-                            onPress={() => !method.disabled && setSelectedPayment(method.id)}
-                            disabled={method.disabled}>
+                            onPress={() => setSelectedPayment(method.id)}>
                             <Text style={styles.paymentIcon}>{method.icon}</Text>
                             <View style={styles.paymentInfo}>
                                 <Text style={styles.paymentName}>{method.name}</Text>
                                 {method.description && (
                                     <Text style={styles.paymentDescription}>{method.description}</Text>
-                                )}
-                                {method.balance && (
-                                    <Text style={styles.paymentBalance}>Balance: {method.balance}</Text>
                                 )}
                             </View>
                             <View
@@ -279,7 +517,7 @@ export const CheckoutScreen: React.FC<Props> = ({ navigation, route }) => {
                     disabled={isProcessing}
                     activeOpacity={0.8}>
                     <Text style={styles.placeOrderText}>
-                        {isProcessing ? 'Processing...' : `PAY ${total.toFixed(2)}`}
+                        {isProcessing ? (processingStep || 'Processing...') : `PAY ${total.toFixed(2)}`}
                     </Text>
                     {!isProcessing && <Text style={styles.arrowIcon}></Text>}
                 </TouchableOpacity>
@@ -324,6 +562,104 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#FFFFFF',
         marginBottom: 12,
+    },
+    savingsChip: {
+        alignSelf: 'flex-start',
+        marginBottom: 10,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#00C85355',
+        backgroundColor: '#00C85322',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    savingsChipText: {
+        color: '#00C853',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    timingRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+    },
+    timingChip: {
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        backgroundColor: '#111111',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+    },
+    timingChipActive: {
+        borderColor: '#00E5FF',
+        backgroundColor: '#00E5FF22',
+    },
+    timingChipText: {
+        color: '#CFCFCF',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    timingChipTextActive: {
+        color: '#00E5FF',
+    },
+    scheduleDayRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 10,
+    },
+    dayChip: {
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        backgroundColor: '#111111',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    dayChipActive: {
+        borderColor: '#00E5FF',
+        backgroundColor: '#00E5FF22',
+    },
+    dayChipText: {
+        color: '#D0D0D0',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    dayChipTextActive: {
+        color: '#00E5FF',
+    },
+    slotRow: {
+        gap: 8,
+        paddingRight: 10,
+    },
+    slotChip: {
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+        backgroundColor: '#121212',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    slotChipActive: {
+        borderColor: '#00E5FF',
+        backgroundColor: '#00E5FF22',
+    },
+    slotChipText: {
+        color: '#D0D0D0',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    slotChipTextActive: {
+        color: '#00E5FF',
+    },
+    slotLoading: {
+        minWidth: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    slotError: {
+        color: '#FF6B6B',
+        fontSize: 12,
     },
     changeText: {
         fontSize: 12,

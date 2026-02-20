@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../constants';
+import { trackClientError, trackClientEvent } from '../utils/telemetry';
 
 // API Response types
 export interface ApiError {
@@ -34,6 +35,7 @@ async function request<T>(
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+    const startedAt = Date.now();
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -71,13 +73,30 @@ async function request<T>(
         }
 
         const data = await response.json().catch(() => null);
+        const requestId = response.headers.get('x-request-id') || undefined;
 
         if (!response.ok) {
+            trackClientError('api_response_error', {
+                endpoint,
+                method: options.method || 'GET',
+                statusCode: response.status,
+                requestId,
+                durationMs: Date.now() - startedAt,
+                message: data?.message || response.statusText,
+            });
             return {
                 success: false,
                 error: data?.message || `HTTP ${response.status}: ${response.statusText}`,
             };
         }
+
+        trackClientEvent('api_response_success', {
+            endpoint,
+            method: options.method || 'GET',
+            statusCode: response.status,
+            requestId,
+            durationMs: Date.now() - startedAt,
+        });
 
         // Handle both enveloped and non-enveloped responses
         if (data && typeof data.success === 'boolean') {
@@ -91,6 +110,12 @@ async function request<T>(
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Network error';
+        trackClientError('api_network_error', {
+            endpoint,
+            method: options.method || 'GET',
+            durationMs: Date.now() - startedAt,
+            message,
+        });
         return {
             success: false,
             error: message,
@@ -109,6 +134,7 @@ async function requestFormData<T>(
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+    const startedAt = Date.now();
 
     const headers: Record<string, string> = {
         ...(options.headers as Record<string, string>),
@@ -129,11 +155,27 @@ async function requestFormData<T>(
 
         const data = await response.json().catch(() => null);
         if (!response.ok) {
+            const requestId = response.headers.get('x-request-id') || undefined;
+            trackClientError('api_response_error', {
+                endpoint,
+                method,
+                statusCode: response.status,
+                requestId,
+                durationMs: Date.now() - startedAt,
+                message: data?.message || response.statusText,
+            });
             return {
                 success: false,
                 error: data?.message || `HTTP ${response.status}: ${response.statusText}`,
             };
         }
+        trackClientEvent('api_response_success', {
+            endpoint,
+            method,
+            statusCode: response.status,
+            requestId: response.headers.get('x-request-id') || undefined,
+            durationMs: Date.now() - startedAt,
+        });
 
         if (data && typeof data.success === 'boolean') {
             return data as ApiResponse<T>;
@@ -145,6 +187,12 @@ async function requestFormData<T>(
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Network error';
+        trackClientError('api_network_error', {
+            endpoint,
+            method,
+            durationMs: Date.now() - startedAt,
+            message,
+        });
         return {
             success: false,
             error: message,
